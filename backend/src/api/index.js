@@ -1,2 +1,9 @@
-import app from "../src/app.js";
-export default app;
+// src/api/index.js
+import express from "express";
+
+const router = express.Router();
+// aquí van más rutas luego
+
+
+
+export default router;
