@@ -115,15 +115,15 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="mb-2 flex justify-center">
             <Logo />
           </div>
 
           {/* Título */}
-          <h1 className="text-3xl font-bold text-blue-500 mb-2">
+          <h1 className="text-3xl font-bold text-blue-500 mb-2 text-center">
             ¡Nos alegra verte de nuevo!
           </h1>
-          <p className="text-gray-600 mb-8 text-sm">
+          <p className="text-gray-600 mb-4 text-sm text-center">
             Ingresa y controla todos tus procesos desde un solo lugar, cuando quieras y donde quieras
           </p>
 
@@ -172,7 +172,7 @@ export default function Login() {
             </div>
 
             {/* Recuérdame y Recuperar Contraseña */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between -mt-4">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
