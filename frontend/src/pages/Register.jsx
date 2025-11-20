@@ -27,7 +27,7 @@ export default function Register() {
 
   // Validación de cédula (formato: 000-0000000-0)
   const validateCedula = (cedula) => {
-    const cedulaRegex = /^[0-9]{7,8}$/;
+    const cedulaRegex = /^[0-9]{11}$/;
     return cedulaRegex.test(cedula.replace(/-/g, ''));
   };
 
@@ -51,7 +51,7 @@ export default function Register() {
     const newErrors = {};
     
     if (!formData.full_name.trim()) {
-      newErrors.full_name = 'El nombre es requerido';
+      newErrors.full_name = 'Este campo es requerido';
     } else if (formData.full_name.trim().length < 3) {
       newErrors.full_name = 'El nombre debe tener al menos 3 caracteres';
     }
@@ -59,7 +59,7 @@ export default function Register() {
     if (!formData.cedula) {
       newErrors.cedula = 'La cédula es requerida';
     } else if (!validateCedula(formData.cedula)) {
-      newErrors.cedula = 'Ingresa una cédula válida (7-8 dígitos)';
+      newErrors.cedula = 'La cédula ingresada está incompleta';
     }
 
     if (!formData.email) {
@@ -137,7 +137,7 @@ export default function Register() {
 
           {/* Título y descripción */}
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-blue-500 text-center">
+            <h1 className="text-2xl font-bold text-center" style={{ color: '#4A8BDF' }}>
               ¡Crea tu cuenta en segundos!
             </h1>
             <p className="text-gray-600 text-xs text-center">
@@ -165,10 +165,11 @@ export default function Register() {
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
-                placeholder="ejemplo@gmail.com"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                placeholder="Tu nombre completo"
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                   errors.full_name ? 'border-red-500' : 'border-gray-300'
                 }`}
+                style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.full_name && (
                 <p className="mt-1 text-sm text-red-500">{errors.full_name}</p>
@@ -187,9 +188,10 @@ export default function Register() {
                 value={formData.cedula}
                 onChange={handleChange}
                 placeholder="000-0000000-0"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                   errors.cedula ? 'border-red-500' : 'border-gray-300'
                 }`}
+                style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.cedula && (
                 <p className="mt-1 text-sm text-red-500">{errors.cedula}</p>
@@ -208,9 +210,10 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="ejemplo@gmail.com"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
+                style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -221,7 +224,10 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2.5 text-sm rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full text-white py-2.5 text-sm rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#085297', '--tw-ring-color': '#085297' }}
+              onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#064073')}
+              onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#085297')}
             >
               {isLoading ? 'Enviando...' : 'Validar Correo'}
             </button>
@@ -233,7 +239,7 @@ export default function Register() {
           {/* Iniciar sesión */}
           <p className="text-center text-sm text-gray-600 -mt-4">
             ¿Ya tienes una cuenta?{' '}
-            <a href="/login" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
+            <a href="/login" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
               Iniciar sesión
             </a>
           </p>

@@ -122,7 +122,7 @@ export default function Login() {
 
           {/* Título y descripción */}
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-blue-500 text-center">
+            <h1 className="text-3xl font-bold text-center" style={{ color: '#4A8BDF' }}>
               ¡Nos alegra verte de nuevo!
             </h1>
             <p className="text-gray-600 text-sm text-center">
@@ -144,9 +144,10 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="ejemplo@gmail.com"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
+                style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -166,9 +167,10 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
+                  style={{ '--tw-ring-color': '#4A8BDF' }}
                 />
                 <button
                   type="button"
@@ -200,11 +202,12 @@ export default function Login() {
                   name="rememberMe"
                   checked={formData.rememberMe}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 border-gray-300 rounded focus:ring-2"
+                  style={{ accentColor: '#4A8BDF', '--tw-ring-color': '#4A8BDF' }}
                 />
                 <span className="ml-2 text-xs text-gray-700">Recuérdame</span>
               </label>
-              <a href="#" className="text-xs text-blue-500 hover:text-blue-600 transition-colors">
+              <a href="#" className="text-xs transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
                 Recuperar Contraseña
               </a>
             </div>
@@ -213,7 +216,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2.5 text-sm rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full text-white py-2.5 text-sm rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#085297', '--tw-ring-color': '#085297' }}
+              onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#064073')}
+              onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#085297')}
             >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
@@ -225,7 +231,7 @@ export default function Login() {
           {/* Registrarse */}
           <p className="text-center text-xs text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
-            <a href="/register" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
+            <a href="/register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
               Regístrate aquí
             </a>
           </p>
