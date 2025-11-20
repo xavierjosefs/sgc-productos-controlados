@@ -1,9 +1,10 @@
-import { createUser , findUserByEmail } from "../models/user.client.js";
+import { createUser , findUserByEmail, login } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
 import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
 export const preRegister = async (req, res) => {
     const { cedula ,full_name , email } = req.body;
@@ -68,4 +69,30 @@ export const registerComplete = async (req, res) => {
   console.log("se elimino el usuario pendiente con cédula:", pending.cedula);
 
   res.json({ ok: true, message: "Registro completado con éxito" });
+};
+
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const { user } = await login(email, password);
+    console.log(user);
+    const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
+
+    return res.status(200).json({
+      ok: true,
+      message: "Inicio de sesión exitoso",
+      user,
+      token
+    });
+  } catch (err) {
+    console.error(err);
+
+    const status = err.statusCode || 500;
+
+    return res.status(status).json({
+      ok: false,
+      message: err.message || "Error al iniciar sesión",
+    });
+  }
 };
