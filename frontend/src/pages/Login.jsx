@@ -113,19 +113,21 @@ export default function Login() {
     <div className="flex min-h-screen">
       {/* Lado izquierdo - Formulario */}
       <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-[526px] space-y-6">
           {/* Logo */}
-          <div className="mb-2 flex justify-center">
+          <div className="flex justify-center">
             <Logo />
           </div>
 
-          {/* Título */}
-          <h1 className="text-3xl font-bold text-blue-500 mb-2 text-center">
-            ¡Nos alegra verte de nuevo!
-          </h1>
-          <p className="text-gray-600 mb-4 text-sm text-center">
-            Ingresa y controla todos tus procesos desde un solo lugar, cuando quieras y donde quieras
-          </p>
+          {/* Título y descripción */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-blue-500 text-center">
+              ¡Nos alegra verte de nuevo!
+            </h1>
+            <p className="text-gray-600 text-sm text-center">
+              Ingresa y controla todos tus procesos desde un solo lugar, cuando quieras y donde quieras
+            </p>
+          </div>
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -198,8 +200,11 @@ export default function Login() {
             </button>
           </form>
 
+          {/* Línea divisoria */}
+          <div className="border-t border-black"></div>
+
           {/* Registrarse */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
             <a href="#" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
               Regístrate aquí
@@ -209,50 +214,17 @@ export default function Login() {
       </div>
 
       {/* Lado derecho - Imagen de fondo */}
-      <div className="hidden lg:flex flex-1 relative bg-gray-800">
+      <div className="hidden lg:flex flex-1 relative overflow-hidden rounded-l-[48px]">
         {/* Imagen de fondo con overlay */}
-        <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop)',
+            backgroundImage: 'url(/login-background.jpg)',
           }}
         ></div>
         
-        {/* Iconos decorativos superpuestos */}
-        <div className="relative z-20 flex items-center justify-center w-full">
-          <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-30">
-            {/* Ícono de documento con check */}
-            <rect x="100" y="80" width="80" height="100" rx="8" stroke="white" strokeWidth="3" fill="none"/>
-            <line x1="115" y1="105" x2="165" y2="105" stroke="white" strokeWidth="3"/>
-            <line x1="115" y1="125" x2="165" y2="125" stroke="white" strokeWidth="3"/>
-            <line x1="115" y1="145" x2="150" y2="145" stroke="white" strokeWidth="3"/>
-            <circle cx="155" cy="155" r="15" fill="white"/>
-            <path d="M148 155L153 160L162 150" stroke="#1E293B" strokeWidth="2" fill="none"/>
-
-            {/* Ícono de carpeta */}
-            <rect x="220" y="100" width="90" height="70" rx="8" stroke="white" strokeWidth="3" fill="none"/>
-            <path d="M220 115L245 115L252 108L220 108Z" stroke="white" strokeWidth="3" fill="none"/>
-            <line x1="235" y1="130" x2="285" y2="130" stroke="white" strokeWidth="2"/>
-            <line x1="235" y1="145" x2="275" y2="145" stroke="white" strokeWidth="2"/>
-
-            {/* Ícono de checklist */}
-            <rect x="150" y="220" width="100" height="120" rx="8" stroke="white" strokeWidth="3" fill="none"/>
-            <circle cx="170" cy="245" r="8" stroke="white" strokeWidth="2" fill="none"/>
-            <path d="M167 245L169 247L173 242" stroke="white" strokeWidth="2" fill="none"/>
-            <line x1="185" y1="245" x2="230" y2="245" stroke="white" strokeWidth="2"/>
-            
-            <circle cx="170" cy="270" r="8" stroke="white" strokeWidth="2" fill="none"/>
-            <path d="M167 270L169 272L173 267" stroke="white" strokeWidth="2" fill="none"/>
-            <line x1="185" y1="270" x2="230" y2="270" stroke="white" strokeWidth="2"/>
-            
-            <circle cx="170" cy="295" r="8" stroke="white" strokeWidth="2" fill="none"/>
-            <line x1="185" y1="295" x2="230" y2="295" stroke="white" strokeWidth="2"/>
-            
-            <circle cx="170" cy="320" r="8" stroke="white" strokeWidth="2" fill="none"/>
-            <line x1="185" y1="320" x2="215" y2="320" stroke="white" strokeWidth="2"/>
-          </svg>
-        </div>
+        {/* Overlay oscuro */}
+        <div className="absolute inset-0 bg-black/40"></div>
       </div>
     </div>
   );
