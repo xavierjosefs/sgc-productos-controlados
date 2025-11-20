@@ -130,10 +130,10 @@ export default function Login() {
           </div>
 
           {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Campo de Correo */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
                 Correo
               </label>
               <input
@@ -143,7 +143,7 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="ejemplo@gmail.com"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -154,7 +154,7 @@ export default function Login() {
 
             {/* Campo de Contraseña */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
                 Contraseña
               </label>
               <input
@@ -164,7 +164,7 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -174,7 +174,7 @@ export default function Login() {
             </div>
 
             {/* Recuérdame y Recuperar Contraseña */}
-            <div className="flex items-center justify-between -mt-4">
+            <div className="flex items-center justify-between -mt-2">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -183,9 +183,9 @@ export default function Login() {
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Recuérdame</span>
+                <span className="ml-2 text-xs text-gray-700">Recuérdame</span>
               </label>
-              <a href="#" className="text-sm text-blue-500 hover:text-blue-600 transition-colors">
+              <a href="#" className="text-xs text-blue-500 hover:text-blue-600 transition-colors">
                 Recuperar Contraseña
               </a>
             </div>
@@ -194,7 +194,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-2.5 text-sm rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
@@ -204,9 +204,9 @@ export default function Login() {
           <div className="border-t border-black"></div>
 
           {/* Registrarse */}
-          <p className="text-center text-sm text-gray-600 -mt-4">
+          <p className="text-center text-xs text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
-            <a href="#" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
+            <a href="/register" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
               Regístrate aquí
             </a>
           </p>

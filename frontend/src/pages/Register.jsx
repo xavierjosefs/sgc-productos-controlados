@@ -1,0 +1,258 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Logo from '../components/Logo';
+
+export default function Register() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    full_name: '',
+    cedula: '',
+    email: ''
+  });
+
+  const [errors, setErrors] = useState({
+    full_name: '',
+    cedula: '',
+    email: ''
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+
+  // Validación de email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validación de cédula (formato: 000-0000000-0)
+  const validateCedula = (cedula) => {
+    const cedulaRegex = /^[0-9]{7,8}$/;
+    return cedulaRegex.test(cedula.replace(/-/g, ''));
+  };
+
+  // Manejar cambios en los inputs
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Limpiar errores al escribir
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    setApiError('');
+  };
+
+  // Validar formulario
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'El nombre es requerido';
+    } else if (formData.full_name.trim().length < 3) {
+      newErrors.full_name = 'El nombre debe tener al menos 3 caracteres';
+    }
+
+    if (!formData.cedula) {
+      newErrors.cedula = 'La cédula es requerida';
+    } else if (!validateCedula(formData.cedula)) {
+      newErrors.cedula = 'Ingresa una cédula válida (7-8 dígitos)';
+    }
+
+    if (!formData.email) {
+      newErrors.email = 'El correo es requerido';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Ingresa un correo válido';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Manejar submit del formulario
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setApiError('');
+
+    try {
+      // TODO: Conectar con el endpoint del backend cuando esté listo
+      // Este endpoint debe enviar un correo de verificación al usuario
+      // const response = await fetch('http://localhost:3000/api/auth/send-verification', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     full_name: formData.full_name.trim(),
+      //     cedula: formData.cedula,
+      //     email: formData.email.trim().toLowerCase()
+      //   })
+      // });
+      
+      // if (!response.ok) {
+      //   const data = await response.json();
+      //   throw new Error(data.message || 'Error al enviar verificación');
+      // }
+
+      // const data = await response.json();
+      
+      // Simulación temporal del envío de verificación
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Verificación enviada para:', {
+        full_name: formData.full_name,
+        cedula: formData.cedula,
+        email: formData.email
+      });
+      
+      alert('¡Correo de verificación enviado! Revisa tu bandeja de entrada para continuar con el registro.');
+      
+      // TODO: Redirigir a página de confirmación o mostrar mensaje
+      // navigate('/verify-email');
+      
+    } catch (error) {
+      console.error('Error en registro:', error);
+      setApiError(error.message || 'Error al registrar usuario. Inténtalo de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Lado izquierdo - Formulario */}
+      <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
+        <div className="w-full max-w-[460px] space-y-5">
+          {/* Logo */}
+          <div className="flex justify-center scale-90">
+            <Logo />
+          </div>
+
+          {/* Título y descripción */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-blue-500 text-center">
+              ¡Crea tu cuenta en segundos!
+            </h1>
+            <p className="text-gray-600 text-xs text-center">
+              Regístrate y gestiona tus solicitudes sin filas, sin estrés y desde cualquier lugar
+            </p>
+          </div>
+
+          {/* Mensaje de error general */}
+          {apiError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {apiError}
+            </div>
+          )}
+
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Campo de Nombre */}
+            <div>
+              <label htmlFor="full_name" className="block text-xs font-medium text-gray-700 mb-1">
+                Nombre
+              </label>
+              <input
+                type="text"
+                id="full_name"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                placeholder="ejemplo@gmail.com"
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  errors.full_name ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.full_name && (
+                <p className="mt-1 text-sm text-red-500">{errors.full_name}</p>
+              )}
+            </div>
+
+            {/* Campo de Cédula */}
+            <div>
+              <label htmlFor="cedula" className="block text-xs font-medium text-gray-700 mb-1">
+                Cédula
+              </label>
+              <input
+                type="text"
+                id="cedula"
+                name="cedula"
+                value={formData.cedula}
+                onChange={handleChange}
+                placeholder="000-0000000-0"
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  errors.cedula ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.cedula && (
+                <p className="mt-1 text-sm text-red-500">{errors.cedula}</p>
+              )}
+            </div>
+
+            {/* Campo de Correo */}
+            <div>
+              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+                Correo
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="ejemplo@gmail.com"
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              )}
+            </div>
+
+            {/* Botón de Validar Correo */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white py-2.5 text-sm rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Enviando...' : 'Validar Correo'}
+            </button>
+          </form>
+
+          {/* Línea divisoria */}
+          <div className="border-t border-black"></div>
+
+          {/* Iniciar sesión */}
+          <p className="text-center text-sm text-gray-600 -mt-4">
+            ¿Ya tienes una cuenta?{' '}
+            <a href="/login" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">
+              Iniciar sesión
+            </a>
+          </p>
+        </div>
+      </div>
+
+      {/* Lado derecho - Imagen de fondo */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden rounded-l-[48px]">
+        {/* Imagen de fondo */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: 'url(/Registrar-Backgroung.jpg)',
+          }}
+        ></div>
+        
+        {/* Overlay oscuro */}
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
+    </div>
+  );
+}
