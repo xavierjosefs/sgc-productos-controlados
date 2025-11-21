@@ -76,7 +76,6 @@ export const loginUser = async (req, res) => {
 
   try {
     const { user } = await login(email, password);
-    console.log(user);
     const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
     return res.status(200).json({
@@ -86,8 +85,6 @@ export const loginUser = async (req, res) => {
       token
     });
   } catch (err) {
-    console.error(err);
-
     const status = err.statusCode || 500;
 
     return res.status(status).json({
@@ -96,3 +93,6 @@ export const loginUser = async (req, res) => {
     });
   }
 };
+
+
+
