@@ -98,11 +98,10 @@ export default function Register() {
         { full_name, cedula, email},
         { headers: { "Content-Type": "application/json" } }
       );
-      
-      // if (!response.ok) {
-      //   const data = await response.json();
-      //   throw new Error(data.message || 'Error al enviar verificación');
-      // }
+      console.log('Respuesta del servidor:', response.data);
+      if (!response.status === 200) {
+        throw new Error(response.data.message || 'Error al enviar verificación');
+      }
 
       // const data = await response.json();
       
