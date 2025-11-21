@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import axios from 'axios';
 
-export default function Register() {
+export default function PreRegister() {
   
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ export default function Register() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [apiSuccess, setApiSuccess] = useState('');
+
 
   // Validación de email
   const validateEmail = (email) => {
@@ -92,23 +94,15 @@ export default function Register() {
     setApiError('');
 
     try {
-      // TODO: Conectar con el endpoint del backend cuando esté listo
-      // Este endpoint debe enviar un correo de verificación al usuario
-      const response = await axios.post(`${baseURL}/auth/pre-register`, 
-        { full_name, cedula, email},
+      const response = await axios.post(
+        `${baseURL}/api/auth/pre-register`,
+        { full_name, cedula, email },
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log('Respuesta del servidor:', response.data);
-      if (!response.status === 200) {
-        throw new Error(response.data.message || 'Error al enviar verificación');
-      }
 
-      // const data = await response.json();
-      
-      // TODO: Redirigir a página de confirmación o mostrar mensaje
-      // navigate('/verify-email');
-      
-    } catch (error) {
+      setApiSuccess(response.data.message);   // ✔ Muestra mensaje de éxito
+      setApiError('');                       // ✔ Limpia errores si había
+    }catch (error) {
       console.error('Error en registro:', error);
       setApiError(error.message || 'Error al registrar usuario. Inténtalo de nuevo.');
     } finally {
@@ -142,6 +136,14 @@ export default function Register() {
               {apiError}
             </div>
           )}
+
+          {/* Mensaje de éxito */}
+          {apiSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+              {apiSuccess}
+            </div>
+          )}
+
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-4">

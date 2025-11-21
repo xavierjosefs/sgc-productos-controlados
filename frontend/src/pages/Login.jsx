@@ -231,7 +231,7 @@ export default function Login() {
           {/* Registrarse */}
           <p className="text-center text-xs text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
-            <a href="/register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
+            <a href="/pre-register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
               Regístrate aquí
             </a>
           </p>
