@@ -26,15 +26,6 @@ export default function CompleteRegister() {
       return;
     }
 
-    // DATOS DE PRUEBA PARA VER EL DISEÑO (comentar cuando el backend esté listo)
-    setTimeout(() => {
-      setPreData({
-        full_name: "Usuario Demo",
-        email: "demo@ejemplo.com"
-      });
-      setLoading(false);
-    }, 500);
-
     const fetchData = async () => {
       try {
         const res = await axios.get(
