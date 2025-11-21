@@ -1,15 +1,20 @@
 import { createUser , findUserByEmail } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
 import bcrypt from 'bcrypt';
 
 export const preRegister = async (req, res) => {
-    const { full_name, email } = req.body;
+    const { cedula ,full_name , email } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    await deletePendingUserByEmail(normalizedEmail); // Eliminar cualquier pre-registro previo con el mismo email
+    if (!isValidDominicanCedula(cedula)) {
+      return res.status(400).json({ error: "Cédula inválida." });
+    }
+
+    await deletePendingUserByEmail(normalizedEmail); 
 
     const existingUser = await findUserByEmail(normalizedEmail);
     // console.log(existingUser);
@@ -20,7 +25,7 @@ export const preRegister = async (req, res) => {
     const token = crypto.randomBytes(20).toString('hex');
     const expires = new Date(Date.now() + 1000 * 60 * 15); // Token válido por 15 minutos
 
-    await createPendingUser(full_name, normalizedEmail, token, expires);
+    await createPendingUser(cedula, full_name, email, token, expires);
 
     const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
     const link = `http://${FRONTEND_URL}/pre-data?token=${token}`;
@@ -58,9 +63,9 @@ export const registerComplete = async (req, res) => {
 
   const hash = await bcrypt.hash(password, 10);
 
-  await createUser(pending.full_name, pending.email, hash);
-
-  await deletePendingUser(pending.id);
+  await createUser(pending.full_name,pending.cedula ,pending.email, hash);
+  await deletePendingUser(pending.cedula);
+  console.log("se elimino el usuario pendiente con cédula:", pending.cedula);
 
   res.json({ ok: true, message: "Registro completado con éxito" });
 };
