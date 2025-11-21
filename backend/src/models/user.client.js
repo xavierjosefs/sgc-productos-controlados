@@ -2,8 +2,8 @@ import pool from "../config/db.js";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
-export const createUser = async (full_name, email, password) => {
-    // Lógica para crear un usuario en la base de datos
+// Funcion para crear un nuevo usuario
+export const createUser = async (full_name, cedula, email, password) => {
     // Nomalizar datos de entrada
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedName = full_name.trim();
@@ -12,11 +12,11 @@ export const createUser = async (full_name, email, password) => {
     if (search.rows.length > 0) {
         throw new Error('El correo ya está registrado');
     }
-    const id = crypto.randomUUID(); // Generar un UUID para el nuevo usuario
+
     const passwordHash = await bcrypt.hash(password, 10) // Hashear la contraseña
     const result = await pool.query(
-        'INSERT INTO users (id, full_name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *',
-        [id, normalizedName, normalizedEmail, passwordHash]
+        'INSERT INTO users (cedula, full_name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *',
+        [cedula, normalizedName, normalizedEmail, passwordHash]
     );
     return result.rows[0];;
 };
@@ -25,4 +25,46 @@ export const findUserByEmail = async (email) => {
     const normalizedEmail = email.trim().toLowerCase();
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
     return result.rows[0];
+};
+
+// Funcion para hacer login
+export const login = async (email, password) => {
+  try {
+    if (!email || !password) {
+      throw new Error("Correo y contraseña son obligatorios");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { rows } = await pool.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [normalizedEmail]
+    );
+
+    if (rows.length === 0) {
+      const error = new Error("No existe una cuenta asociada con ese correo");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = rows[0];
+
+    const isValid = bcrypt.compareSync(password, user.password_hash);
+    if (!isValid) {
+      const error = new Error("La contraseña es incorrecta");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    delete user.password_hash;
+
+    return { user };
+  } catch (err) {
+    // Si no tiene statusCode, asumimos 500
+    if (!err.statusCode) {
+      err.statusCode = 500;
+      err.message = "Error interno en el servidor";
+    }
+    throw err;
+  }
 };

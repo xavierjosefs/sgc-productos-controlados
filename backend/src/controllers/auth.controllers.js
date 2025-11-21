@@ -1,15 +1,21 @@
-import { createUser , findUserByEmail } from "../models/user.client.js";
+import { createUser , findUserByEmail, login } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
 import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
 export const preRegister = async (req, res) => {
-    const { full_name, email } = req.body;
+    const { cedula ,full_name , email } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    await deletePendingUserByEmail(normalizedEmail); // Eliminar cualquier pre-registro previo con el mismo email
+    if (!isValidDominicanCedula(cedula)) {
+      return res.status(400).json({ error: "Cédula inválida." });
+    }
+
+    await deletePendingUserByEmail(normalizedEmail); 
 
     const existingUser = await findUserByEmail(normalizedEmail);
     // console.log(existingUser);
@@ -20,10 +26,10 @@ export const preRegister = async (req, res) => {
     const token = crypto.randomBytes(20).toString('hex');
     const expires = new Date(Date.now() + 1000 * 60 * 15); // Token válido por 15 minutos
 
-    await createPendingUser(full_name, normalizedEmail, token, expires);
+    await createPendingUser(cedula, full_name, email, token, expires);
 
-    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
-    const link = `http://${FRONTEND_URL}/pre-data?token=${token}`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:5173";
+    const link = `${FRONTEND_URL}/pre-data?token=${token}`;
 
     const subject = "Completa tu registro";
     const text = `Hola ${full_name},\n\nPor favor, completa tu registro haciendo clic en el siguiente enlace:\n\n${link}\n\nEste enlace expirará en 15 minutos.\n\nSi no solicitaste este correo, ignóralo.`;
@@ -58,9 +64,35 @@ export const registerComplete = async (req, res) => {
 
   const hash = await bcrypt.hash(password, 10);
 
-  await createUser(pending.full_name, pending.email, hash);
+  await createUser(pending.full_name,pending.cedula ,pending.email, hash);
+  await deletePendingUser(pending.cedula);
 
-  await deletePendingUser(pending.id);
 
   res.json({ ok: true, message: "Registro completado con éxito" });
+};
+
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const { user } = await login(email, password);
+    console.log(user);
+    const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
+
+    return res.status(200).json({
+      ok: true,
+      message: "Inicio de sesión exitoso",
+      user,
+      token
+    });
+  } catch (err) {
+    console.error(err);
+
+    const status = err.statusCode || 500;
+
+    return res.status(status).json({
+      ok: false,
+      message: err.message || "Error al iniciar sesión",
+    });
+  }
 };
