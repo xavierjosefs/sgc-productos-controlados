@@ -54,6 +54,7 @@ export default function CompleteRegister() {
     }
 
     try {
+      console.log(password);
       const res = await axios.post(
         "http://localhost:8000/api/auth/register-complete",
         {
