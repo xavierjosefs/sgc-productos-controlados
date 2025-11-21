@@ -28,8 +28,8 @@ export const preRegister = async (req, res) => {
 
     await createPendingUser(cedula, full_name, email, token, expires);
 
-    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
-    const link = `http://${FRONTEND_URL}/pre-data?token=${token}`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:5173";
+    const link = `${FRONTEND_URL}/pre-data?token=${token}`;
 
     const subject = "Completa tu registro";
     const text = `Hola ${full_name},\n\nPor favor, completa tu registro haciendo clic en el siguiente enlace:\n\n${link}\n\nEste enlace expirará en 15 minutos.\n\nSi no solicitaste este correo, ignóralo.`;
@@ -66,7 +66,7 @@ export const registerComplete = async (req, res) => {
 
   await createUser(pending.full_name,pending.cedula ,pending.email, hash);
   await deletePendingUser(pending.cedula);
-  console.log("se elimino el usuario pendiente con cédula:", pending.cedula);
+
 
   res.json({ ok: true, message: "Registro completado con éxito" });
 };
@@ -76,7 +76,6 @@ export const loginUser = async (req, res) => {
 
   try {
     const { user } = await login(email, password);
-    console.log(user);
     const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
     return res.status(200).json({
@@ -86,8 +85,6 @@ export const loginUser = async (req, res) => {
       token
     });
   } catch (err) {
-    console.error(err);
-
     const status = err.statusCode || 500;
 
     return res.status(status).json({
@@ -96,3 +93,6 @@ export const loginUser = async (req, res) => {
     });
   }
 };
+
+
+
