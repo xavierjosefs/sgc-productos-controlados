@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import axios from 'axios';
 
 export default function Register() {
-  
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -79,10 +76,6 @@ export default function Register() {
   // Manejar submit del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const full_name = fd.get('full_name').toString().trim();
-    const cedula = fd.get('cedula').toString().trim();
-    const email = fd.get('email').toString().trim();
     
     if (!validateForm()) {
       return;
@@ -94,16 +87,33 @@ export default function Register() {
     try {
       // TODO: Conectar con el endpoint del backend cuando esté listo
       // Este endpoint debe enviar un correo de verificación al usuario
-      const response = await axios.post(`${baseURL}/auth/pre-register`, 
-        { full_name, cedula, email},
-        { headers: { "Content-Type": "application/json" } }
-      );
-      console.log('Respuesta del servidor:', response.data);
-      if (!response.status === 200) {
-        throw new Error(response.data.message || 'Error al enviar verificación');
-      }
+      // const response = await fetch('http://localhost:3000/api/auth/send-verification', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     full_name: formData.full_name.trim(),
+      //     cedula: formData.cedula,
+      //     email: formData.email.trim().toLowerCase()
+      //   })
+      // });
+      
+      // if (!response.ok) {
+      //   const data = await response.json();
+      //   throw new Error(data.message || 'Error al enviar verificación');
+      // }
 
       // const data = await response.json();
+      
+      // Simulación temporal del envío de verificación
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Verificación enviada para:', {
+        full_name: formData.full_name,
+        cedula: formData.cedula,
+        email: formData.email
+      });
+      
+      alert('¡Correo de verificación enviado! Revisa tu bandeja de entrada para continuar con el registro.');
       
       // TODO: Redirigir a página de confirmación o mostrar mensaje
       // navigate('/verify-email');
