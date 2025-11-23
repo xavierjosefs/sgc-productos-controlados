@@ -20,10 +20,25 @@ export default function CompleteRegister() {
 
   // Traer datos del backend usando el token
   useEffect(() => {
-    if (!token) {
-      setError("Token no encontrado en la URL.");
+  if (!token) {
+    setError("Token no encontrado en la URL.");
+    setLoading(false);
+    return;
+  }
+
+  const fetchData = async () => {
+    try {
+      console.log("Fetching pre-data with token:", token);
+      const res = await axios.get(
+        `${baseURL}/api/auth/pre-data?token=${token}`
+      );
+      console.log("Pre-data response:", res.data);
+      setPreData(res.data);
+    } catch (err) {
+      console.error("Error obteniendo pre-data:", err);
+      setError("Este enlace es inválido o ha expirado.");
+    } finally {
       setLoading(false);
-      return;
     }
     
     const fetchData = async () => {
@@ -67,8 +82,8 @@ export default function CompleteRegister() {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Mostrar pantalla de éxito y redirigir al login
-      setSuccess(data?.message || true);
+      // axios solo entra al catch si NO es 2xx, así que aquí es éxito
+      setSuccess(data?.message || "Registro completado correctamente. Redirigiendo...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       console.error("Error completando registro:", err);
@@ -79,6 +94,7 @@ export default function CompleteRegister() {
       setError(msg);
     }
   };
+
 
   if (loading) {
     return (

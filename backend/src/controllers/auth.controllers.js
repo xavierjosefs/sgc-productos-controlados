@@ -70,8 +70,10 @@ export const registerComplete = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log("Llego aqui");
 
   try {
+    console.log("Intentando iniciar sesión para:", email);
     const { user } = await login(email, password);
     const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
