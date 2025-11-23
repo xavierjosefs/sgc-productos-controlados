@@ -84,8 +84,6 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      
-      const baseURL = import.meta.env.VITE_API_URL ||"http://localhost:8000" ;
       const response = await axios.post(`${baseURL}/api/auth/login`, { email, password }, { withCredentials: true });
       if(response.status === 200){
         const { token, user } = response.data;

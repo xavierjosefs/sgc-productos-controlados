@@ -30,9 +30,9 @@ export default function CompleteRegister() {
           `${baseURL}/api/auth/pre-data?token=${token}`
         );
         console.log("Pre-data response:", res.data);
-
         setPreData(res.data);
       } catch (err) {
+        console.error("Error obteniendo pre-data:", err);
         setError("Este enlace es inválido o ha expirado.");
       } finally {
         setLoading(false);
@@ -40,7 +40,8 @@ export default function CompleteRegister() {
     };
 
     fetchData();
-  }, [token]);
+  }, [token, baseURL]);
+
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
@@ -54,8 +55,8 @@ export default function CompleteRegister() {
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/register-complete",
+      const { data } = await axios.post(
+        `${baseURL}/api/auth/register-complete`,
         {
           token,
           password,
@@ -63,10 +64,16 @@ export default function CompleteRegister() {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      setSuccess("Registro completado correctamente. Redirigiendo...");
+      // axios solo entra al catch si NO es 2xx, así que aquí es éxito
+      setSuccess(data?.message || "Registro completado correctamente. Redirigiendo...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError("Hubo un error al completar el registro.");
+      console.error("Error completando registro:", err);
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al completar el registro.";
+      setError(msg);
     }
   };
 
