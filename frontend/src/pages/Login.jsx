@@ -200,7 +200,7 @@ export default function Login() {
                 />
                 <span className="ml-2 text-xs text-gray-700">Recuérdame</span>
               </label>
-              <a href="#" className="text-xs transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
+              <a href="/forgot-password" className="text-xs transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
                 Recuperar Contraseña
               </a>
             </div>
