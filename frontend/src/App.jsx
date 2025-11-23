@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
+import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -19,6 +20,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </BrowserRouter>
   );
