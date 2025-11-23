@@ -20,32 +20,19 @@ export default function CompleteRegister() {
 
   // Traer datos del backend usando el token
   useEffect(() => {
-  if (!token) {
-    setError("Token no encontrado en la URL.");
-    setLoading(false);
-    return;
-  }
-
-  const fetchData = async () => {
-    try {
-      console.log("Fetching pre-data with token:", token);
-      const res = await axios.get(
-        `${baseURL}/api/auth/pre-data?token=${token}`
-      );
-      console.log("Pre-data response:", res.data);
-      setPreData(res.data);
-    } catch (err) {
-      console.error("Error obteniendo pre-data:", err);
-      setError("Este enlace es inválido o ha expirado.");
-    } finally {
+    if (!token) {
+      setError("Token no encontrado en la URL.");
       setLoading(false);
+      return;
     }
-    
+
     const fetchData = async () => {
       try {
+        console.log("Fetching pre-data with token:", token);
         const res = await axios.get(
           `${baseURL}/api/auth/pre-data?token=${token}`
         );
+        console.log("Pre-data response:", res.data);
         setPreData(res.data);
       } catch (err) {
         console.error("Error obteniendo pre-data:", err);
