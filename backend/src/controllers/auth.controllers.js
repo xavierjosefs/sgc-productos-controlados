@@ -3,7 +3,6 @@ import { createPendingUser, findPendingByToken, deletePendingUser, deletePending
 import { sendEmail } from "../utils/sendEmail.js";
 import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
-import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 
 export const preRegister = async (req, res) => {

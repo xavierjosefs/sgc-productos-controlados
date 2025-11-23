@@ -40,20 +40,35 @@ export default function CompleteRegister() {
     } finally {
       setLoading(false);
     }
-  };
+    
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
+          `${baseURL}/api/auth/pre-data?token=${token}`
+        );
+        setPreData(res.data);
+      } catch (err) {
+        console.error("Error obteniendo pre-data:", err);
+        setError("Este enlace es inválido o ha expirado.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, [token, baseURL]);
-
+    fetchData();
+  }, [token, baseURL]);
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
 
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
       return;
     }
 

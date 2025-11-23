@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import axios from 'axios';
 
 export default function PreRegister() {
   
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     full_name: '',
