@@ -1,9 +1,9 @@
-import { createUser , findUserByEmail } from "../models/user.client.js";
+import { createUser , findUserByEmail, login } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
-import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
 export const preRegister = async (req, res) => {
     const { cedula ,full_name , email } = req.body;
@@ -27,8 +27,8 @@ export const preRegister = async (req, res) => {
 
     await createPendingUser(cedula, full_name, email, token, expires);
 
-    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
-    const link = `http://${FRONTEND_URL}/pre-data?token=${token}`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:5173";
+    const link = `${FRONTEND_URL}/pre-data?token=${token}`;
 
     const subject = "Completa tu registro";
     const text = `Hola ${full_name},\n\nPor favor, completa tu registro haciendo clic en el siguiente enlace:\n\n${link}\n\nEste enlace expirará en 15 minutos.\n\nSi no solicitaste este correo, ignóralo.`;
@@ -61,11 +61,37 @@ export const registerComplete = async (req, res) => {
     return res.status(400).json({ ok: false, message: "Token inválido o expirado" });
   }
 
-  const hash = await bcrypt.hash(password, 10);
-
-  await createUser(pending.full_name,pending.cedula ,pending.email, hash);
+  await createUser(pending.full_name,pending.cedula ,pending.email, password);
   await deletePendingUser(pending.cedula);
-  console.log("se elimino el usuario pendiente con cédula:", pending.cedula);
+
 
   res.json({ ok: true, message: "Registro completado con éxito" });
 };
+
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Llego aqui");
+
+  try {
+    console.log("Intentando iniciar sesión para:", email);
+    const { user } = await login(email, password);
+    const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
+
+    return res.status(200).json({
+      ok: true,
+      message: "Inicio de sesión exitoso",
+      user,
+      token
+    });
+  } catch (err) {
+    const status = err.statusCode || 500;
+
+    return res.status(status).json({
+      ok: false,
+      message: err.message || "Error al iniciar sesión",
+    });
+  }
+};
+
+
+
