@@ -25,7 +25,7 @@ export default function CompleteRegister() {
       setLoading(false);
       return;
     }
-
+    
     const fetchData = async () => {
       try {
         const res = await axios.get(
@@ -33,6 +33,7 @@ export default function CompleteRegister() {
         );
         setPreData(res.data);
       } catch (err) {
+        console.error("Error obteniendo pre-data:", err);
         setError("Este enlace es inválido o ha expirado.");
       } finally {
         setLoading(false);
@@ -40,14 +41,12 @@ export default function CompleteRegister() {
     };
 
     fetchData();
-    
   }, [token, baseURL]);
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
@@ -59,7 +58,7 @@ export default function CompleteRegister() {
     }
 
     try {
-      await axios.post(
+      const { data } = await axios.post(
         `${baseURL}/api/auth/register-complete`,
         {
           token,
@@ -68,9 +67,16 @@ export default function CompleteRegister() {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      setSuccess(true);
+      // Mostrar pantalla de éxito y redirigir al login
+      setSuccess(data?.message || true);
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError("Hubo un error al completar el registro.");
+      console.error("Error completando registro:", err);
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al completar el registro.";
+      setError(msg);
     }
   };
 

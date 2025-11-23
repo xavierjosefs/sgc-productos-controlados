@@ -62,9 +62,7 @@ export const registerComplete = async (req, res) => {
     return res.status(400).json({ ok: false, message: "Token inválido o expirado" });
   }
 
-  const hash = await bcrypt.hash(password, 10);
-
-  await createUser(pending.full_name,pending.cedula ,pending.email, hash);
+  await createUser(pending.full_name,pending.cedula ,pending.email, password);
   await deletePendingUser(pending.cedula);
 
 
