@@ -78,3 +78,14 @@ export const login = async (email, password) => {
     throw err;
   }
 };
+
+export const createRequest = async (user_id, tipo_servicio_id, formulario, estado_id) => {
+  const result = await pool.query(
+    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data, estado_id)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [user_id, tipo_servicio_id, formulario, estado_id]
+  );
+
+  return result.rows[0];
+};
