@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createRequest } from "../models/user.client.js";
+import { createRequest, getRequestsBycedula } from "../models/user.client.js";
 
 export const createRequestController = async (req, res) => {
     try {
@@ -62,4 +62,23 @@ export const createRequestController = async (req, res) => {
             error: error.message
         });
     }
+};
+
+export const getRequestsController = async (req, res) => {
+  try {
+    const cedula = req.user.cedula;
+    const requests = await getRequestsBycedula(cedula);
+
+    return res.status(200).json({
+      ok: true,
+      requests,
+    });
+  } catch (error) {
+    console.error("Error al obtener solicitudes:", error);
+
+    return res.status(500).json({
+      ok: false,
+      message: "Error interno del servidor al obtener las solicitudes",
+    });
+  }
 };

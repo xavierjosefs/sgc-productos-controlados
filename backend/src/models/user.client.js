@@ -89,3 +89,9 @@ export const createRequest = async (user_id, tipo_servicio_id, formulario, estad
 
   return result.rows[0];
 };
+
+export const getRequestsBycedula = async (cedula) => {
+  const result = await pool.query("SELECT * FROM solicitudes WHERE user_id = $1", [cedula]);
+
+  return result.rows;
+}
