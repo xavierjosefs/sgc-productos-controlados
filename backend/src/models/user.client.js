@@ -49,15 +49,7 @@ export const login = async (email, password) => {
 
     const user = rows[0];
 
-    console.log("Password ingresada:", password);
-    console.log("Hash en BD:", user.password_hash);
-    console.log("Tipo del hash:", typeof user.password_hash);
-    console.log("Longitud del hash:", user.password_hash?.length);
-
-
     const isValid = bcrypt.compareSync(password, user.password_hash);
-    console.log("Resultado compare:", isValid);
-
 
     if (!isValid) {
       const error = new Error("La contraseña es incorrecta");
