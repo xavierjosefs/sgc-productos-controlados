@@ -17,3 +17,11 @@ export const createDocumento = async (solicitud_id, tipo_documento, nombre_archi
     );
     return result.rows[0];
 }
+
+export const getDocumentosBySolicitudId = async (solicitud_id) => {
+    const result = await pool.query(
+        `SELECT * FROM documentos_solicitud WHERE solicitud_id = $1`,
+        [solicitud_id]
+    );
+    return result.rows;
+}

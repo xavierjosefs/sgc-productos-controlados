@@ -1,5 +1,5 @@
 import {supabase} from "../lib/supabase.js";
-import { findSolicitudById, createDocumento } from "../models/document.client.js";
+import { findSolicitudById, createDocumento, getDocumentosBySolicitudId } from "../models/document.client.js";
 
 export const uploadDocumentController = async (req, res) => {
   try {
@@ -83,3 +83,42 @@ export const uploadDocumentController = async (req, res) => {
     });
   }
 };
+
+export const getDocumentosBySolicitudController = async (req, res) => {
+    try {
+      const solicitudId = req.params.id;
+      const usuarioCedula = req.user.cedula;
+
+      // Verificar que exista la solicitud
+      const solicitud = await findSolicitudById(solicitudId);
+      if (!solicitud) {
+        return res.status(404).json({
+          ok: false,
+          message: "Solicitud no encontrada.",
+        });
+      }
+
+      // Verificar que pertenece al usuario autenticado
+      if (solicitud.user_id !== usuarioCedula) {
+        return res.status(403).json({
+          ok: false,
+          message: "No tienes permiso para ver los documentos de esta solicitud.",
+        });
+      }
+      const documentos = await getDocumentosBySolicitudId(solicitudId);
+
+      return res.status(200).json({
+        ok: true,
+        documentos,
+      });
+
+    } catch (error) {
+      
+      return res.status(500).json({
+        ok: false,
+        message: "Error interno del servidor.",
+        error: error.message,
+      });
+
+    }
+}

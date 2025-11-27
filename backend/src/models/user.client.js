@@ -71,12 +71,12 @@ export const login = async (email, password) => {
   }
 };
 
-export const createRequest = async (user_id, tipo_servicio_id, formulario, estado_id) => {
+export const createRequest = async (user_id, tipo_servicio_id, formulario) => {
   const result = await pool.query(
-    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data, estado_id)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data)
+     VALUES ($1, $2, $3)
      RETURNING *`,
-    [user_id, tipo_servicio_id, formulario, estado_id]
+    [user_id, tipo_servicio_id, formulario]
   );
 
   return result.rows[0];
@@ -87,3 +87,24 @@ export const getRequestsBycedula = async (cedula) => {
 
   return result.rows;
 }
+
+export const getRequestDetailsById = async (id) => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      s.form_data,
+      s.fecha_creacion,
+      ts.nombre_servicio AS tipo_servicio,
+      e.nombre_mostrar   AS estado_actual
+    FROM solicitudes s
+    JOIN tipos_servicio ts
+      ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e
+      ON s.estado_id = e.id
+    WHERE s.id = $1
+  `,[id]);
+
+  return result.rows[0] || null;
+};
+
