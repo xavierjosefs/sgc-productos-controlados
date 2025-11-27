@@ -1,5 +1,5 @@
-import supabase from "backendlibsupabase.js";
-import { findSolicitudById, createDocumento } from "../models/document.client";
+import {supabase} from "../lib/supabase.js";
+import { findSolicitudById, createDocumento } from "../models/document.client.js";
 
 export const uploadDocumentController = async (req, res) => {
   try {
