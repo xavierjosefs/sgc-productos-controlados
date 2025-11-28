@@ -204,11 +204,16 @@ export function useRequestsAPI() {
     error,
     
     // Solicitudes
-    createRequest,
     getUserRequests,
     getRequestDetail,
     
-    // Documentos
+    // Las siguientes funciones están disponibles pero se usarán en features específicos:
+    // createRequest - Para formularios de creación de solicitudes
+    // getRequestDocuments - Para ver documentos de una solicitud
+    // uploadDocument - Para subir documentos
+    // deleteDocument - Para eliminar documentos
+    // updateDocument - Para actualizar documentos
+    createRequest,
     getRequestDocuments,
     uploadDocument,
     deleteDocument,

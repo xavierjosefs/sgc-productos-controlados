@@ -7,16 +7,14 @@ import useRequestsAPI from '../hooks/useRequestsAPI';
 
 /**
  * Dashboard principal del Cliente (Home)
- * Muestra resumen de estados y tabla de solicitudes
+ * Muestra resumen de estados y últimas 5 solicitudes
  */
 export default function Home() {
   const navigate = useNavigate();
-  const { getUserRequests, loading } = useRequestsAPI();
-
+  const { getUserRequests } = useRequestsAPI();
+  
   const [allRequests, setAllRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState(null);
-  const [typeFilter, setTypeFilter] = useState('');
+  const [recentRequests, setRecentRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
 
@@ -27,17 +25,18 @@ export default function Home() {
       try {
         const data = await getUserRequests();
         setAllRequests(data);
-        setFilteredRequests(data);
+        // Mostrar solo las últimas 5 solicitudes
+        setRecentRequests(data.slice(0, 5));
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
         setAllRequests([]);
-        setFilteredRequests([]);
+        setRecentRequests([]);
       } finally {
         setLoadingRequests(false);
       }
     };
     loadRequests();
-  }, []);
+  }, [getUserRequests]);
 
   // Contar solicitudes por estado
   const countByStatus = {
@@ -47,35 +46,6 @@ export default function Home() {
     pendientes: allRequests.filter(r => r.estado === 'pendiente').length,
   };
 
-  // Filtrar solicitudes
-  const handleStatusFilter = (status) => {
-    setSelectedStatus(selectedStatus === status ? null : status);
-  };
-
-  // Manejar creación de solicitud
-  const handleCreateRequest = (tipoServicio) => {
-    setShowCreateMenu(false);
-    // Navegar a la pantalla de creación con el tipo de servicio
-    navigate(`/requests/create?tipo=${encodeURIComponent(tipoServicio)}`);
-  };
-
-  useEffect(() => {
-    let filtered = allRequests;
-
-    if (selectedStatus) {
-      filtered = filtered.filter(r => r.estado === selectedStatus);
-    }
-
-    if (typeFilter) {
-      filtered = filtered.filter(r => r.tipo_servicio.includes(typeFilter));
-    }
-
-    setFilteredRequests(filtered);
-  }, [selectedStatus, typeFilter, allRequests]);
-
-  // Obtener tipos de servicios únicos
-  const serviceTypes = [...new Set(allRequests.map(r => r.tipo_servicio))];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Topbar */}
@@ -83,13 +53,14 @@ export default function Home() {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Encabezado */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Encabezado con título y botón crear */}
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
+          
           <div className="relative">
             <button
               onClick={() => setShowCreateMenu(!showCreateMenu)}
-              className="px-6 py-2 bg-[#4A8BDF] text-white rounded-lg font-semibold hover:bg-[#3875C8] transition-colors flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#4A8BDF] text-white rounded-lg font-medium hover:bg-[#3875C8] transition-colors flex items-center gap-2"
             >
               Crear Solicitud
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -98,132 +69,143 @@ export default function Home() {
             </button>
             {showCreateMenu && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                <button
-                  onClick={() => handleCreateRequest('Permiso de Construcción')}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
-                >
-                  Permiso de Construcción
-                </button>
-                <button
-                  onClick={() => handleCreateRequest('Licencia de Funcionamiento')}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
-                >
-                  Licencia de Funcionamiento
-                </button>
-                <button
-                  onClick={() => handleCreateRequest('Certificado')}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
-                >
-                  Certificado
-                </button>
+                <div className="px-4 py-3 text-sm text-gray-500">
+                  Los tipos de servicio se cargarán desde el backend
+                </div>
               </div>
             )}
           </div>
         </div>
 
         {/* Cards de resumen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <RequestSummaryCard
-            title="Enviadas"
-            count={countByStatus.enviadas}
-            color="#4A8BDF"
-            onClick={() => handleStatusFilter('enviada')}
-          />
-          <RequestSummaryCard
-            title="Aprobadas"
-            count={countByStatus.aprobadas}
-            color="#10B981"
-            onClick={() => handleStatusFilter('aprobada')}
-          />
-          <RequestSummaryCard
-            title="Devueltas"
-            count={countByStatus.devueltas}
-            color="#F59E0B"
-            onClick={() => handleStatusFilter('devuelta')}
-          />
-          <RequestSummaryCard
-            title="Pendientes"
-            count={countByStatus.pendientes}
-            color="#EC4899"
-            onClick={() => handleStatusFilter('pendiente')}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div 
+            onClick={() => navigate('/requests/enviadas')}
+            className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm text-gray-600">Enviadas</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-[#4A8BDF]">{countByStatus.enviadas}</p>
+          </div>
+
+          <div 
+            onClick={() => navigate('/requests/aprobadas')}
+            className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm text-gray-600">Aprobadas</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-[#10B981]">{countByStatus.aprobadas}</p>
+          </div>
+
+          <div 
+            onClick={() => navigate('/requests/devueltas')}
+            className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm text-gray-600">Devueltas</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-[#F59E0B]">{countByStatus.devueltas}</p>
+          </div>
+
+          <div 
+            onClick={() => navigate('/requests/pendientes')}
+            className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm text-gray-600">Pendientes</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-[#EC4899]">{countByStatus.pendientes}</p>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex flex-wrap gap-4 items-center justify-end">
+            <div className="flex gap-4">
+              <div className="relative">
+                <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10">
+                  <option value="">Tipo</option>
+                </select>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+              
+              <div className="relative">
+                <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10">
+                  <option value="">Estado</option>
+                  <option value="enviada">Enviada</option>
+                  <option value="aprobada">Aprobada</option>
+                  <option value="devuelta">Devuelta</option>
+                  <option value="pendiente">Pendiente</option>
+                </select>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+
+              <button className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors">
+                Filtrar
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tabla de solicitudes */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          {/* Filtros */}
-          <div className="flex items-center justify-end gap-4 mb-6">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] min-w-[200px]"
-            >
-              <option value="">Tipo</option>
-              {serviceTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <select
-              value={selectedStatus || ''}
-              onChange={(e) => setSelectedStatus(e.target.value || null)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] min-w-[200px]"
-            >
-              <option value="">Estado</option>
-              <option value="enviada">Enviada</option>
-              <option value="aprobada">Aprobada</option>
-              <option value="devuelta">Devuelta</option>
-              <option value="pendiente">Pendiente</option>
-            </select>
-            <button
-              className="px-6 py-2 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors"
-            >
-              Filtrar
-            </button>
-          </div>
-
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* Tabla - Desktop */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#4A8BDF] text-white">
-                  <th className="px-4 py-3 text-left font-semibold">CÓDIGO</th>
-                  <th className="px-4 py-3 text-left font-semibold">FECHA CREACIÓN</th>
-                  <th className="px-4 py-3 text-left font-semibold">TIPO DE SERVICIO</th>
-                  <th className="px-4 py-3 text-left font-semibold">ESTADO</th>
-                  <th className="px-4 py-3 text-left font-semibold"></th>
+                <tr className="bg-[#4A8BDF]">
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">FECHA CREACIÓN</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">TIPO DE SERVICIO</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">ESTADO</th>
                 </tr>
               </thead>
               <tbody>
                 {loadingRequests ? (
                   <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                       Cargando solicitudes...
                     </td>
                   </tr>
-                ) : filteredRequests.length === 0 ? (
+                ) : recentRequests.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                      No tienes solicitudes registradas
+                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                      No tienes solicitudes registradas aún
                     </td>
                   </tr>
                 ) : (
-                  filteredRequests.map((request) => (
-                    <tr key={request.id} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm text-gray-700">{request.codigo}</td>
-                      <td className="px-4 py-4 text-sm text-gray-700">
+                  recentRequests.map((request, index) => (
+                    <tr 
+                      key={request.id} 
+                      className={`${index % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'} hover:bg-gray-100 transition-colors cursor-pointer`}
+                    >
+                      <td className="px-6 py-5 text-sm text-gray-700">{request.codigo}</td>
+                      <td className="px-6 py-5 text-sm text-gray-700">
                         {new Date(request.fecha_creacion).toLocaleDateString('es-ES')}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-700">{request.tipo_servicio}</td>
-                      <td className="px-4 py-4">
-                        <BadgeEstado estado={request.estado} />
-                      </td>
-                      <td className="px-4 py-4">
-                        <button
-                          onClick={() => navigate(`/requests/${request.id}`)}
-                          className="text-[#4A8BDF] font-semibold text-sm hover:text-[#3875C8] transition-colors"
-                        >
+                      <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio}</td>
+                      <td className="px-6 py-5">
+                        <span className="inline-block px-4 py-1 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white">
                           Ver Detalle
-                        </button>
+                        </span>
                       </td>
                     </tr>
                   ))
@@ -233,30 +215,42 @@ export default function Home() {
           </div>
 
           {/* Cards - Mobile */}
-          <div className="md:hidden space-y-4">
+          <div className="md:hidden">
             {loadingRequests ? (
-              <div className="text-center py-8 text-gray-500">Cargando solicitudes...</div>
-            ) : filteredRequests.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">No tienes solicitudes registradas</div>
+              <div className="text-center py-12 text-gray-500">Cargando solicitudes...</div>
+            ) : recentRequests.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aún</div>
             ) : (
-              filteredRequests.map((request) => (
-                <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="font-semibold text-gray-900">{request.codigo}</span>
-                    <BadgeEstado estado={request.estado} />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{request.tipo_servicio}</p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    {new Date(request.fecha_creacion).toLocaleDateString('es-ES')}
-                  </p>
-                  <button
-                    onClick={() => navigate(`/requests/${request.id}`)}
-                    className="text-[#4A8BDF] font-semibold text-sm hover:text-[#3875C8] transition-colors"
+              <div className="divide-y divide-gray-200">
+                {recentRequests.map((request, index) => (
+                  <div 
+                    key={request.id} 
+                    className={`${index % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'} p-4`}
                   >
-                    Ver Detalle
-                  </button>
-                </div>
-              ))
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs text-gray-500">Código</span>
+                        <span className="font-semibold text-sm text-gray-900">{request.codigo}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs text-gray-500">Fecha</span>
+                        <span className="text-sm text-gray-700">
+                          {new Date(request.fecha_creacion).toLocaleDateString('es-ES')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs text-gray-500">Servicio</span>
+                        <span className="text-sm text-gray-700 text-right">{request.tipo_servicio}</span>
+                      </div>
+                      <div className="pt-2">
+                        <button className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors">
+                          Ver Detalle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
