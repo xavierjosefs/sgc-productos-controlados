@@ -41,7 +41,7 @@ export default function Accordion({ items = [], allowMultiple = false }) {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className={`w-5 h-5 text-gray-600 transition-transform flex-shrink-0 ml-2 ${
+              className={`w-5 h-5 text-gray-600 transition-transform shrink-0 ml-2 ${
                 isExpanded(item.id) ? 'rotate-180' : ''
               }`}
             >

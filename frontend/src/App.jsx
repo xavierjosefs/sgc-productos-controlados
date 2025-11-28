@@ -12,7 +12,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas públicas */}
+        {/* Rutas publicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/pre-register" element={<PreRegister />} />
         <Route path="/pre-data" element={<CompleteRegister />} />
@@ -43,6 +43,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Ruta por defecto */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
