@@ -2,17 +2,12 @@
  * Card de Resumen de Estado
  * Muestra cantidad de solicitudes por estado
  */
-export default function RequestSummaryCard({ title, count, color = '#4A8BDF', icon, onClick }) {
+export default function RequestSummaryCard({ title, count, color = '#4A8BDF', onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden"
+      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer relative"
     >
-      {/* Badge de estado en la esquina */}
-      <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 text-white font-bold text-xs">
-        {icon || '●'}
-      </div>
-
       {/* Contenido */}
       <p className="text-gray-700 text-sm font-medium mb-2">{title}</p>
       <p className="text-4xl font-bold" style={{ color }}>
