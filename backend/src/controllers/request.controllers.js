@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createRequest, getRequestsBycedula, getRequestDetailsById } from "../models/user.client.js";
+import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 
 export const createRequestController = async (req, res) => {
@@ -109,5 +109,72 @@ export const getRequestDetailsController = async (req, res) => {
             error: error.message
         });
     }
-    //Estoy arreglando el endpoint de ver los detalles de una solicitud
 };
+
+export const getSendRequestsController = async (req, res) => {
+    try {
+        const cedula = req.user.cedula;
+        const sentRequests = await getSentRequestsByUserId(cedula);
+        return res.status(200).json({
+            ok: true,
+            sentRequests
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+}
+
+export const getAproveRequestsController = async (req, res) => {
+    try {
+        const cedula = req.user.cedula;
+        const aproveRequests = await getAproveRequestsByUserId(cedula);
+        return res.status(200).json({
+            ok: true,
+            aproveRequests
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+}
+
+export const getReturnedRequestsController = async (req, res) => {
+    try {
+        const cedula = req.user.cedula;
+        const returnedRequests = await getReturnedRequestsByUserId(cedula);
+        return res.status(200).json({
+            ok: true,
+            returnedRequests
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+}
+
+export const getPendingRequestsController = async (req, res) => {
+    try {
+        const cedula = req.user.cedula;
+        const pendingRequests = await getPendingRequestsByUserId(cedula);
+        return res.status(200).json({
+            ok: true,
+            pendingRequests
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+}
