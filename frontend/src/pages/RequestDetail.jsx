@@ -29,8 +29,9 @@ const RequestDetail = () => {
     try {
       const data = await getRequestDetail(id);
       setRequest(data);
-    } catch (err) {
-      setError('No se pudo cargar la solicitud');
+    } catch (error) {
+      console.error('Error fetching request detail:', error);
+      setError(error?.message || 'No se pudo cargar la solicitud');
       setRequest(null);
     } finally {
       setLoading(false);
@@ -61,8 +62,9 @@ const RequestDetail = () => {
     try {
       await deleteDocument(id, documentId);
       await fetchDetail();
-    } catch (err) {
-      setDeleteError('Error al eliminar el documento');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setDeleteError(error?.message || 'Error al eliminar el documento');
     } finally {
       setDeleteLoading(false);
       setSelectedDocument(null);

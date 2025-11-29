@@ -17,8 +17,9 @@ const Requests = () => {
       try {
         const data = await getUserRequests();
         setRequests(data);
-      } catch (err) {
-        setError('Error al cargar solicitudes');
+      } catch (error) {
+        console.error('Error fetching requests:', error);
+        setError(error?.message || 'Error al cargar solicitudes');
         setRequests([]);
       } finally {
         setLoading(false);
