@@ -23,7 +23,7 @@ export const preRegister = async (req, res) => {
     }
 
     const token = crypto.randomBytes(20).toString('hex');
-    const expires = new Date(Date.now() + 1000 * 60 * 15); // Token válido por 15 minutos
+    const expires = new Date(Date.now() + 1000 * 60 * 15).toISOString();
 
     await createPendingUser(cedula, full_name, email, token, expires);
 
@@ -70,10 +70,8 @@ export const registerComplete = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  console.log("Llego aqui");
 
   try {
-    console.log("Intentando iniciar sesión para:", email);
     const { user } = await login(email, password);
     const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
