@@ -31,8 +31,12 @@ export default function RequestsFiltered() {
       setLoading(true);
       try {
         const data = await getUserRequests();
-        const statusKey = status.replace('s', ''); // enviadas -> enviada
-        const filtered = data.filter(r => r.estado === statusKey || r.estado === status);
+        const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
+        const statusKey = status.replace(/s$/, '').toLowerCase(); // enviadas -> enviada
+        const filtered = normalized.filter(r => {
+          const s = (r.estado || r.estado_actual || '').toString().toLowerCase();
+          return s === statusKey || s === status.toLowerCase();
+        });
         setFilteredRequests(filtered);
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);

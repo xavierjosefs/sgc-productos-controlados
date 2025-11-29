@@ -30,7 +30,8 @@ export default function Home() {
       setLoadingRequests(true);
       try {
         const data = await getUserRequests();
-        const normalized = Array.isArray(data) ? data : (data?.data || []);
+        // El backend responde { ok: true, requests } o directamente un array
+        const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
         // Mostrar solo las últimas 5 solicitudes
         setRecentRequests(normalized.slice(0, 5));

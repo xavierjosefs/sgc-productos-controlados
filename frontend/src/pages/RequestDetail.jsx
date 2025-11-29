@@ -10,7 +10,7 @@ const RequestDetail = () => {
     getRequestDetail,
     uploadDocument,
     deleteDocument,
-    replaceDocument
+    updateDocument
   } = useRequestsAPI();
 
   const [request, setRequest] = useState(null);
@@ -51,7 +51,7 @@ const RequestDetail = () => {
 
   // Reemplazar documento
   const handleReplace = async (requestId, file, documentId) => {
-    await replaceDocument(requestId, documentId, file);
+    await updateDocument(requestId, documentId, file);
     await fetchDetail();
   };
 
@@ -132,7 +132,7 @@ const RequestDetail = () => {
                 <div className="flex gap-2">
                   <a href={doc.url} target="_blank" rel="noopener noreferrer" className="px-2 py-1 text-blue-600 underline text-xs">Ver</a>
                   <button className="px-2 py-1 bg-yellow-500 text-white rounded text-xs" onClick={() => { setSelectedDocument(doc); setModalReplaceOpen(true); }}>Reemplazar</button>
-                  <button className="px-2 py-1 bg-red-500 text-white rounded text-xs" onClick={() => setSelectedDocument(doc)}>Eliminar</button>
+                  <button className="px-2 py-1 bg-red-500 text-white rounded text-xs" onClick={() => alert('Eliminar documentos no está soportado por el backend actualmente.')}>Eliminar</button>
                 </div>
               </li>
             ))}
@@ -158,22 +158,7 @@ const RequestDetail = () => {
         isReplace={true}
         initialDocument={selectedDocument}
       />
-      {/* Modal eliminar documento */}
-      {selectedDocument && !modalReplaceOpen && (
-        <div className="modal-confirmacion-overlay">
-          <div className="modal-confirmacion">
-            <h3>¿Eliminar documento?</h3>
-            <p>¿Estás seguro que deseas eliminar este documento?</p>
-            {deleteError && <div className="text-red-500 mb-2">{deleteError}</div>}
-            <div className="modal-actions">
-              <button className="cancelar-btn" onClick={() => setSelectedDocument(null)} disabled={deleteLoading}>Cancelar</button>
-              <button className="enviar-btn" onClick={() => handleDelete(selectedDocument.id)} disabled={deleteLoading}>
-                {deleteLoading ? 'Eliminando...' : 'Eliminar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Nota: eliminación de documentos no soportada por backend actualmente */}
     </div>
   );
 };

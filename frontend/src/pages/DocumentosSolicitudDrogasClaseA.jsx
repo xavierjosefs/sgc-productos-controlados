@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
+import useRequestsAPI from '../hooks/useRequestsAPI';
 
 const FIELD_LIST = [
   { key: 'cedula', label: 'Cédula de Identidad y Electoral' },
@@ -38,12 +39,34 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const { createRequest, uploadDocument } = useRequestsAPI();
+
   const handleConfirm = async () => {
     setConfirmOpen(false);
-    if (typeof onEnviar === 'function') {
-      await onEnviar(files);
+    try {
+      // Crear una solicitud mínima en el backend. El formulario aún no está integrado,
+      // así que enviamos un objeto vacío. Ajustar en el futuro para enviar los datos reales.
+      const resp = await createRequest({ nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A', formulario: {} });
+      // El controller responde { ok: true, request }
+      const newRequest = resp.request || resp;
+      const requestId = newRequest.id || newRequest.request?.id;
+
+      if (!requestId) {
+        throw new Error('No se pudo obtener el ID de la solicitud creada');
+      }
+
+      // Subir todos los archivos
+      const entries = Object.entries(files);
+      for (const [key, file] of entries) {
+        if (!file) continue;
+        await uploadDocument(requestId, file, { tipo_documento: key });
+      }
+
+      navigate('/solicitud-drogas-clase-a/exito');
+    } catch (error) {
+      console.error('Error durante el envío de documentos:', error);
+      alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
     }
-    navigate('/solicitud-drogas-clase-a/exito');
   };
 
   const handleCancel = () => setConfirmOpen(false);

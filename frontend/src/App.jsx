@@ -21,13 +21,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas públicas */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/pre-register" element={<PreRegister />} />
+        {/* Backwards-compatible redirect from /register to /pre-register */}
+        <Route path="/register" element={<Navigate to="/pre-register" replace />} />
         <Route path="/pre-data" element={<CompleteRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Rutas protegidas - Cliente */}
+        {/* Protected routes */}
         <Route
           path="/"
           element={
@@ -36,6 +38,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/support"
           element={
@@ -44,56 +47,60 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-            path="/requests/:status"
-            element={
-              <ProtectedRoute>
-                <RequestsFiltered />
-              </ProtectedRoute>
-            }
-          />
-          {/* Detalle de solicitud por ID */}
-          <Route
-            path="/requests/:id"
-            element={
-              <ProtectedRoute>
-                <RequestDetail />
-              </ProtectedRoute>
-            }
-          />
 
-        {/* Flujo de solicitud de drogas controladas clase A */}
+        <Route
+          path="/requests/:status"
+          element={
+            <ProtectedRoute>
+              <RequestsFiltered />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/requests/:id"
+          element={
+            <ProtectedRoute>
+              <RequestDetail />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/solicitud-drogas-clase-a"
           element={
             <ProtectedRoute>
-              <SolicitudDrogasClaseAForm onContinue={() => {
-                window.location.href = '/solicitud-drogas-clase-a/documentos';
-              }} />
+              <SolicitudDrogasClaseAForm
+                onContinue={() => {
+                  window.location.href = '/solicitud-drogas-clase-a/documentos';
+                }}
+              />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/solicitud-drogas-clase-a/documentos"
           element={
             <ProtectedRoute>
-              <DocumentosSolicitudDrogasClaseA
-                onBack={() => window.location.href = '/solicitud-drogas-clase-a'}
-                onEnviar={() => {
-                  setModalOpen(true);
-                }}
-              />
-              <ModalConfirmacionEnvio
-                open={modalOpen}
-                onCancel={() => setModalOpen(false)}
-                onConfirm={() => {
-                  setModalOpen(false);
-                  window.location.href = '/solicitud-drogas-clase-a/exito';
-                }}
-              />
+              <>
+                <DocumentosSolicitudDrogasClaseA
+                  onBack={() => window.location.href = '/solicitud-drogas-clase-a'}
+                  onEnviar={() => setModalOpen(true)}
+                />
+                <ModalConfirmacionEnvio
+                  open={modalOpen}
+                  onCancel={() => setModalOpen(false)}
+                  onConfirm={() => {
+                    setModalOpen(false);
+                    window.location.href = '/solicitud-drogas-clase-a/exito';
+                  }}
+                />
+              </>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/solicitud-drogas-clase-a/exito"
           element={
@@ -102,11 +109,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Redirección para "Mis Solicitudes" */}
-        <Route
-          path="/mis-solicitudes"
-          element={<Navigate to="/" />}
-        />
+
+        {/* Redirect for old path */}
+        <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
