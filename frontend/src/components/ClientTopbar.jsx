@@ -29,43 +29,35 @@ export default function ClientTopbar() {
           <Logo />
         </div>
 
-        {/* Centro - Botones de navegación */}
-        <div className="flex items-center gap-4">
+        {/* Derecha - Botones de navegación y Usuario */}
+        <div className="flex items-center gap-6">
           <button
             onClick={() => navigate('/')}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-              isHome
-                ? 'bg-[#085297] text-white'
-                : 'text-gray-700 hover:text-[#085297]'
-            }`}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-semibold text-sm transition-colors"
           >
             Mis Solicitudes
           </button>
           <button
             onClick={() => navigate('/support')}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-              isSupport
-                ? 'bg-[#085297] text-white'
-                : 'text-gray-700 hover:text-[#085297]'
-            }`}
+            className="text-gray-700 hover:text-gray-900 font-semibold text-sm transition-colors"
           >
             Soporte
           </button>
-        </div>
 
-        {/* Usuario con dropdown */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-bold text-sm">
-            {initials}
+          {/* Usuario con dropdown */}
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-bold text-sm">
+              {initials}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>

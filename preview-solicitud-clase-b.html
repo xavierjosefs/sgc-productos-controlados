@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Certificado - Drogas Controladas Clase B</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-white shadow">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+                <button class="text-blue-600 hover:text-blue-800 text-2xl">
+                    ←
+                </button>
+                <div class="flex-1 text-center">
+                    <h1 class="text-lg font-bold text-blue-600">
+                        Solicitud de Certificado de Inscripción de Drogas Controladas Clase B
+                    </h1>
+                    <p class="text-sm text-gray-600">para Establecimientos Privados</p>
+                </div>
+                <div class="w-12"></div>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="max-w-2xl mx-auto px-4 py-8">
+            <form class="space-y-6">
+                <!-- SECCIÓN 1: Identificación -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-blue-600 font-bold text-lg mb-6">Identificación</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nombre de la Empresa / Razón Social
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nombre de la Empresa"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Dirección/Casanero Invador (IP-Old)
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Dirección"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                RNC
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="00-000000"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Teléfono
+                            </label>
+                            <input
+                                type="tel"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="+1-809-000-0000"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Correo Electrónico
+                            </label>
+                            <input
+                                type="email"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="empresa@ejemplo.com"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: Actividades -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-blue-600 font-bold text-lg mb-6">Actividades (es)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="importadora"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="importadora" class="text-sm font-medium text-gray-700">
+                                Importadora
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="farmacéutica"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="farmacéutica" class="text-sm font-medium text-gray-700">
+                                Farmacéutica
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="fabricadora"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="fabricadora" class="text-sm font-medium text-gray-700">
+                                Fabricadora
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="distribuidor"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="distribuidor" class="text-sm font-medium text-gray-700">
+                                Distribuidor
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="almacenadista"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="almacenadista" class="text-sm font-medium text-gray-700">
+                                Almacenadista
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="boticario"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="boticario" class="text-sm font-medium text-gray-700">
+                                Boticario
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="clinicaPrivada"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="clinicaPrivada" class="text-sm font-medium text-gray-700">
+                                Clínica privada
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="clinicaVeterinaria"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="clinicaVeterinaria" class="text-sm font-medium text-gray-700">
+                                Clínica veterinaria
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="instruccion"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="instruccion" class="text-sm font-medium text-gray-700">
+                                Instrucción de investigación
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="respuesta"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="respuesta" class="text-sm font-medium text-gray-700">
+                                Respuesta edifcación
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="insalubre"
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label for="insalubre" class="text-sm font-medium text-gray-700">
+                                Insalubre grupo 1
+                            </label>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="otros"
+                                class="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <div class="flex-1">
+                                <label for="otros" class="text-sm font-medium text-gray-700">
+                                    Otro especifique
+                                </label>
+                                <input
+                                    type="text"
+                                    class="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Especifique..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: Condición de Solicitud -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-blue-600 font-bold text-lg mb-6">Condición de Solicitud</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="radio"
+                                id="primero"
+                                name="condicion"
+                                class="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label for="primero" class="text-sm font-medium text-gray-700">
+                                a) Primero: Solicitar
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="radio"
+                                id="renovacion"
+                                name="condicion"
+                                class="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label for="renovacion" class="text-sm font-medium text-gray-700">
+                                b) Renovación
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="radio"
+                                id="solicitar"
+                                name="condicion"
+                                class="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label for="solicitar" class="text-sm font-medium text-gray-700">
+                                c) Solicitar-Ordenar negocio
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="radio"
+                                id="opec"
+                                name="condicion"
+                                class="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label for="opec" class="text-sm font-medium text-gray-700">
+                                d) OPEC revisado, suspendidos
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="radio"
+                                id="otros-condicion"
+                                name="condicion"
+                                class="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label for="otros-condicion" class="text-sm font-medium text-gray-700">
+                                e) Otros, especifique
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-4 space-y-3 pt-4 border-t">
+                        <input
+                            type="text"
+                            placeholder="Si no especificó bajo 3 o 4, escriba al Rev CSDC"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <textarea
+                            placeholder="Si no especificó bajo 4 o 5, en que manera el modelo"
+                            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: Regente Farmacéutico -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-blue-600 font-bold text-lg mb-6">Regente Farmacéutico</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nombre del Regente
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nombre del Regente"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Descripción
+                            </label>
+                            <textarea
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Cédula de Identidad y Electoral
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="00-0000000-0000"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Profesión
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Profesión"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Cédula del Registro de Colegio
+                            </label>
+                            <input
+                                type="text"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Cédula del Registro"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 5: Pago -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-blue-600 font-bold text-lg mb-6">Pago</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Cuenta de Ingreso Especial – ESCO (Recaudación)
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="No. 00-02-341-0361 0"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Crédito del Facturador
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="RD$500.00"
+                                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón Continuar -->
+                <div class="flex justify-center mb-8">
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-12 rounded-lg w-full"
+                    >
+                        Continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
