@@ -1,0 +1,116 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useRequestsAPI from '../hooks/useRequestsAPI';
+import BadgeEstado from '../components/BadgeEstado';
+
+const Requests = () => {
+  const navigate = useNavigate();
+  const { getUserRequests } = useRequestsAPI();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const data = await getUserRequests();
+        setRequests(data);
+      } catch (err) {
+        setError('Error al cargar solicitudes');
+        setRequests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRequests();
+  }, [getUserRequests]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Mis Solicitudes</h1>
+        {/* Tabla desktop */}
+        <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#4A8BDF]">
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creación</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">Cargando...</td></tr>
+              ) : error ? (
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-red-500">{error}</td></tr>
+              ) : requests.length === 0 ? (
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aún</td></tr>
+              ) : (
+                requests.map(request => (
+                  <tr key={request.id} className="hover:bg-gray-100 transition-colors">
+                    <td className="px-6 py-5 text-sm text-gray-700">{request.id}</td>
+                    <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio}</td>
+                    <td className="px-6 py-5"><BadgeEstado estado={request.estado_actual} /></td>
+                    <td className="px-6 py-5 text-sm text-gray-700">{new Date(request.fecha_creacion).toLocaleDateString('es-ES')}</td>
+                    <td className="px-6 py-5">
+                      <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg" onClick={() => navigate(`/requests/${request.id}`)}>
+                        Ver detalles
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Cards mobile */}
+        <div className="md:hidden">
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">Cargando...</div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">{error}</div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aún</div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {requests.map(request => (
+                <div key={request.id} className="bg-white p-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs text-gray-500">ID</span>
+                      <span className="font-semibold text-sm text-gray-900">{request.id}</span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs text-gray-500">Servicio</span>
+                      <span className="text-sm text-gray-700">{request.tipo_servicio}</span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs text-gray-500">Estado</span>
+                      <span><BadgeEstado estado={request.estado_actual} /></span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs text-gray-500">Fecha</span>
+                      <span className="text-sm text-gray-700">{new Date(request.fecha_creacion).toLocaleDateString('es-ES')}</span>
+                    </div>
+                    <div className="pt-2">
+                      <button className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white" onClick={() => navigate(`/requests/${request.id}`)}>
+                        Ver detalles
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Requests;
