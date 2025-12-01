@@ -1,15 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
 import Logo from '../components/Logo';
 
 export default function Login() {
-
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  const navigate = useNavigate();
-
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -72,10 +64,6 @@ export default function Login() {
   // Manejar submit del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const fd = new FormData(e.currentTarget);
-    const email = fd.get("email");
-    const password = fd.get("password");
     
     if (!validateForm()) {
       return;
@@ -84,19 +72,44 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${baseURL}/api/auth/login`, { email, password }, { withCredentials: true });
-      if(response.status === 200){
-        const { token, user } = response.data;
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        navigate("/");
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al iniciar sesión');
+      }
+      
+      // Guardar token y datos del usuario en localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        if (formData.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        }
+        
+        // Redirigir al dashboard
+        window.location.href = '/';
+      } else {
+        throw new Error('No se recibió el token de autenticación');
       }
       
     } catch (error) {
       console.error('Error en login:', error);
       setErrors(prev => ({ 
         ...prev, 
-        password: 'Error al iniciar sesión. Verifica tus credenciales.' 
+        password: error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
       }));
     } finally {
       setIsLoading(false);

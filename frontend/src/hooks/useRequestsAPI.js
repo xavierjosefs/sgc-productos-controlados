@@ -49,10 +49,16 @@ export function useRequestsAPI() {
    * @param {Object} data - { tipo_servicio, form_data }
    */
   const createRequest = useCallback(async (data) => {
+    // El backend expone POST /create-requests que espera { nombre_servicio, formulario }
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/requests', data);
+      // Normalizar el payload si el caller envia otro formato
+      const payload = {
+        nombre_servicio: data.nombre_servicio || data.tipo_servicio || data.serviceName,
+        formulario: data.formulario || data.form_data || data.formData || data,
+      };
+      const response = await api.post('/requests/create-requests', payload);
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al crear la solicitud';
@@ -70,7 +76,8 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/requests');
+      // El backend expone GET /get-requests
+      const response = await api.get('/requests/get-requests');
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes';
@@ -89,8 +96,10 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`/requests/${id}`);
-      return response.data;
+      // El backend expone GET /:id/details
+      const response = await api.get(`/requests/${id}/details`);
+      // El controller devuelve { ok: true, request }
+      return response.data.request || response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
       setError(errorMessage);
@@ -130,10 +139,17 @@ export function useRequestsAPI() {
     setError(null);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      // El backend espera el campo del archivo con nombre 'archivo'
+      formData.append('archivo', file);
       Object.keys(metadata).forEach(key => {
         formData.append(key, metadata[key]);
       });
+      // Asegurar que el tipo de documento se envie como 'tipo_documento'
+      if (metadata.tipo_documento) {
+        formData.set('tipo_documento', metadata.tipo_documento);
+      } else if (metadata.tipo) {
+        formData.set('tipo_documento', metadata.tipo);
+      }
 
       const response = await api.post(`/requests/${requestId}/documents`, formData, {
         headers: {
