@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import { upload } from "../middleware/upload.middleware.js";
 import { createRequestController, getRequestsController, getRequestDetailsController, getSendRequestsController, getAproveRequestsController, getReturnedRequestsController, getPendingRequestsController } from "../controllers/request.controllers.js";
 import { uploadDocumentController, getDocumentosBySolicitudController } from "../controllers/document.controllers.js";

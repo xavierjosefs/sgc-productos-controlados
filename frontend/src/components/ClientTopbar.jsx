@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Topbar del cliente
  * Logo + Navegación + Usuario
  */
@@ -9,7 +9,7 @@ export default function ClientTopbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userName = user.nombre || user.name || 'Usuario';
+  const userName = user.full_name || user.nombre || user.name || 'Usuario';
   const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   const handleLogout = () => {

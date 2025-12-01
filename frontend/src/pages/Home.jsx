@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
 import RequestSummaryCard from '../components/RequestSummaryCard';
@@ -19,7 +19,7 @@ export default function Home() {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [errorRequests, setErrorRequests] = useState('');
   const [showCreateMenu, setShowCreateMenu] = useState(false);
-  // Estado para tipos de servicio din├ímicos
+  // Estado para tipos de servicio dinámicos
   const [serviceTypes, setServiceTypes] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [errorServices, setErrorServices] = useState('');
@@ -106,10 +106,10 @@ export default function Home() {
 
   // Contar solicitudes por estado
   const countByStatus = {
-    enviadas: allRequests.filter(r => (r.estado || '').toLowerCase() === 'enviada').length,
-    aprobadas: allRequests.filter(r => (r.estado || '').toLowerCase() === 'aprobada').length,
-    devueltas: allRequests.filter(r => (r.estado || '').toLowerCase() === 'devuelta').length,
-    pendientes: allRequests.filter(r => (r.estado || '').toLowerCase() === 'pendiente').length,
+    enviadas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('enviada')).length,
+    aprobadas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('finalizada') || (r.estado_actual || '').toLowerCase().includes('autorizada')).length,
+    devueltas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('devuelta') || (r.estado_actual || '').toLowerCase().includes('rechazada')).length,
+    pendientes: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('pendiente') || (r.estado_actual || '').toLowerCase().includes('revisión') || (r.estado_actual || '').toLowerCase().includes('evaluación')).length,
   };
 
   return (
@@ -140,26 +140,7 @@ export default function Home() {
                 ) : errorServices ? (
                   <div className="px-4 py-3 text-sm text-red-500">{errorServices}</div>
                 ) : serviceTypes.length === 0 ? (
-                  <>
-                    <button 
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
-                      onClick={() => {
-                        navigate('/solicitud-importacion-materia-prima/fase-01');
-                        setShowCreateMenu(false);
-                      }}
-                    >
-                      Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas - Fase 01
-                    </button>
-                    <button 
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
-                      onClick={() => {
-                        navigate('/solicitud-importacion-materia-prima/fase-02');
-                        setShowCreateMenu(false);
-                      }}
-                    >
-                      Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas - Fase 02
-                    </button>
-                  </>
+                  <div className="px-4 py-3 text-sm text-gray-500">Los tipos de servicio se cargarán desde el backend</div>
                 ) : (
                   <ul>
                     {serviceTypes.map(type => (
@@ -242,7 +223,7 @@ export default function Home() {
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
                 >
                   <option value="">Todos los tipos</option>
-                  {/* Los tipos se mostrar├ín din├ímicamente cuando el backend implemente el endpoint */}
+                  {/* Los tipos se mostrarán dinámicamente cuando el backend implemente el endpoint */}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -308,11 +289,11 @@ export default function Home() {
                 recentRequests.map(request => (
                   <tr key={request.id} className="hover:bg-gray-100 transition-colors">
                     <td className="px-6 py-5 text-sm text-gray-700">{request.id}</td>
-                    <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio}</td>
-                    <td className="px-6 py-5"><BadgeEstado estado={request.estado} /></td>
+                    <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio || '-'}</td>
+                    <td className="px-6 py-5"><BadgeEstado estado={request.estado_actual} /></td>
                     <td className="px-6 py-5 text-sm text-gray-700">{request.fecha_creacion ? new Date(request.fecha_creacion).toLocaleDateString('es-ES') : '-'}</td>
                     <td className="px-6 py-5">
-                      <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg" onClick={() => navigate(`/requests/${request.id}`)}>
+                      <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg" onClick={() => navigate(`/requests/${request.id}/details`)}>
                         Ver detalles
                       </button>
                     </td>
@@ -345,14 +326,14 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between items-start">
                       <span className="text-xs text-gray-500">Estado</span>
-                      <span><BadgeEstado estado={request.estado} /></span>
+                      <span><BadgeEstado estado={request.estado_actual} /></span>
                     </div>
                     <div className="flex justify-between items-start">
                       <span className="text-xs text-gray-500">Fecha</span>
                       <span className="text-sm text-gray-700">{request.fecha_creacion ? new Date(request.fecha_creacion).toLocaleDateString('es-ES') : '-'}</span>
                     </div>
                     <div className="pt-2">
-                      <button className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white" onClick={() => navigate(`/requests/${request.id}`)}>
+                      <button className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white" onClick={() => navigate(`/requests/${request.id}/details`)}>
                         Ver detalles
                       </button>
                     </div>

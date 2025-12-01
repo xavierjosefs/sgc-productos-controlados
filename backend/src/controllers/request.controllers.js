@@ -1,4 +1,4 @@
-﻿import pool from "../config/db.js";
+import pool from "../config/db.js";
 import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 
@@ -21,7 +21,7 @@ export const createRequestController = async (req, res) => {
 
         //Validar formulario
         if (!formulario || typeof formulario !== 'object') {
-            return res.status(400).json({ message: "Formulario inv├ílido" });
+            return res.status(400).json({ message: "Formulario inválido" });
         }
 
         // Obtener cedula desde token
@@ -36,7 +36,7 @@ export const createRequestController = async (req, res) => {
 
         return res.status(201).json({
             ok: true,
-            message: "Solicitud creada con ├⌐xito",
+            message: "Solicitud creada con éxito",
             request: newRequest
         });
 
