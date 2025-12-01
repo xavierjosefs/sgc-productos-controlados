@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/request.client.js";
+import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 
 export const createRequestController = async (req, res) => {
@@ -95,6 +95,7 @@ export const getRequestDetailsController = async (req, res) => {
         //obtener los documentos asociados a la solicitud
         const documentos = await getDocumentosBySolicitudId(requestId);
         request.documentos = documentos;
+        console.log(request);
 
         return res.status(200).json({
             ok: true,

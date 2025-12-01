@@ -54,15 +54,36 @@ const ModalDocumento = ({ open, onClose, onSubmit, requestId, isReplace = false,
 
   if (!open) return null;
   return (
-    <div className="modal-documento-overlay">
-      <div className="modal-documento">
-        <h3>{isReplace ? 'Reemplazar documento' : 'Subir documento'}</h3>
-        <form onSubmit={handleSubmit}>
-          <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileChange} disabled={loading} />
-          {error && <div className="modal-documento-error">{error}</div>}
-          <div className="modal-documento-actions">
-            <button type="button" onClick={onClose} disabled={loading} className="cancelar-btn">Cancelar</button>
-            <button type="submit" disabled={loading || !file} className="subir-btn">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">{isReplace ? 'Reemplazar documento' : 'Subir documento'}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-700 mb-2">Seleccionar archivo</label>
+            <input 
+              type="file" 
+              accept=".pdf,.png,.jpg,.jpeg" 
+              onChange={handleFileChange} 
+              disabled={loading}
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+            {file && <p className="text-xs text-green-600 mt-2">✓ {file.name}</p>}
+          </div>
+          {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</div>}
+          <div className="flex gap-3 justify-end">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              disabled={loading}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading || !file}
+              className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg hover:bg-[#3a7bcf] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? 'Subiendo...' : isReplace ? 'Reemplazar' : 'Subir'}
             </button>
           </div>

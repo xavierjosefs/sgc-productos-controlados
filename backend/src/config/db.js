@@ -4,7 +4,7 @@ const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-//   ssl: { rejectUnauthorized: false } // (normalmente solo para Supabase/producción)
+  ssl: { rejectUnauthorized: false } // (normalmente solo para Supabase/producción)
 });
 
 export default pool;

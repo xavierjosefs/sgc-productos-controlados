@@ -1,4 +1,4 @@
-﻿import RequestDetail from './pages/RequestDetail';
+import RequestDetail from './pages/RequestDetail';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
@@ -11,27 +11,25 @@ import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
 import ClientLayout from './layouts/ClientLayout';
-// Solicitud Clase B
-import SolicitudDrogasClaseBForm from './pages/SolicitudDrogasClaseBForm';
-import SolicitudDrogasClaseBForm2 from './pages/SolicitudDrogasClaseBForm2';
-import DocumentosSolicitudDrogasClaseB from './pages/DocumentosSolicitudDrogasClaseB';
-import SolicitudDrogasClaseBExito from './pages/SolicitudDrogasClaseBExito';
+import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
+import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
 import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
-import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
+import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/pre-register" element={<PreRegister />} />
-        <Route path="/register" element={<Navigate to="/pre-register" replace />} />
-        <Route path="/pre-data" element={<CompleteRegister />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <SolicitudClaseAProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/pre-register" element={<PreRegister />} />
+          <Route path="/register" element={<Navigate to="/pre-register" replace />} />
+          <Route path="/pre-data" element={<CompleteRegister />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Protected routes - cada p├ígina maneja su propio layout */}
+          {/* Protected routes - cada página maneja su propio layout */}
           <Route
             path="/"
             element={
@@ -60,6 +58,15 @@ export default function App() {
           />
 
           <Route
+            path="/requests/:id/details"
+            element={
+              <ProtectedRoute>
+                <RequestDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/requests/:status"
             element={
               <ProtectedRoute>
@@ -77,54 +84,27 @@ export default function App() {
             }
           />
 
-          {/* Solicitud Drogas Clase B flow */}
+          {/* Solicitud Drogas Clase A flow */}
           <Route
-            path="/solicitud-drogas-clase-b"
+            path="/solicitud-drogas-clase-a"
             element={
               <ProtectedRoute>
-                <SolicitudClaseBProvider>
-                  <SolicitudDrogasClaseBForm />
-                </SolicitudClaseBProvider>
+                <SolicitudDrogasClaseAForm />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-b/paso-2"
+            path="/solicitud-drogas-clase-a/documentos"
             element={
               <ProtectedRoute>
-                <SolicitudClaseBProvider>
-                  <SolicitudDrogasClaseBForm2 />
-                </SolicitudClaseBProvider>
+                <DocumentosSolicitudDrogasClaseA />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-b/documentos"
-            element={
-              <ProtectedRoute>
-                <SolicitudClaseBProvider>
-                  <DocumentosSolicitudDrogasClaseB />
-                </SolicitudClaseBProvider>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/solicitud-drogas-clase-b/exito"
-            element={
-              <ProtectedRoute>
-                <SolicitudClaseBProvider>
-                  <SolicitudDrogasClaseBExito />
-                </SolicitudClaseBProvider>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Página de éxito compartida */}
-          <Route
-            path="/solicitud-exito"
+            path="/solicitud-drogas-clase-a/exito"
             element={
               <ProtectedRoute>
                 <SolicitudEnviadaExito />
@@ -135,6 +115,7 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
+      </SolicitudClaseAProvider>
     </BrowserRouter>
   );
 }

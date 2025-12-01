@@ -1,40 +1,13 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 
-// Configuración base de Axios
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Interceptor para agregar token a las peticiones
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Interceptor para manejar errores globales
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expirado o inválido
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+// Helper para obtener el token
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 /**
  * Hook para consumir la API de solicitudes
@@ -49,20 +22,29 @@ export function useRequestsAPI() {
    * @param {Object} data - { tipo_servicio, form_data }
    */
   const createRequest = useCallback(async (data) => {
-    // El backend expone POST /create-requests que espera { nombre_servicio, formulario }
     setLoading(true);
     setError(null);
     try {
-      // Normalizar el payload si el caller envia otro formato
       const payload = {
         nombre_servicio: data.nombre_servicio || data.tipo_servicio || data.serviceName,
         formulario: data.formulario || data.form_data || data.formData || data,
       };
-      const response = await api.post('/requests/create-requests', payload);
+      const response = await axios.post(`${baseURL}/api/requests/create-requests`, payload, {
+        withCredentials: true,
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al crear la solicitud';
       setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -76,12 +58,19 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      // El backend expone GET /get-requests
-      const response = await api.get('/requests/get-requests');
+      const response = await axios.get(`${baseURL}/api/requests/get-requests`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes';
       setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -96,13 +85,19 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      // El backend expone GET /:id/details
-      const response = await api.get(`/requests/${id}/details`);
-      // El controller devuelve { ok: true, request }
+      const response = await axios.get(`${baseURL}/api/requests/${id}/details`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
       return response.data.request || response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
       setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -117,11 +112,19 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`/requests/${id}/documents`);
+      const response = await axios.get(`${baseURL}/api/requests/${id}/documents`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener los documentos';
       setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -135,36 +138,49 @@ export function useRequestsAPI() {
    * @param {Object} metadata - Metadatos del documento (tipo, nombre, etc.)
    */
   const uploadDocument = useCallback(async (requestId, file, metadata = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      // El backend espera el campo del archivo con nombre 'archivo'
-      formData.append('archivo', file);
-      Object.keys(metadata).forEach(key => {
-        formData.append(key, metadata[key]);
-      });
-      // Asegurar que el tipo de documento se envie como 'tipo_documento'
-      if (metadata.tipo_documento) {
-        formData.set('tipo_documento', metadata.tipo_documento);
-      } else if (metadata.tipo) {
-        formData.set('tipo_documento', metadata.tipo);
-      }
+  setLoading(true);
+  setError(null);
+  try {
+    const formData = new FormData();
+    formData.append('archivo', file);
 
-      const response = await api.post(`/requests/${requestId}/documents`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al subir el documento';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
+    Object.keys(metadata).forEach(key => {
+      formData.append(key, metadata[key]);
+    });
+
+    if (metadata.tipo_documento) {
+      formData.set('tipo_documento', metadata.tipo_documento);
+    } else if (metadata.tipo) {
+      formData.set('tipo_documento', metadata.tipo);
     }
-  }, []);
+
+    const response = await axios.post(
+      `${baseURL}/api/requests/${requestId}/documents`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          ...getAuthHeaders(),  // ✔ sin content-type
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Error al subir el documento';
+    setError(errorMessage);
+
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    throw new Error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   /**
    * Eliminar un documento
@@ -175,11 +191,19 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.delete(`/requests/${requestId}/documents/${documentId}`);
+      const response = await axios.delete(`${baseURL}/api/requests/${requestId}/documents/${documentId}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al eliminar el documento';
       setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -199,8 +223,10 @@ export function useRequestsAPI() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.put(`/requests/${requestId}/documents/${documentId}`, formData, {
+      const response = await axios.put(`${baseURL}/api/requests/${requestId}/documents/${documentId}`, formData, {
+        withCredentials: true,
         headers: {
+          ...getAuthHeaders(),
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -208,78 +234,11 @@ export function useRequestsAPI() {
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al actualizar el documento';
       setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Obtener solicitudes enviadas (estado: enviada)
-   */
-  const getSendRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get('/requests/send');
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al obtener solicitudes enviadas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Obtener solicitudes aprobadas (estado: aprobada)
-   */
-  const getAproveRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get('/requests/aprove');
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al obtener solicitudes aprobadas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Obtener solicitudes devueltas (estado: devuelta)
-   */
-  const getReturnedRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get('/requests/returned');
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al obtener solicitudes devueltas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Obtener solicitudes pendientes (estado: pendiente)
-   */
-  const getPendingRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get('/requests/pending');
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al obtener solicitudes pendientes';
-      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -294,12 +253,13 @@ export function useRequestsAPI() {
     // Solicitudes
     getUserRequests,
     getRequestDetail,
-    getSendRequests,
-    getAproveRequests,
-    getReturnedRequests,
-    getPendingRequests,
     
-    // Documentos
+    // Las siguientes funciones están disponibles pero se usarán en features específicos:
+    // createRequest - Para formularios de creación de solicitudes
+    // getRequestDocuments - Para ver documentos de una solicitud
+    // uploadDocument - Para subir documentos
+    // deleteDocument - Para eliminar documentos
+    // updateDocument - Para actualizar documentos
     createRequest,
     getRequestDocuments,
     uploadDocument,
