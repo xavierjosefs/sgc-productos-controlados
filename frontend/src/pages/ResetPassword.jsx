@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Logo from '../components/Logo';
 
 export default function ResetPassword() {
@@ -71,19 +72,15 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/auth/reset-password/${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: formData.password })
-      });
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al restablecer contraseña');
-      }
-
-      // Simulación temporal
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axios.post(`${baseURL}/api/auth/reset-password/${token}`, 
+        { password: formData.password },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
       
       console.log('Contraseña restablecida con token:', token);
       setIsSuccess(true);
@@ -97,7 +94,7 @@ export default function ResetPassword() {
       console.error('Error al restablecer contraseña:', error);
       setErrors(prev => ({ 
         ...prev, 
-        password: error.message || 'Error al restablecer contraseña. El enlace puede haber expirado.' 
+        password: error.response?.data?.message || error.message || 'Error al restablecer contraseña. El enlace puede haber expirado.' 
       }));
     } finally {
       setIsLoading(false);

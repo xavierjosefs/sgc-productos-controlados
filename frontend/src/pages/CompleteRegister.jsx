@@ -29,12 +29,13 @@ export default function CompleteRegister() {
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${baseURL}/api/auth/pre-data?token=${token}`
+          `${baseURL}/api/auth/pre-data?token=${token}`,
+          { withCredentials: true }
         );
         setPreData(res.data);
       } catch (err) {
         console.error("Error obteniendo pre-data:", err);
-        setError("Este enlace es inválido o ha expirado.");
+        setError(err.response?.data?.message || "Este enlace es inválido o ha expirado.");
       } finally {
         setLoading(false);
       }
@@ -64,7 +65,10 @@ export default function CompleteRegister() {
           token,
           password,
         },
-        { headers: { "Content-Type": "application/json" } }
+        { 
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" } 
+        }
       );
 
       // Mostrar pantalla de éxito y redirigir al login

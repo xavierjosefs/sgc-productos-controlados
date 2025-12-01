@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import Logo from '../components/Logo';
 
 export default function Login() {
@@ -72,22 +73,16 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const response = await axios.post(`${baseURL}/api/auth/login`, {
+        email: formData.email,
+        password: formData.password
+      }, {
+        withCredentials: true,
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
-      }
+      const data = response.data;
       
       // Guardar token y datos del usuario en localStorage
       if (data.token) {
@@ -109,7 +104,7 @@ export default function Login() {
       console.error('Error en login:', error);
       setErrors(prev => ({ 
         ...prev, 
-        password: error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
+        password: error.response?.data?.message || error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
       }));
     } finally {
       setIsLoading(false);

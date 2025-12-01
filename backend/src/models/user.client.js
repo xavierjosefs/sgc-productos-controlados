@@ -49,15 +49,7 @@ export const login = async (email, password) => {
 
     const user = rows[0];
 
-    console.log("Password ingresada:", password);
-    console.log("Hash en BD:", user.password_hash);
-    console.log("Tipo del hash:", typeof user.password_hash);
-    console.log("Longitud del hash:", user.password_hash?.length);
-
-
     const isValid = bcrypt.compareSync(password, user.password_hash);
-    console.log("Resultado compare:", isValid);
-
 
     if (!isValid) {
       const error = new Error("La contraseña es incorrecta");
@@ -78,3 +70,88 @@ export const login = async (email, password) => {
     throw err;
   }
 };
+
+export const createRequest = async (user_id, tipo_servicio_id, formulario) => {
+  const result = await pool.query(
+    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [user_id, tipo_servicio_id, formulario]
+  );
+
+  return result.rows[0];
+};
+
+export const getRequestsBycedula = async (cedula) => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      s.form_data,
+      s.fecha_creacion,
+      s.tipo_solicitud,
+      s.solicitud_original_id,
+      s.fase,
+      s.solicitud_anterior_id,
+      s.estado_id,
+      ts.nombre_servicio AS tipo_servicio,
+      e.nombre_mostrar   AS estado_actual
+    FROM solicitudes s
+    JOIN tipos_servicio ts
+      ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e
+      ON s.estado_id = e.id
+    WHERE s.user_id = $1
+    ORDER BY s.fecha_creacion DESC
+  `, [cedula]);
+
+  return result.rows;
+}
+
+export const getRequestDetailsById = async (id) => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      s.form_data,
+      s.fecha_creacion,
+      s.tipo_solicitud,
+      s.solicitud_original_id,
+      s.fase,
+      s.solicitud_anterior_id,
+      ts.nombre_servicio AS tipo_servicio,
+      e.nombre_mostrar   AS estado_actual
+    FROM solicitudes s
+    JOIN tipos_servicio ts
+      ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e
+      ON s.estado_id = e.id
+    WHERE s.id = $1
+  `,[id]);
+
+  return result.rows[0] || null;
+};
+
+export const getSentRequestsByUserId = async (cedula) => {
+  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 12`, [cedula]);
+
+  return result.rows || null;
+}
+
+export const getAproveRequestsByUserId = async (cedula) => {
+  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 10`, [cedula]);
+
+  return result.rows || null;
+}
+
+export const getReturnedRequestsByUserId = async (cedula) => {
+  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND (estado_id = 3 OR estado_id = 5)`, [cedula]);
+
+  return result.rows || null;
+}
+
+export const getPendingRequestsByUserId = async (cedula) => {
+  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 1`, [cedula]);
+
+  return result.rows || null;
+}

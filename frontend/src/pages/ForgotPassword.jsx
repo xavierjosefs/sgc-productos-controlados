@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import Logo from '../components/Logo';
 
 export default function ForgotPassword() {
@@ -39,23 +40,22 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
-      });
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al enviar enlace');
-      }
-
+      await axios.post(`${baseURL}/api/auth/forgot-password`, 
+        { email: email.trim().toLowerCase() },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
       console.log('Enlace de recuperación enviado a:', email);
       setIsSuccess(true);
       
     } catch (error) {
       console.error('Error en recuperación:', error);
-      setError(error.message || 'Error al enviar enlace. Inténtalo de nuevo.');
+      setError(error.response?.data?.message || error.message || 'Error al enviar enlace. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }

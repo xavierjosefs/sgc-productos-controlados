@@ -10,10 +10,16 @@ import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
+import ClientLayout from './layouts/ClientLayout';
+import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
+import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
+import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
+import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <SolicitudClaseAProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -52,6 +58,15 @@ export default function App() {
           />
 
           <Route
+            path="/requests/:id/details"
+            element={
+              <ProtectedRoute>
+                <RequestDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/requests/:status"
             element={
               <ProtectedRoute>
@@ -69,9 +84,38 @@ export default function App() {
             }
           />
 
+          {/* Solicitud Drogas Clase A flow */}
+          <Route
+            path="/solicitud-drogas-clase-a"
+            element={
+              <ProtectedRoute>
+                <SolicitudDrogasClaseAForm />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/solicitud-drogas-clase-a/documentos"
+            element={
+              <ProtectedRoute>
+                <DocumentosSolicitudDrogasClaseA />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/solicitud-drogas-clase-a/exito"
+            element={
+              <ProtectedRoute>
+                <SolicitudEnviadaExito />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
+      </SolicitudClaseAProvider>
     </BrowserRouter>
   );
 }
