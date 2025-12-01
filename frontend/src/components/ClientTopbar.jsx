@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Topbar del cliente
- * Logo + Navegación + Usuario
+ * Logo + Navegaci├│n + Usuario
  */
 import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
@@ -29,7 +29,7 @@ export default function ClientTopbar() {
           <Logo />
         </div>
 
-        {/* Centro - Botones de navegación */}
+        {/* Centro - Botones de navegaci├│n */}
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}
