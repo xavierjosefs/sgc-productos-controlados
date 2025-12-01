@@ -1,4 +1,4 @@
-﻿import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 export const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -13,9 +13,9 @@ export const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    req.user = decoded; // <- aqu├¡ te queda: { id, email, role, ... }
+    req.user = decoded; // <- aquí te queda: { id, email, role, ... }
     next();
   } catch (err) {
-    res.status(401).json({ error: "Token inv├ílido" });
+    res.status(401).json({ error: "Token inválido" });
   }
 };
