@@ -13,12 +13,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SolicitudImportacionMateriaPrimaFase01 from './pages/SolicitudImportacionMateriaPrimaFase01';
 import SolicitudImportacionMateriaPrimaFase02 from './pages/SolicitudImportacionMateriaPrimaFase02';
 import SolicitudImportacionMateriaPrimaExito from './pages/SolicitudImportacionMateriaPrimaExito';
-import { SolicitudMateriaPrimaProvider } from './contexts/SolicitudMateriaPrimaContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudMateriaPrimaProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -114,7 +112,6 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
-      </SolicitudMateriaPrimaProvider>
     </BrowserRouter>
   );
 }
