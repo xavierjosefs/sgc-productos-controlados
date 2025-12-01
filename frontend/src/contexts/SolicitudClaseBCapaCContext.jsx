@@ -14,12 +14,15 @@ export const useSolicitudClaseBCapaC = () => {
 
 export const SolicitudClaseBCapaCProvider = ({ children }) => {
   const [formData, setFormData] = useState({
-    // Sustancias Controladas
+    // Actividades (Pantalla 1)
+    actividades: [],
+    
+    // Sustancias Controladas (Pantalla 2 - condicional)
     categoriasSustancias: [],
     codigoGrupo: "",
     designacionSustancias: "",
     
-    // Administrador/Propietario
+    // Administrador/Propietario (Pantalla 2 - condicional)
     nombreAdministrador: "",
     direccionAdministrador: "",
     cedulaAdministrador: "",
@@ -27,7 +30,7 @@ export const SolicitudClaseBCapaCProvider = ({ children }) => {
     telefonoAdministrador: "",
     lugarTrabajoAdministrador: "",
     
-    // Agente Aduanero
+    // Agente Aduanero (Pantalla 2 - condicional)
     nombreAgenteAduanero: "",
     direccionAgenteAduanero: "",
     cedulaAgenteAduanero: "",
@@ -42,6 +45,7 @@ export const SolicitudClaseBCapaCProvider = ({ children }) => {
 
   const clearFormData = () => {
     setFormData({
+      actividades: [],
       categoriasSustancias: [],
       codigoGrupo: "",
       designacionSustancias: "",

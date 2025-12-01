@@ -13,6 +13,7 @@ import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
 
 // Solicitud Drogas Clase B Capa C
 import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
+import SolicitudClaseBCapaCActividadesForm from './pages/SolicitudClaseBCapaCActividadesForm';
 import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
 import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
 import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
@@ -72,6 +73,16 @@ export default function App() {
         {/* Rutas de Solicitud Drogas Clase B Capa C */}
         <Route
           path="/solicitud-drogas-clase-b-capa-c"
+          element={
+            <ProtectedRoute>
+              <SolicitudClaseBCapaCProvider>
+                <SolicitudClaseBCapaCActividadesForm />
+              </SolicitudClaseBCapaCProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-drogas-clase-b-capa-c/paso-2"
           element={
             <ProtectedRoute>
               <SolicitudClaseBCapaCProvider>

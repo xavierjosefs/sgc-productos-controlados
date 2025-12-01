@@ -61,7 +61,7 @@ export default function SolicitudClaseBCapaCForm() {
   };
 
   const handleBack = () => {
-    navigate("/");
+    navigate("/solicitud-drogas-clase-b-capa-c");
   };
 
   const handleSubmit = (e) => {

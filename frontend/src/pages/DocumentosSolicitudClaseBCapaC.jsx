@@ -20,7 +20,17 @@ export default function DocumentosSolicitudClaseBCapaC() {
   const [reciboPago, setReciboPago] = useState(null);
 
   const handleBack = () => {
-    navigate("/solicitud-drogas-clase-b-capa-c");
+    // Verificar si tiene actividades especiales para saber a dónde volver
+    const actividadesEspeciales = ["Importadora", "Exportadora", "Fabricante"];
+    const tieneActividadEspecial = formData.actividades?.some((act) =>
+      actividadesEspeciales.includes(act)
+    );
+
+    if (tieneActividadEspecial) {
+      navigate("/solicitud-drogas-clase-b-capa-c/paso-2");
+    } else {
+      navigate("/solicitud-drogas-clase-b-capa-c");
+    }
   };
 
   const handleFileChange = (e, setter) => {
@@ -61,12 +71,15 @@ export default function DocumentosSolicitudClaseBCapaC() {
     try {
       // Preparar el objeto de formulario para el backend
       const formularioData = {
-        // Sustancias Controladas
+        // Actividades
+        actividades: formData.actividades,
+        
+        // Sustancias Controladas (solo si tiene actividades especiales)
         categoriasSustancias: formData.categoriasSustancias,
         codigoGrupo: formData.codigoGrupo,
         designacionSustancias: formData.designacionSustancias,
         
-        // Administrador/Propietario
+        // Administrador/Propietario (solo si tiene actividades especiales)
         nombreAdministrador: formData.nombreAdministrador,
         direccionAdministrador: formData.direccionAdministrador,
         cedulaAdministrador: formData.cedulaAdministrador,
@@ -74,7 +87,7 @@ export default function DocumentosSolicitudClaseBCapaC() {
         telefonoAdministrador: formData.telefonoAdministrador,
         lugarTrabajoAdministrador: formData.lugarTrabajoAdministrador,
         
-        // Agente Aduanero
+        // Agente Aduanero (solo si tiene actividades especiales)
         nombreAgenteAduanero: formData.nombreAgenteAduanero,
         direccionAgenteAduanero: formData.direccionAgenteAduanero,
         cedulaAgenteAduanero: formData.cedulaAgenteAduanero,
