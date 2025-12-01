@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+﻿import { useState, useCallback } from 'react';
 import axios from 'axios';
 
-// Configuración base de Axios
+// Configuraci├│n base de Axios
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   withCredentials: true,
@@ -27,7 +27,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
+      // Token expirado o inv├ílido
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -49,10 +49,16 @@ export function useRequestsAPI() {
    * @param {Object} data - { tipo_servicio, form_data }
    */
   const createRequest = useCallback(async (data) => {
+    // El backend expone POST /create-requests que espera { nombre_servicio, formulario }
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/requests', data);
+      // Normalizar el payload si el caller envia otro formato
+      const payload = {
+        nombre_servicio: data.nombre_servicio || data.tipo_servicio || data.serviceName,
+        formulario: data.formulario || data.form_data || data.formData || data,
+      };
+      const response = await api.post('/requests/create-requests', payload);
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al crear la solicitud';
@@ -70,7 +76,8 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/requests');
+      // El backend expone GET /get-requests
+      const response = await api.get('/requests/get-requests');
       return response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes';
@@ -82,15 +89,17 @@ export function useRequestsAPI() {
   }, []);
 
   /**
-   * Obtener detalle de una solicitud específica
+   * Obtener detalle de una solicitud espec├¡fica
    * @param {string} id - ID de la solicitud
    */
   const getRequestDetail = useCallback(async (id) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`/requests/${id}`);
-      return response.data;
+      // El backend expone GET /:id/details
+      const response = await api.get(`/requests/${id}/details`);
+      // El controller devuelve { ok: true, request }
+      return response.data.request || response.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
       setError(errorMessage);
@@ -130,10 +139,17 @@ export function useRequestsAPI() {
     setError(null);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      // El backend espera el campo del archivo con nombre 'archivo'
+      formData.append('archivo', file);
       Object.keys(metadata).forEach(key => {
         formData.append(key, metadata[key]);
       });
+      // Asegurar que el tipo de documento se envie como 'tipo_documento'
+      if (metadata.tipo_documento) {
+        formData.set('tipo_documento', metadata.tipo_documento);
+      } else if (metadata.tipo) {
+        formData.set('tipo_documento', metadata.tipo);
+      }
 
       const response = await api.post(`/requests/${requestId}/documents`, formData, {
         headers: {
@@ -207,8 +223,8 @@ export function useRequestsAPI() {
     getUserRequests,
     getRequestDetail,
     
-    // Las siguientes funciones están disponibles pero se usarán en features específicos:
-    // createRequest - Para formularios de creación de solicitudes
+    // Las siguientes funciones est├ín disponibles pero se usar├ín en features espec├¡ficos:
+    // createRequest - Para formularios de creaci├│n de solicitudes
     // getRequestDocuments - Para ver documentos de una solicitud
     // uploadDocument - Para subir documentos
     // deleteDocument - Para eliminar documentos
