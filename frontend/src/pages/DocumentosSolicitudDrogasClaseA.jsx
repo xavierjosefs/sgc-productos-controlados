@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
 import useRequestsAPI from '../hooks/useRequestsAPI';
+import { useSolicitudClaseA } from '../contexts/SolicitudClaseAContext';
 
 const FIELD_LIST = [
   { key: 'cedula', label: 'Cédula de Identidad y Electoral' },
@@ -12,6 +13,7 @@ const FIELD_LIST = [
 
 const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
   const navigate = useNavigate();
+  const { formData, clearFormData } = useSolicitudClaseA();
   const [files, setFiles] = useState({});
   const inputRefs = useRef({});
 
@@ -44,9 +46,11 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
   const handleConfirm = async () => {
     setConfirmOpen(false);
     try {
-      // Crear una solicitud mínima en el backend. El formulario aún no está integrado,
-      // así que enviamos un objeto vacío. Ajustar en el futuro para enviar los datos reales.
-      const resp = await createRequest({ nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A', formulario: {} });
+      // Crear solicitud con datos reales del formulario desde Context
+      const resp = await createRequest({ 
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A', 
+        formulario: formData 
+      });
       // El controller responde { ok: true, request }
       const newRequest = resp.request || resp;
       const requestId = newRequest.id || newRequest.request?.id;
@@ -62,6 +66,8 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
         await uploadDocument(requestId, file, { tipo_documento: key });
       }
 
+      // Limpiar datos del formulario del context
+      clearFormData();
       navigate('/solicitud-drogas-clase-a/exito');
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);

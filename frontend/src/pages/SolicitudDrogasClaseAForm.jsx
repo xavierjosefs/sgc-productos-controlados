@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
+import { useSolicitudClaseA } from '../contexts/SolicitudClaseAContext';
 
 const SolicitudDrogasClaseAForm = () => {
   const navigate = useNavigate();
+  const { updateFormData } = useSolicitudClaseA();
   const [form, setForm] = useState({});
 
   // usar el estado `form` para evitar warning de linter mientras se integra la lógica de envío
@@ -21,8 +23,9 @@ const SolicitudDrogasClaseAForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // por ahora solo navegamos a la pantalla de documentos
     if (!isValid) return;
+    // Guardar datos del formulario en context antes de navegar
+    updateFormData(form);
     navigate('/solicitud-drogas-clase-a/documentos');
   };
 

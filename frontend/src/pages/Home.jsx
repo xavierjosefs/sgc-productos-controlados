@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
 import RequestSummaryCard from '../components/RequestSummaryCard';
 import BadgeEstado from '../components/BadgeEstado';
 import useRequestsAPI from '../hooks/useRequestsAPI';
@@ -23,6 +22,9 @@ export default function Home() {
   const [serviceTypes, setServiceTypes] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [errorServices, setErrorServices] = useState('');
+  // Estados para filtros
+  const [filterTipo, setFilterTipo] = useState('');
+  const [filterEstado, setFilterEstado] = useState('');
 
   // Cargar solicitudes
   useEffect(() => {
@@ -33,8 +35,7 @@ export default function Home() {
         // El backend responde { ok: true, requests } o directamente un array
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
-        // Mostrar solo las últimas 5 solicitudes
-        setRecentRequests(normalized.slice(0, 5));
+        applyFilters(normalized);
         setErrorRequests('');
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
@@ -46,7 +47,41 @@ export default function Home() {
       }
     };
     loadRequests();
-  }, [getUserRequests]);
+  }, [getUserRequests, applyFilters]);
+
+  // Aplicar filtros a las solicitudes
+  const applyFilters = useCallback((requests) => {
+    let filtered = [...requests];
+    
+    // Filtrar por tipo de servicio
+    if (filterTipo) {
+      filtered = filtered.filter(r => 
+        (r.tipo_servicio || '').toLowerCase().includes(filterTipo.toLowerCase())
+      );
+    }
+    
+    // Filtrar por estado
+    if (filterEstado) {
+      filtered = filtered.filter(r => 
+        (r.estado || r.estado_actual || '').toLowerCase() === filterEstado.toLowerCase()
+      );
+    }
+    
+    // Mostrar solo las últimas 5 solicitudes filtradas
+    setRecentRequests(filtered.slice(0, 5));
+  }, [filterTipo, filterEstado]);
+
+  // Handler para aplicar filtros
+  const handleApplyFilters = () => {
+    applyFilters(allRequests);
+  };
+
+  // Resetear filtros
+  const handleResetFilters = () => {
+    setFilterTipo('');
+    setFilterEstado('');
+    setRecentRequests(allRequests.slice(0, 5));
+  };
 
   // Cargar tipos de servicio dinámicos cuando se abre el menú
   const { getServiceTypes } = useServicesAPI();
@@ -77,12 +112,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Topbar */}
-      <ClientTopbar />
-
-      {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Encabezado con título y botón crear */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
@@ -181,8 +211,13 @@ export default function Home() {
           <div className="flex flex-wrap gap-4 items-center justify-end">
             <div className="flex gap-4">
               <div className="relative">
-                <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10">
-                  <option value="">Tipo</option>
+                <select 
+                  value={filterTipo}
+                  onChange={(e) => setFilterTipo(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
+                >
+                  <option value="">Todos los tipos</option>
+                  {/* Los tipos se mostrarán dinámicamente cuando el backend implemente el endpoint */}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -190,8 +225,12 @@ export default function Home() {
               </div>
               
               <div className="relative">
-                <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10">
-                  <option value="">Estado</option>
+                <select 
+                  value={filterEstado}
+                  onChange={(e) => setFilterEstado(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
+                >
+                  <option value="">Todos los estados</option>
                   <option value="enviada">Enviada</option>
                   <option value="aprobada">Aprobada</option>
                   <option value="devuelta">Devuelta</option>
@@ -202,9 +241,21 @@ export default function Home() {
                 </svg>
               </div>
 
-              <button className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors">
+              <button 
+                onClick={handleApplyFilters}
+                className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors"
+              >
                 Filtrar
               </button>
+              
+              {(filterTipo || filterEstado) && (
+                <button 
+                  onClick={handleResetFilters}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -287,6 +338,5 @@ export default function Home() {
           )}
         </div>
       </div>
-    </div>
   );
 }

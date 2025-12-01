@@ -6,113 +6,80 @@ import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
+import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
+import ClientLayout from './layouts/ClientLayout';
 import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
 import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
 import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
-import { useState } from 'react';
-import ModalConfirmacionEnvio from './components/ModalConfirmacionEnvio';
+import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
 export default function App() {
-  // Estado para navegación entre pantallas del flujo de solicitud
-  const [modalOpen, setModalOpen] = useState(false);
-
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/pre-register" element={<PreRegister />} />
-        {/* Backwards-compatible redirect from /register to /pre-register */}
-        <Route path="/register" element={<Navigate to="/pre-register" replace />} />
-        <Route path="/pre-data" element={<CompleteRegister />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      <SolicitudClaseAProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/pre-register" element={<PreRegister />} />
+          <Route path="/register" element={<Navigate to="/pre-register" replace />} />
+          <Route path="/pre-data" element={<CompleteRegister />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected routes with ClientLayout (Sidebar + Topbar) */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ClientLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Dashboard / Home */}
+            <Route index element={<Home />} />
+            
+            {/* Support */}
+            <Route path="support" element={<Support />} />
+            
+            {/* Requests routes */}
+            <Route path="requests" element={<Requests />} />
+            <Route path="requests/:status" element={<RequestsFiltered />} />
+            <Route path="requests/:id" element={<RequestDetail />} />
+          </Route>
 
-        <Route
-          path="/support"
-          element={
-            <ProtectedRoute>
-              <Support />
-            </ProtectedRoute>
-          }
-        />
+          {/* Solicitud Drogas Clase A flow (sin ClientLayout para pantalla completa) */}
+          <Route
+            path="/solicitud-drogas-clase-a"
+            element={
+              <ProtectedRoute>
+                <SolicitudDrogasClaseAForm />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/requests/:status"
-          element={
-            <ProtectedRoute>
-              <RequestsFiltered />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/solicitud-drogas-clase-a/documentos"
+            element={
+              <ProtectedRoute>
+                <DocumentosSolicitudDrogasClaseA />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/requests/:id"
-          element={
-            <ProtectedRoute>
-              <RequestDetail />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/solicitud-drogas-clase-a/exito"
+            element={
+              <ProtectedRoute>
+                <SolicitudEnviadaExito />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/solicitud-drogas-clase-a"
-          element={
-            <ProtectedRoute>
-              <SolicitudDrogasClaseAForm
-                onContinue={() => {
-                  window.location.href = '/solicitud-drogas-clase-a/documentos';
-                }}
-              />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/solicitud-drogas-clase-a/documentos"
-          element={
-            <ProtectedRoute>
-              <>
-                <DocumentosSolicitudDrogasClaseA
-                  onBack={() => window.location.href = '/solicitud-drogas-clase-a'}
-                  onEnviar={() => setModalOpen(true)}
-                />
-                <ModalConfirmacionEnvio
-                  open={modalOpen}
-                  onCancel={() => setModalOpen(false)}
-                  onConfirm={() => {
-                    setModalOpen(false);
-                    window.location.href = '/solicitud-drogas-clase-a/exito';
-                  }}
-                />
-              </>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/solicitud-drogas-clase-a/exito"
-          element={
-            <ProtectedRoute>
-              <SolicitudEnviadaExito />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect for old path */}
-        <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Legacy redirects */}
+          <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
+        </Routes>
+      </SolicitudClaseAProvider>
     </BrowserRouter>
   );
 }

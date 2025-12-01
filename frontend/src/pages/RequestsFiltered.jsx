@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
 import BadgeEstado from '../components/BadgeEstado';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 
@@ -49,10 +48,7 @@ export default function RequestsFiltered() {
   }, [status, getUserRequests]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ClientTopbar />
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Encabezado con flecha y título */}
         <div className="flex items-center gap-4 mb-8">
           <button
@@ -185,6 +181,5 @@ export default function RequestsFiltered() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
