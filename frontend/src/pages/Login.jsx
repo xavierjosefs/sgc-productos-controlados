@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Logo from '../components/Logo';
-import { Link } from 'react-router-dom';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -73,38 +72,44 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // TODO: Conectar con el endpoint del backend cuando esté listo
-      // const response = await fetch('http://localhost:3000/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     email: formData.email,
-      //     password: formData.password
-      //   })
-      // });
-      // const data = await response.json();
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
       
-      // Simulación temporal del login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // TODO: Guardar token en localStorage cuando el backend esté listo
-      // if (data.token) {
-      //   localStorage.setItem('token', data.token);
-      //   if (formData.rememberMe) {
-      //     localStorage.setItem('rememberMe', 'true');
-      //   }
-      //   // Redirigir al dashboard
-      //   window.location.href = '/dashboard';
-      // }
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
 
-      console.log('Login exitoso con:', formData);
-      alert('Login simulado exitosamente. Conectar con backend cuando esté listo.');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al iniciar sesión');
+      }
+      
+      // Guardar token y datos del usuario en localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        if (formData.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        }
+        
+        // Redirigir al dashboard
+        window.location.href = '/';
+      } else {
+        throw new Error('No se recibió el token de autenticación');
+      }
       
     } catch (error) {
       console.error('Error en login:', error);
       setErrors(prev => ({ 
         ...prev, 
-        password: 'Error al iniciar sesión. Verifica tus credenciales.' 
+        password: error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
       }));
     } finally {
       setIsLoading(false);
@@ -232,9 +237,9 @@ export default function Login() {
           {/* Registrarse */}
           <p className="text-center text-xs text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
-            <Link to="/pre-register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
+            <a href="/pre-register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
               Regístrate aquí
-            </Link>
+            </a>
           </p>
         </div>
       </div>

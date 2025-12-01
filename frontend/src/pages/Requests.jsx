@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ClientTopbar from '../components/ClientTopbar';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 import BadgeEstado from '../components/BadgeEstado';
 
@@ -60,6 +61,8 @@ const Requests = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ClientTopbar />
+      
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>

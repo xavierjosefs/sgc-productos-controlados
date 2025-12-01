@@ -27,28 +27,53 @@ export default function App() {
           <Route path="/pre-data" element={<CompleteRegister />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Protected routes with ClientLayout (Sidebar + Topbar) */}
+          {/* Protected routes - cada página maneja su propio layout */}
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                <ClientLayout />
+                <Home />
               </ProtectedRoute>
             }
-          >
-            {/* Dashboard / Home */}
-            <Route index element={<Home />} />
-            
-            {/* Support */}
-            <Route path="support" element={<Support />} />
-            
-            {/* Requests routes */}
-            <Route path="requests" element={<Requests />} />
-            <Route path="requests/:status" element={<RequestsFiltered />} />
-            <Route path="requests/:id" element={<RequestDetail />} />
-          </Route>
+          />
 
-          {/* Solicitud Drogas Clase A flow (sin ClientLayout para pantalla completa) */}
+          <Route
+            path="/support"
+            element={
+              <ProtectedRoute>
+                <Support />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/requests"
+            element={
+              <ProtectedRoute>
+                <Requests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/requests/estado/:status"
+            element={
+              <ProtectedRoute>
+                <RequestsFiltered />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/requests/:id"
+            element={
+              <ProtectedRoute>
+                <RequestDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Solicitud Drogas Clase A flow */}
           <Route
             path="/solicitud-drogas-clase-a"
             element={

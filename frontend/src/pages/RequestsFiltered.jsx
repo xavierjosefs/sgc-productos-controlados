@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ClientTopbar from '../components/ClientTopbar';
 import BadgeEstado from '../components/BadgeEstado';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 
@@ -11,8 +12,10 @@ export default function RequestsFiltered() {
   const navigate = useNavigate();
   const { getUserRequests } = useRequestsAPI();
   
+  const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filterTipo, setFilterTipo] = useState('');
 
   // Mapeo de nombres de estados con colores
   const statusConfig = {
@@ -24,7 +27,7 @@ export default function RequestsFiltered() {
 
   const currentStatus = statusConfig[status] || statusConfig.enviadas;
 
-  // Cargar y filtrar solicitudes
+  // Cargar y filtrar solicitudes por estado
   useEffect(() => {
     const loadRequests = async () => {
       setLoading(true);
@@ -36,9 +39,11 @@ export default function RequestsFiltered() {
           const s = (r.estado || r.estado_actual || '').toString().toLowerCase();
           return s === statusKey || s === status.toLowerCase();
         });
+        setAllRequests(filtered);
         setFilteredRequests(filtered);
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
+        setAllRequests([]);
         setFilteredRequests([]);
       } finally {
         setLoading(false);
@@ -47,8 +52,29 @@ export default function RequestsFiltered() {
     loadRequests();
   }, [status, getUserRequests]);
 
+  // Aplicar filtro adicional por tipo
+  const handleApplyFilter = () => {
+    if (!filterTipo) {
+      setFilteredRequests(allRequests);
+      return;
+    }
+    const filtered = allRequests.filter(r => 
+      (r.tipo_servicio || '').toLowerCase().includes(filterTipo.toLowerCase())
+    );
+    setFilteredRequests(filtered);
+  };
+
+  // Resetear filtro
+  const handleResetFilter = () => {
+    setFilterTipo('');
+    setFilteredRequests(allRequests);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <ClientTopbar />
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Encabezado con flecha y título */}
         <div className="flex items-center gap-4 mb-8">
           <button
@@ -81,16 +107,32 @@ export default function RequestsFiltered() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-end items-center gap-4">
               <div className="relative">
-                <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 min-w-[200px]">
+                <select 
+                  value={filterTipo}
+                  onChange={(e) => setFilterTipo(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 min-w-[200px]"
+                >
                   <option value="">Tipo</option>
+                  {/* Los tipos se cargarán dinámicamente desde el backend */}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </div>
-              <button className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors">
+              <button 
+                onClick={handleApplyFilter}
+                className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors"
+              >
                 Filtrar
               </button>
+              {filterTipo && (
+                <button 
+                  onClick={handleResetFilter}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
           </div>
 
@@ -129,7 +171,10 @@ export default function RequestsFiltered() {
                       </td>
                       <td className="px-6 py-5 text-sm text-gray-700 flex items-center justify-between">
                         <span>{request.tipo_servicio}</span>
-                        <button className="text-[#4A8BDF] font-medium text-sm hover:text-[#3875C8] transition-colors">
+                        <button 
+                          onClick={() => navigate(`/requests/${request.id}`)}
+                          className="text-[#4A8BDF] font-medium text-sm hover:text-[#3875C8] transition-colors"
+                        >
                           Ver Detalle
                         </button>
                       </td>
@@ -169,7 +214,10 @@ export default function RequestsFiltered() {
                         <span className="text-sm text-gray-700 text-right">{request.tipo_servicio}</span>
                       </div>
                       <div className="pt-2">
-                        <button className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors">
+                        <button 
+                          onClick={() => navigate(`/requests/${request.id}`)}
+                          className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors"
+                        >
                           Ver Detalle
                         </button>
                       </div>
@@ -181,5 +229,6 @@ export default function RequestsFiltered() {
           </div>
         </div>
       </div>
+    </div>
   );
 }

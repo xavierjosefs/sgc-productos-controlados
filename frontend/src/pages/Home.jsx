@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ClientTopbar from '../components/ClientTopbar';
 import RequestSummaryCard from '../components/RequestSummaryCard';
 import BadgeEstado from '../components/BadgeEstado';
 import useRequestsAPI from '../hooks/useRequestsAPI';
@@ -35,7 +36,7 @@ export default function Home() {
         // El backend responde { ok: true, requests } o directamente un array
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
-        applyFilters(normalized);
+        setRecentRequests(normalized.slice(0, 5));
         setErrorRequests('');
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
@@ -47,7 +48,7 @@ export default function Home() {
       }
     };
     loadRequests();
-  }, [getUserRequests, applyFilters]);
+  }, [getUserRequests]);
 
   // Aplicar filtros a las solicitudes
   const applyFilters = useCallback((requests) => {
@@ -112,7 +113,12 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Topbar */}
+      <ClientTopbar />
+
+      {/* Contenido principal */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Encabezado con título y botón crear */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
@@ -154,7 +160,7 @@ export default function Home() {
         {/* Cards de resumen */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div 
-            onClick={() => navigate('/requests/enviadas')}
+            onClick={() => navigate('/requests/estado/enviadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -167,7 +173,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/aprobadas')}
+            onClick={() => navigate('/requests/estado/aprobadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -180,7 +186,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/devueltas')}
+            onClick={() => navigate('/requests/estado/devueltas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -193,7 +199,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/pendientes')}
+            onClick={() => navigate('/requests/estado/pendientes')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -338,5 +344,6 @@ export default function Home() {
           )}
         </div>
       </div>
+    </div>
   );
 }

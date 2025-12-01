@@ -36,7 +36,7 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
 
   const handleBack = () => {
     if (typeof onBack === 'function') return onBack();
-    navigate('/mis-solicitudes');
+    navigate(-1);
   };
 
   const [confirmOpen, setConfirmOpen] = useState(false);
