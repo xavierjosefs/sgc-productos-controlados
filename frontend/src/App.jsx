@@ -6,7 +6,16 @@ import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
 import RequestsFiltered from './pages/RequestsFiltered';
+import Requests from './pages/Requests';
+import RequestDetail from './pages/RequestDetail';
 import ProtectedRoute from './components/ProtectedRoute';
+import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
+
+// Solicitud Drogas Clase B Capa C
+import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
+import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
+import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
+import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
 
 export default function App() {
   return (
@@ -43,6 +52,65 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/requests"
+          element={
+            <ProtectedRoute>
+              <Requests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests/:id"
+          element={
+            <ProtectedRoute>
+              <RequestDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Rutas de Solicitud Drogas Clase B Capa C */}
+        <Route
+          path="/solicitud-drogas-clase-b-capa-c"
+          element={
+            <ProtectedRoute>
+              <SolicitudClaseBCapaCProvider>
+                <SolicitudClaseBCapaCForm />
+              </SolicitudClaseBCapaCProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-drogas-clase-b-capa-c/documentos"
+          element={
+            <ProtectedRoute>
+              <SolicitudClaseBCapaCProvider>
+                <DocumentosSolicitudClaseBCapaC />
+              </SolicitudClaseBCapaCProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-drogas-clase-b-capa-c/exito"
+          element={
+            <ProtectedRoute>
+              <SolicitudClaseBCapaCExito />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Ruta compartida de éxito */}
+        <Route
+          path="/solicitud-exito"
+          element={
+            <ProtectedRoute>
+              <SolicitudEnviadaExito />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirect para compatibilidad */}
+        <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
