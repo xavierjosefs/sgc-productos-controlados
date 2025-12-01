@@ -13,12 +13,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SolicitudImportacionMedicamentosFase01 from './pages/SolicitudImportacionMedicamentosFase01';
 import SolicitudImportacionMedicamentosFase02 from './pages/SolicitudImportacionMedicamentosFase02';
 import SolicitudImportacionMedicamentosExito from './pages/SolicitudImportacionMedicamentosExito';
-import { SolicitudMedicamentosProvider } from './contexts/SolicitudMedicamentosContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudMedicamentosProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -114,7 +112,6 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
-      </SolicitudMedicamentosProvider>
     </BrowserRouter>
   );
 }
