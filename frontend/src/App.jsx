@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
 import Requests from './pages/Requests';
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/register" element={<Navigate to="/pre-register" replace />} />
         <Route path="/pre-data" element={<CompleteRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected routes - cada p├ígina maneja su propio layout */}
           <Route
@@ -58,7 +60,7 @@ export default function App() {
           />
 
           <Route
-            path="/requests/estado/:status"
+            path="/requests/:status"
             element={
               <ProtectedRoute>
                 <RequestsFiltered />
