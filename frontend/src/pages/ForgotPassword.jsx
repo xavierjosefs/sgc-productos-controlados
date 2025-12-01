@@ -39,22 +39,17 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      // TODO: Conectar con el endpoint del backend cuando esté listo
-      // Este endpoint debe enviar un correo con el enlace de recuperación
-      // const response = await fetch('http://localhost:3000/api/auth/forgot-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email: email.trim().toLowerCase() })
-      // });
+      const response = await fetch('http://localhost:3000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
+      });
       
-      // if (!response.ok) {
-      //   const data = await response.json();
-      //   throw new Error(data.message || 'Error al enviar enlace');
-      // }
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al enviar enlace');
+      }
 
-      // Simulación temporal del envío
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       console.log('Enlace de recuperación enviado a:', email);
       setIsSuccess(true);
       
