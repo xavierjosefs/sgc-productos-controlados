@@ -10,16 +10,15 @@ import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
-import ClientLayout from './layouts/ClientLayout';
-import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
-import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
-import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
-import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
+import SolicitudImportacionMateriaPrimaFase01 from './pages/SolicitudImportacionMateriaPrimaFase01';
+import SolicitudImportacionMateriaPrimaFase02 from './pages/SolicitudImportacionMateriaPrimaFase02';
+import SolicitudImportacionMateriaPrimaExito from './pages/SolicitudImportacionMateriaPrimaExito';
+import { SolicitudMateriaPrimaProvider } from './contexts/SolicitudMateriaPrimaContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudClaseAProvider>
+      <SolicitudMateriaPrimaProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -84,30 +83,30 @@ export default function App() {
             }
           />
 
-          {/* Solicitud Drogas Clase A flow */}
+          {/* Solicitud Importacion Materia Prima flow */}
           <Route
-            path="/solicitud-drogas-clase-a"
+            path="/solicitud-importacion-materia-prima"
             element={
               <ProtectedRoute>
-                <SolicitudDrogasClaseAForm />
+                <SolicitudImportacionMateriaPrimaFase01 />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/documentos"
+            path="/solicitud-importacion-materia-prima/fase02"
             element={
               <ProtectedRoute>
-                <DocumentosSolicitudDrogasClaseA />
+                <SolicitudImportacionMateriaPrimaFase02 />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/exito"
+            path="/solicitud-importacion-materia-prima/exito"
             element={
               <ProtectedRoute>
-                <SolicitudEnviadaExito />
+                <SolicitudImportacionMateriaPrimaExito />
               </ProtectedRoute>
             }
           />
@@ -115,7 +114,7 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
-      </SolicitudClaseAProvider>
+      </SolicitudMateriaPrimaProvider>
     </BrowserRouter>
   );
 }
