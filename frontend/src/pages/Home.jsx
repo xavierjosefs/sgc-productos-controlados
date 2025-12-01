@@ -160,7 +160,7 @@ export default function Home() {
         {/* Cards de resumen */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div 
-            onClick={() => navigate('/requests/estado/enviadas')}
+            onClick={() => navigate('/requests/enviadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -173,7 +173,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/estado/aprobadas')}
+            onClick={() => navigate('/requests/aprobadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -186,7 +186,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/estado/devueltas')}
+            onClick={() => navigate('/requests/devueltas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
@@ -199,7 +199,7 @@ export default function Home() {
           </div>
 
           <div 
-            onClick={() => navigate('/requests/estado/pendientes')}
+            onClick={() => navigate('/requests/pendientes')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">

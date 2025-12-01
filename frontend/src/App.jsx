@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
 import RequestsFiltered from './pages/RequestsFiltered';
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/pre-register" element={<PreRegister />} />
         <Route path="/pre-data" element={<CompleteRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Rutas protegidas - Cliente */}
         <Route
