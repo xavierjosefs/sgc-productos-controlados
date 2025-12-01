@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Card de Resumen de Estado
  * Muestra cantidad de solicitudes por estado
  */
