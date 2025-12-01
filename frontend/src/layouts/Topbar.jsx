@@ -1,8 +1,8 @@
 ﻿import { useState } from 'react';
 
 /**
- * Topbar - Barra superior del m├│dulo Cliente
- * Incluye: Saludo al usuario, notificaciones e ├¡cono de perfil
+ * Topbar - Barra superior del modulo Cliente
+ * Incluye: Saludo al usuario, notificaciones e iccono de perfil
  */
 export default function Topbar() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -21,13 +21,13 @@ export default function Topbar() {
             ┬íHola, {userName}!
           </h2>
           <p className="text-sm text-gray-500">
-            Bienvenido al sistema de gesti├│n
+            Bienvenido al sistema de gestión
           </p>
         </div>
 
         {/* Acciones */}
         <div className="flex items-center gap-4">
-          {/* Bot├│n de notificaciones */}
+          {/* Botón de notificaciones */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -72,7 +72,7 @@ export default function Topbar() {
                   Mi Perfil
                 </a>
                 <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Configuraci├│n
+                  Configuración
                 </a>
                 <hr className="my-2" />
                 <button 
@@ -83,7 +83,7 @@ export default function Topbar() {
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
-                  Cerrar Sesi├│n
+                  Cerrar Sesión
                 </button>
               </div>
             )}

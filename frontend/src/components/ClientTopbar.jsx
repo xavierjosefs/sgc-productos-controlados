@@ -29,7 +29,7 @@ export default function ClientTopbar() {
           <Logo />
         </div>
 
-        {/* Centro - Botones de navegaci├│n */}
+        {/* Centro - Botones de navegación */}
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}

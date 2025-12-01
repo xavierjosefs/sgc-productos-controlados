@@ -6,7 +6,7 @@ const ModalConfirmacionEnvio = ({ open, onCancel, onConfirm }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black opacity-40" />
       <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
-        <h3 className="text-center text-lg font-semibold text-[#2B6CB0] mb-3">Confirmaci├│n de Env├¡o</h3>
+        <h3 className="text-center text-lg font-semibold text-[#2B6CB0] mb-3">Confirmación de Envío</h3>
         <p className="text-center text-sm text-gray-600 mb-6">┬┐Est├í seguro de que desea enviar esta solicitud?<br />Una vez enviada, no podr├í ser editada.</p>
 
         <div className="flex justify-center gap-4">

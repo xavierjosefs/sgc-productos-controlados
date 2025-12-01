@@ -9,7 +9,7 @@ import Topbar from './Topbar';
 export default function ClientLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Navegaci├│n lateral */}
+      {/* Sidebar - Navegación lateral */}
       <Sidebar />
 
       {/* Contenedor principal */}

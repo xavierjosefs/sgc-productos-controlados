@@ -97,12 +97,12 @@ const RequestDetail = () => {
             <div className="text-gray-700">{new Date(request.fecha_creacion).toLocaleDateString('es-ES')}</div>
           </div>
         </div>
-        {/* Bot├│n subir documento */}
+        {/* Botón subir documento */}
         <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg mb-4" onClick={() => setModalOpen(true)}>
           Subir documento
         </button>
       </div>
-      {/* Campos din├ímicos del formulario */}
+      {/* Campos dinámicos del formulario */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Datos del Formulario</h2>
         {request.form_data ? (
@@ -158,7 +158,7 @@ const RequestDetail = () => {
         isReplace={true}
         initialDocument={selectedDocument}
       />
-      {/* Nota: eliminaci├│n de documentos no soportada por backend actualmente */}
+      {/* Nota: eliminación de documentos no soportada por backend actualmente */}
     </div>
   );
 };
