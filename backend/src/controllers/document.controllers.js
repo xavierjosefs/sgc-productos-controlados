@@ -1,5 +1,5 @@
 import {supabase} from "../lib/supabase.js";
-import { findSolicitudById, createDocumento, getDocumentosBySolicitudId } from "../models/document.client.js";
+import { findSolicitudById, createDocumento, getDocumentosBySolicitudId, sendRequestBySoliciutudId } from "../models/document.client.js";
 
 export const uploadDocumentController = async (req, res) => {
   try {
@@ -37,7 +37,7 @@ export const uploadDocumentController = async (req, res) => {
     const nombreArchivoStorage = `${solicitudId}/${tipoDocumento}-${Date.now()}.${extension}`;
 
     //Subir al bucket de supabase
-    const { error } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("documentos")
       .upload(nombreArchivoStorage, archivo.buffer, {
         cacheControl: "3600",
@@ -47,11 +47,15 @@ export const uploadDocumentController = async (req, res) => {
 
     if (error) {
       console.error("Error Supabase:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return res.status(500).json({
         ok: false,
-        message: "Error al subir archivo a Supabase.",
+        message: `Error al subir archivo a Supabase: ${error.message || error.error || 'Unknown error'}`,
+        details: error
       });
     }
+
+    console.log("Archivo subido exitosamente:", data);
 
     //obtener la url del archivo
     const { data: ulrData } = supabase.storage
@@ -68,7 +72,8 @@ export const uploadDocumentController = async (req, res) => {
       archivo.size,
       url
     );
-
+    // Cambiar estado de la solicitud a 'Enviada'
+    await sendRequestBySoliciutudId(solicitudId);
     return res.status(201).json({
       ok: true,
       message: "Documento subido correctamente.",

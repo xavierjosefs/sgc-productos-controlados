@@ -58,6 +58,15 @@ export default function App() {
           />
 
           <Route
+            path="/requests/:id/details"
+            element={
+              <ProtectedRoute>
+                <RequestDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/requests/:status"
             element={
               <ProtectedRoute>
