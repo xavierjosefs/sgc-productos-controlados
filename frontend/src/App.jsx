@@ -10,16 +10,15 @@ import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
-import ClientLayout from './layouts/ClientLayout';
-import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
-import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
-import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
-import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
+import SolicitudImportacionMedicamentosFase01 from './pages/SolicitudImportacionMedicamentosFase01';
+import SolicitudImportacionMedicamentosFase02 from './pages/SolicitudImportacionMedicamentosFase02';
+import SolicitudImportacionMedicamentosExito from './pages/SolicitudImportacionMedicamentosExito';
+import { SolicitudMedicamentosProvider } from './contexts/SolicitudMedicamentosContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudClaseAProvider>
+      <SolicitudMedicamentosProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -84,30 +83,30 @@ export default function App() {
             }
           />
 
-          {/* Solicitud Drogas Clase A flow */}
+          {/* Solicitud Importacion Medicamentos flow */}
           <Route
-            path="/solicitud-drogas-clase-a"
+            path="/solicitud-importacion-medicamentos"
             element={
               <ProtectedRoute>
-                <SolicitudDrogasClaseAForm />
+                <SolicitudImportacionMedicamentosFase01 />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/documentos"
+            path="/solicitud-importacion-medicamentos/fase02"
             element={
               <ProtectedRoute>
-                <DocumentosSolicitudDrogasClaseA />
+                <SolicitudImportacionMedicamentosFase02 />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/exito"
+            path="/solicitud-importacion-medicamentos/exito"
             element={
               <ProtectedRoute>
-                <SolicitudEnviadaExito />
+                <SolicitudImportacionMedicamentosExito />
               </ProtectedRoute>
             }
           />
@@ -115,7 +114,7 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
-      </SolicitudClaseAProvider>
+      </SolicitudMedicamentosProvider>
     </BrowserRouter>
   );
 }
