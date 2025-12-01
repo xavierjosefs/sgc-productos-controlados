@@ -8,7 +8,7 @@ import useServicesAPI from '../hooks/useServicesAPI';
 
 /**
  * Dashboard principal del Cliente (Home)
- * Muestra resumen de estados y ├║ltimas 5 solicitudes
+ * Muestra resumen de estados y últimas 5 solicitudes
  */
 export default function Home() {
   const navigate = useNavigate();
@@ -68,7 +68,7 @@ export default function Home() {
       );
     }
     
-    // Mostrar solo las ├║ltimas 5 solicitudes filtradas
+    // Mostrar solo las últimas 5 solicitudes filtradas
     setRecentRequests(filtered.slice(0, 5));
   }, [filterTipo, filterEstado]);
 
@@ -84,7 +84,7 @@ export default function Home() {
     setRecentRequests(allRequests.slice(0, 5));
   };
 
-  // Cargar tipos de servicio din├ímicos cuando se abre el men├║
+  // Cargar tipos de servicio dinámicos cuando se abre el menú
   const { getServiceTypes } = useServicesAPI();
   const handleOpenCreateMenu = async () => {
     setShowCreateMenu(!showCreateMenu);
@@ -119,7 +119,7 @@ export default function Home() {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Encabezado con t├¡tulo y bot├│n crear */}
+        {/* Encabezado con título y botón crear */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
           
@@ -140,7 +140,26 @@ export default function Home() {
                 ) : errorServices ? (
                   <div className="px-4 py-3 text-sm text-red-500">{errorServices}</div>
                 ) : serviceTypes.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-gray-500">Los tipos de servicio se cargar├ín desde el backend</div>
+                  <>
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                      onClick={() => {
+                        navigate('/solicitud-importacion-materia-prima/fase-01');
+                        setShowCreateMenu(false);
+                      }}
+                    >
+                      Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas - Fase 01
+                    </button>
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                      onClick={() => {
+                        navigate('/solicitud-importacion-materia-prima/fase-02');
+                        setShowCreateMenu(false);
+                      }}
+                    >
+                      Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas - Fase 02
+                    </button>
+                  </>
                 ) : (
                   <ul>
                     {serviceTypes.map(type => (
@@ -274,7 +293,7 @@ export default function Home() {
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creaci├│n</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creación</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
               </tr>
             </thead>
@@ -284,7 +303,7 @@ export default function Home() {
               ) : errorRequests ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-red-500">{errorRequests}</td></tr>
               ) : recentRequests.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas a├║n</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aún</td></tr>
               ) : (
                 recentRequests.map(request => (
                   <tr key={request.id} className="hover:bg-gray-100 transition-colors">
@@ -310,7 +329,7 @@ export default function Home() {
           ) : errorRequests ? (
             <div className="text-center py-12 text-red-500">{errorRequests}</div>
           ) : recentRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas a├║n</div>
+            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aún</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {recentRequests.map(request => (

@@ -25,9 +25,9 @@ const ModalDocumento = ({ open, onClose, onSubmit, requestId, isReplace = false,
       setFile(null);
       return;
     }
-    // Validar tama├▒o (m├íx 5MB)
+    // Validar tamaño (máx 5MB)
     if (selected.size > 5 * 1024 * 1024) {
-      setError('El archivo excede el tama├▒o m├íximo de 5MB');
+      setError('El archivo excede el tamaño máximo de 5MB');
       setFile(null);
       return;
     }

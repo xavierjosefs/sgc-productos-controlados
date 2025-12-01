@@ -3,13 +3,13 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 /**
- * Layout principal del m├│dulo Cliente
+ * Layout principal del módulo Cliente
  * Contiene: Sidebar + Topbar + ├ürea de contenido (Outlet)
  */
 export default function ClientLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Navegaci├│n lateral */}
+      {/* Sidebar - Navegación lateral */}
       <Sidebar />
 
       {/* Contenedor principal */}

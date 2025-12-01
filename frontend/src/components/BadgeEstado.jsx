@@ -1,6 +1,6 @@
 ﻿/**
  * Badge de Estado
- * Muestra el estado con color espec├¡fico
+ * Muestra el estado con color específico
  */
 export default function BadgeEstado({ estado }) {
   const statusConfig = {

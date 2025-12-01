@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 
 /**
- * Sidebar - Navegaci├│n lateral del m├│dulo Cliente
+ * Sidebar - Navegación lateral del módulo Cliente
  * Incluye: Dashboard, Mis Solicitudes, Perfil, Logout
  */
 export default function Sidebar() {
@@ -39,7 +39,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Bot├│n hamburguesa para mobile */}
+      {/* Botón hamburguesa para mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-md hover:bg-gray-100 transition-colors"
@@ -74,7 +74,7 @@ export default function Sidebar() {
             <Logo />
           </div>
 
-          {/* Navegaci├│n */}
+          {/* Navegación */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {menuItems.map((item) => (
               <NavLink
@@ -104,7 +104,7 @@ export default function Sidebar() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
               </svg>
-              Cerrar Sesi├│n
+              Cerrar Sesión
             </button>
           </div>
         </div>

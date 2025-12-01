@@ -6,6 +6,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
 import RequestsFiltered from './pages/RequestsFiltered';
+import SolicitudImportacionMateriaPrimaFase01 from './pages/SolicitudImportacionMateriaPrimaFase01';
+import SolicitudImportacionMateriaPrimaFase02 from './pages/SolicitudImportacionMateriaPrimaFase02';
+import SolicitudImportacionMateriaPrimaExito from './pages/SolicitudImportacionMateriaPrimaExito';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -40,6 +43,32 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RequestsFiltered />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Solicitud Importación Materia Prima */}
+        <Route
+          path="/solicitud-importacion-materia-prima/fase-01"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMateriaPrimaFase01 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-importacion-materia-prima/fase-02"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMateriaPrimaFase02 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-importacion-materia-prima/exito"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMateriaPrimaExito />
             </ProtectedRoute>
           }
         />
