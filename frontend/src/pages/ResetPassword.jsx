@@ -71,17 +71,16 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      // TODO: Conectar con el endpoint del backend cuando esté listo
-      // const response = await fetch(`http://localhost:3000/api/auth/reset-password/${token}`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ password: formData.password })
-      // });
+      const response = await fetch(`http://localhost:3000/api/auth/reset-password/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: formData.password })
+      });
       
-      // if (!response.ok) {
-      //   const data = await response.json();
-      //   throw new Error(data.message || 'Error al restablecer contraseña');
-      // }
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al restablecer contraseña');
+      }
 
       // Simulación temporal
       await new Promise(resolve => setTimeout(resolve, 1500));
