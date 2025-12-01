@@ -10,16 +10,15 @@ import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
-import ClientLayout from './layouts/ClientLayout';
-import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
-import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
-import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
-import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
+import SolicitudDrogasClaseBForm from './pages/SolicitudDrogasClaseBForm';
+import SolicitudDrogasClaseBForm2 from './pages/SolicitudDrogasClaseBForm2';
+import SolicitudDrogasClaseBExito from './pages/SolicitudDrogasClaseBExito';
+import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudClaseAProvider>
+      <SolicitudClaseBProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -84,30 +83,30 @@ export default function App() {
             }
           />
 
-          {/* Solicitud Drogas Clase A flow */}
+          {/* Solicitud Drogas Clase B flow */}
           <Route
-            path="/solicitud-drogas-clase-a"
+            path="/solicitud-drogas-clase-b"
             element={
               <ProtectedRoute>
-                <SolicitudDrogasClaseAForm />
+                <SolicitudDrogasClaseBForm />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/documentos"
+            path="/solicitud-drogas-clase-b/form2"
             element={
               <ProtectedRoute>
-                <DocumentosSolicitudDrogasClaseA />
+                <SolicitudDrogasClaseBForm2 />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/solicitud-drogas-clase-a/exito"
+            path="/solicitud-drogas-clase-b/exito"
             element={
               <ProtectedRoute>
-                <SolicitudEnviadaExito />
+                <SolicitudDrogasClaseBExito />
               </ProtectedRoute>
             }
           />
@@ -115,7 +114,7 @@ export default function App() {
           {/* Legacy redirects */}
           <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
         </Routes>
-      </SolicitudClaseAProvider>
+      </SolicitudClaseBProvider>
     </BrowserRouter>
   );
 }
