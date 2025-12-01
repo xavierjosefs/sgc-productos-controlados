@@ -481,7 +481,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
 
               <div className="space-y-2">
                 <label className="block text-sm text-gray-700">
-                  Si su respuesta fue b o c es solicite el No. GDC:
+                  Si su respuesta fue b o c, especifique el No. GDC:
                 </label>
                 <input
                   type="text"
