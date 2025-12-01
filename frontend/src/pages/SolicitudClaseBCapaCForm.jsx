@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import ClientTopbar from "../components/ClientTopbar";
 import { useSolicitudClaseBCapaC } from "../contexts/SolicitudClaseBCapaCContext";
 
 export default function SolicitudClaseBCapaCForm() {
@@ -50,6 +51,53 @@ export default function SolicitudClaseBCapaCForm() {
     formData.lugarTrabajoAgenteAduanero || ""
   );
 
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  // Validaciones
+  const errors = useMemo(() => {
+    if (!attemptedSubmit) return {};
+    
+    const newErrors = {};
+
+    // Sustancias Controladas
+    if (categoriasSustancias.length === 0) newErrors.categoriasSustancias = "Debe seleccionar al menos una categoría";
+    if (!codigoGrupo.trim()) newErrors.codigoGrupo = "Este campo es obligatorio";
+    if (!designacionSustancias.trim()) newErrors.designacionSustancias = "Este campo es obligatorio";
+
+    // Administrador/Propietario
+    if (!nombreAdministrador.trim()) newErrors.nombreAdministrador = "Este campo es obligatorio";
+    if (!direccionAdministrador.trim()) newErrors.direccionAdministrador = "Este campo es obligatorio";
+    if (!cedulaAdministrador.trim()) {
+      newErrors.cedulaAdministrador = "Este campo es obligatorio";
+    } else if (cedulaAdministrador.length !== 11) {
+      newErrors.cedulaAdministrador = "La cédula debe tener 11 dígitos";
+    }
+
+    // Agente Aduanero
+    if (!nombreAgenteAduanero.trim()) newErrors.nombreAgenteAduanero = "Este campo es obligatorio";
+    if (!direccionAgenteAduanero.trim()) newErrors.direccionAgenteAduanero = "Este campo es obligatorio";
+    if (!cedulaAgenteAduanero.trim()) {
+      newErrors.cedulaAgenteAduanero = "Este campo es obligatorio";
+    } else if (cedulaAgenteAduanero.length !== 11) {
+      newErrors.cedulaAgenteAduanero = "La cédula debe tener 11 dígitos";
+    }
+
+    return newErrors;
+  }, [
+    attemptedSubmit,
+    categoriasSustancias,
+    codigoGrupo,
+    designacionSustancias,
+    nombreAdministrador,
+    direccionAdministrador,
+    cedulaAdministrador,
+    nombreAgenteAduanero,
+    direccionAgenteAduanero,
+    cedulaAgenteAduanero,
+  ]);
+
+  const isValid = Object.keys(errors).length === 0;
+
   const handleCategoriaChange = (categoria) => {
     setCategoriasSustancias((prev) => {
       if (prev.includes(categoria)) {
@@ -66,50 +114,23 @@ export default function SolicitudClaseBCapaCForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validaciones básicas
-    if (categoriasSustancias.length === 0) {
-      alert("Debe seleccionar al menos una categoría de sustancias controladas");
-      return;
+    
+    // Primero activamos attemptedSubmit para mostrar errores
+    if (!attemptedSubmit) {
+      setAttemptedSubmit(true);
+      // Forzar que React recalcule antes de continuar
+      setTimeout(() => {
+        const hasErrors = Object.keys(errors).length > 0;
+        if (hasErrors) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 0);
+      return; // Salir y esperar al siguiente submit
     }
 
-    if (!codigoGrupo.trim()) {
-      alert("El código del grupo es requerido");
-      return;
-    }
-
-    if (!designacionSustancias.trim()) {
-      alert("La designación de sustancias es requerida");
-      return;
-    }
-
-    if (!nombreAdministrador.trim()) {
-      alert("El nombre del administrador/propietario es requerido");
-      return;
-    }
-
-    if (!direccionAdministrador.trim()) {
-      alert("La dirección del administrador/propietario es requerida");
-      return;
-    }
-
-    if (!cedulaAdministrador.trim()) {
-      alert("La cédula del administrador/propietario es requerida");
-      return;
-    }
-
-    if (!nombreAgenteAduanero.trim()) {
-      alert("El nombre del agente aduanero es requerido");
-      return;
-    }
-
-    if (!direccionAgenteAduanero.trim()) {
-      alert("La dirección del agente aduanero es requerida");
-      return;
-    }
-
-    if (!cedulaAgenteAduanero.trim()) {
-      alert("La cédula del agente aduanero es requerida");
+    // En el segundo submit, verificar si es válido
+    if (!isValid) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -137,8 +158,9 @@ export default function SolicitudClaseBCapaCForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen bg-gray-50">
+      <ClientTopbar />
+      <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex items-center mb-8">
           <button
@@ -175,8 +197,9 @@ export default function SolicitudClaseBCapaCForm() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Categorías de drogas controladas que solicita
+                  Categorías de drogas controladas que solicita <span className="text-red-500">*</span>
                 </label>
+                {errors.categoriasSustancias && <p className="text-xs text-red-500 mb-3">{errors.categoriasSustancias}</p>}
                 <div className="flex flex-wrap gap-4">
                   {["II", "III", "IV"].map((categoria) => (
                     <label
@@ -197,28 +220,32 @@ export default function SolicitudClaseBCapaCForm() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Código de los Grupos de Complejidad II y IV
+                  Código de los Grupos de Complejidad II y IV <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={codigoGrupo}
                   onChange={(e) => setCodigoGrupo(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.codigoGrupo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Ingrese el código"
+                  aria-invalid={!!errors.codigoGrupo}
                 />
+                {errors.codigoGrupo && <p className="text-xs text-red-500 mt-2">{errors.codigoGrupo}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Designación de Sustancias Controladas
+                  Designación de Sustancias Controladas <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={designacionSustancias}
                   onChange={(e) => setDesignacionSustancias(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.designacionSustancias ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Describa las sustancias"
+                  aria-invalid={!!errors.designacionSustancias}
                 />
+                {errors.designacionSustancias && <p className="text-xs text-red-500 mt-2">{errors.designacionSustancias}</p>}
               </div>
             </div>
           </div>
@@ -232,35 +259,37 @@ export default function SolicitudClaseBCapaCForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre del Administrador / Propietario
+                  Nombre del Administrador / Propietario <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={nombreAdministrador}
                   onChange={(e) => setNombreAdministrador(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.nombreAdministrador ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Nombre completo"
-                  required
+                  aria-invalid={!!errors.nombreAdministrador}
                 />
+                {errors.nombreAdministrador && <p className="text-xs text-red-500 mt-2">{errors.nombreAdministrador}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección
+                  Dirección <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={direccionAdministrador}
                   onChange={(e) => setDireccionAdministrador(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.direccionAdministrador ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Dirección completa"
-                  required
+                  aria-invalid={!!errors.direccionAdministrador}
                 />
+                {errors.direccionAdministrador && <p className="text-xs text-red-500 mt-2">{errors.direccionAdministrador}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cédula de Identidad y Electoral
+                  Cédula de Identidad y Electoral <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -268,11 +297,12 @@ export default function SolicitudClaseBCapaCForm() {
                   onChange={(e) =>
                     setCedulaAdministrador(e.target.value.replace(/\D/g, ""))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.cedulaAdministrador ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="000-0000000-0"
                   maxLength={11}
-                  required
+                  aria-invalid={!!errors.cedulaAdministrador}
                 />
+                {errors.cedulaAdministrador && <p className="text-xs text-red-500 mt-2">{errors.cedulaAdministrador}</p>}
               </div>
 
               <div>
@@ -325,35 +355,37 @@ export default function SolicitudClaseBCapaCForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre del Agente Aduanero
+                  Nombre del Agente Aduanero <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={nombreAgenteAduanero}
                   onChange={(e) => setNombreAgenteAduanero(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.nombreAgenteAduanero ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Nombre completo"
-                  required
+                  aria-invalid={!!errors.nombreAgenteAduanero}
                 />
+                {errors.nombreAgenteAduanero && <p className="text-xs text-red-500 mt-2">{errors.nombreAgenteAduanero}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección
+                  Dirección <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={direccionAgenteAduanero}
                   onChange={(e) => setDireccionAgenteAduanero(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.direccionAgenteAduanero ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="Dirección completa"
-                  required
+                  aria-invalid={!!errors.direccionAgenteAduanero}
                 />
+                {errors.direccionAgenteAduanero && <p className="text-xs text-red-500 mt-2">{errors.direccionAgenteAduanero}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cédula de Identidad y Electoral
+                  Cédula de Identidad y Electoral <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -361,11 +393,12 @@ export default function SolicitudClaseBCapaCForm() {
                   onChange={(e) =>
                     setCedulaAgenteAduanero(e.target.value.replace(/\D/g, ""))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.cedulaAgenteAduanero ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
                   placeholder="000-0000000-0"
                   maxLength={11}
-                  required
+                  aria-invalid={!!errors.cedulaAgenteAduanero}
                 />
+                {errors.cedulaAgenteAduanero && <p className="text-xs text-red-500 mt-2">{errors.cedulaAgenteAduanero}</p>}
               </div>
 
               <div>
@@ -413,7 +446,8 @@ export default function SolicitudClaseBCapaCForm() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-[#0B57A6] hover:bg-[#084c8a] text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200"
+              disabled={attemptedSubmit && !isValid}
+              className="bg-[#0B57A6] hover:bg-[#084c8a] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200"
             >
               Continuar
             </button>

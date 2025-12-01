@@ -14,8 +14,29 @@ export const useSolicitudClaseBCapaC = () => {
 
 export const SolicitudClaseBCapaCProvider = ({ children }) => {
   const [formData, setFormData] = useState({
+    // Identificación (Pantalla 1)
+    nombreEmpresa: "",
+    direccionCamaPostal: "",
+    rncEmpresa: "",
+    telefonoEmpresa: "",
+    correoEmpresa: "",
+    
     // Actividades (Pantalla 1)
     actividades: [],
+    
+    // Condición de Solicitud (Pantalla 1)
+    condicionSolicitud: "",
+    otraCondicion: "",
+    especifiqueNoGdc: "",
+    especifiqueElMotivo: "",
+    
+    // Regente Farmacéutico (Pantalla 1)
+    nombreRegente: "",
+    direccionRegente: "",
+    cedulaRegente: "",
+    exequaturRegente: "",
+    telefonoRegente: "",
+    lugarTrabajoRegente: "",
     
     // Sustancias Controladas (Pantalla 2 - condicional)
     categoriasSustancias: [],
@@ -45,7 +66,22 @@ export const SolicitudClaseBCapaCProvider = ({ children }) => {
 
   const clearFormData = () => {
     setFormData({
+      nombreEmpresa: "",
+      direccionCamaPostal: "",
+      rncEmpresa: "",
+      telefonoEmpresa: "",
+      correoEmpresa: "",
       actividades: [],
+      condicionSolicitud: "",
+      otraCondicion: "",
+      especifiqueNoGdc: "",
+      especifiqueElMotivo: "",
+      nombreRegente: "",
+      direccionRegente: "",
+      cedulaRegente: "",
+      exequaturRegente: "",
+      telefonoRegente: "",
+      lugarTrabajoRegente: "",
       categoriasSustancias: [],
       codigoGrupo: "",
       designacionSustancias: "",
