@@ -1,15 +1,15 @@
-import { Outlet } from 'react-router-dom';
+﻿import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 /**
- * Layout principal del módulo Cliente
- * Contiene: Sidebar + Topbar + Área de contenido (Outlet)
+ * Layout principal del m├│dulo Cliente
+ * Contiene: Sidebar + Topbar + ├ürea de contenido (Outlet)
  */
 export default function ClientLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Navegación lateral */}
+      {/* Sidebar - Navegaci├│n lateral */}
       <Sidebar />
 
       {/* Contenedor principal */}
@@ -17,7 +17,7 @@ export default function ClientLayout() {
         {/* Topbar - Barra superior */}
         <Topbar />
 
-        {/* Área de contenido - Renderiza las páginas */}
+        {/* ├ürea de contenido - Renderiza las p├íginas */}
         <main className="flex-1 p-6 overflow-auto">
           <Outlet />
         </main>
