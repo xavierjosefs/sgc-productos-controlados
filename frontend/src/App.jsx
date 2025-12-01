@@ -6,6 +6,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Support from './pages/Support';
 import RequestsFiltered from './pages/RequestsFiltered';
+import SolicitudImportacionMedicamentosFase01 from './pages/SolicitudImportacionMedicamentosFase01';
+import SolicitudImportacionMedicamentosFase02 from './pages/SolicitudImportacionMedicamentosFase02';
+import SolicitudImportacionMedicamentosExito from './pages/SolicitudImportacionMedicamentosExito';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -40,6 +43,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RequestsFiltered />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-importacion-medicamentos/fase-01"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMedicamentosFase01 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-importacion-medicamentos/fase-02"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMedicamentosFase02 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud-importacion-medicamentos/exito"
+          element={
+            <ProtectedRoute>
+              <SolicitudImportacionMedicamentosExito />
             </ProtectedRoute>
           }
         />

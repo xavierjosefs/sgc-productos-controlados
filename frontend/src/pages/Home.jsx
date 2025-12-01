@@ -8,7 +8,7 @@ import useServicesAPI from '../hooks/useServicesAPI';
 
 /**
  * Dashboard principal del Cliente (Home)
- * Muestra resumen de estados y ├║ltimas 5 solicitudes
+ * Muestra resumen de estados y últimas 5 solicitudes
  */
 export default function Home() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Home() {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [errorRequests, setErrorRequests] = useState('');
   const [showCreateMenu, setShowCreateMenu] = useState(false);
-  // Estado para tipos de servicio din├ímicos
+  // Estado para tipos de servicio dinámicos
   const [serviceTypes, setServiceTypes] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [errorServices, setErrorServices] = useState('');
@@ -68,7 +68,7 @@ export default function Home() {
       );
     }
     
-    // Mostrar solo las ├║ltimas 5 solicitudes filtradas
+    // Mostrar solo las últimas 5 solicitudes filtradas
     setRecentRequests(filtered.slice(0, 5));
   }, [filterTipo, filterEstado]);
 
@@ -84,7 +84,7 @@ export default function Home() {
     setRecentRequests(allRequests.slice(0, 5));
   };
 
-  // Cargar tipos de servicio din├ímicos cuando se abre el men├║
+  // Cargar tipos de servicio dinámicos cuando se abre el menú
   const { getServiceTypes } = useServicesAPI();
   const handleOpenCreateMenu = async () => {
     setShowCreateMenu(!showCreateMenu);
@@ -119,7 +119,7 @@ export default function Home() {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Encabezado con t├¡tulo y bot├│n crear */}
+        {/* Encabezado con título y botón crear */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
           
@@ -223,7 +223,7 @@ export default function Home() {
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
                 >
                   <option value="">Todos los tipos</option>
-                  {/* Los tipos se mostrar├ín din├ímicamente cuando el backend implemente el endpoint */}
+                  {/* Los tipos se mostrarán dinámicamente cuando el backend implemente el endpoint */}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -274,7 +274,7 @@ export default function Home() {
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creaci├│n</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creación</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
               </tr>
             </thead>
@@ -284,7 +284,7 @@ export default function Home() {
               ) : errorRequests ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-red-500">{errorRequests}</td></tr>
               ) : recentRequests.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas a├║n</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aún</td></tr>
               ) : (
                 recentRequests.map(request => (
                   <tr key={request.id} className="hover:bg-gray-100 transition-colors">
@@ -310,7 +310,7 @@ export default function Home() {
           ) : errorRequests ? (
             <div className="text-center py-12 text-red-500">{errorRequests}</div>
           ) : recentRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas a├║n</div>
+            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aún</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {recentRequests.map(request => (
