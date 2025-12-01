@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Topbar del cliente
- * Logo + Navegaci├│n + Usuario
+ * Logo + Navegación + Usuario
  */
 import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
@@ -9,7 +9,7 @@ export default function ClientTopbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userName = user.nombre || user.name || 'Usuario';
+  const userName = user.full_name || user.nombre || user.name || 'Usuario';
   const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   const handleLogout = () => {
@@ -29,7 +29,7 @@ export default function ClientTopbar() {
           <Logo />
         </div>
 
-        {/* Centro - Botones de navegaci├│n */}
+        {/* Centro - Botones de navegación */}
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}

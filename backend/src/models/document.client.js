@@ -1,4 +1,4 @@
-﻿import pool from "../config/db.js";
+import pool from "../config/db.js";
 
 export const findSolicitudById = async(id) => {
     const result = await pool.query(
@@ -24,4 +24,12 @@ export const getDocumentosBySolicitudId = async (solicitud_id) => {
         [solicitud_id]
     );
     return result.rows;
+}
+
+export const sendRequestBySoliciutudId = async (solicitud_id) => {
+    const result = await pool.query(`UPDATE solicitudes
+    SET estado_id = (SELECT id FROM estados_solicitud WHERE nombre_mostrar = 'Enviada')
+    WHERE id = $1`,[solicitud_id]);
+
+    return result.rowCount > 0;
 }
