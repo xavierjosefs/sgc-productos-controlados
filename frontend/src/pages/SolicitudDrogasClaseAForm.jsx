@@ -216,7 +216,7 @@ const SolicitudDrogasClaseAForm = () => {
             <div className="text-gray-700 text-base leading-relaxed">
               <div>Cuenta de ingresos Externos – DNCD (Tesorería):</div>
               <div>No.: 100-01-201-032353-9</div>
-              <div className="font-semibold mt-2">Costo del Servicio: RD$1500.00</div>
+              <div className="font-semibold mt-2">Costo del Servicio: RD$150.00</div>
             </div>
           </div>
 
