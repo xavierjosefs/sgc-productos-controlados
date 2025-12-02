@@ -83,7 +83,27 @@ export const createRequest = async (user_id, tipo_servicio_id, formulario) => {
 };
 
 export const getRequestsBycedula = async (cedula) => {
-  const result = await pool.query("SELECT * FROM solicitudes WHERE user_id = $1", [cedula]);
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      s.form_data,
+      s.fecha_creacion,
+      s.tipo_solicitud,
+      s.solicitud_original_id,
+      s.fase,
+      s.solicitud_anterior_id,
+      s.estado_id,
+      ts.nombre_servicio AS tipo_servicio,
+      e.nombre_mostrar   AS estado_actual
+    FROM solicitudes s
+    JOIN tipos_servicio ts
+      ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e
+      ON s.estado_id = e.id
+    WHERE s.user_id = $1
+    ORDER BY s.fecha_creacion DESC
+  `, [cedula]);
 
   return result.rows;
 }
@@ -95,7 +115,6 @@ export const getRequestDetailsById = async (id) => {
       s.user_id,
       s.form_data,
       s.fecha_creacion,
-      s.fecha_actualizacion,
       s.tipo_solicitud,
       s.solicitud_original_id,
       s.fase,

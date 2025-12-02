@@ -1,5 +1,5 @@
 import {supabase} from "../lib/supabase.js";
-import { findSolicitudById, createDocumento, getDocumentosBySolicitudId } from "../models/document.client.js";
+import { findSolicitudById, createDocumento, getDocumentosBySolicitudId, sendRequestBySoliciutudId } from "../models/document.client.js";
 
 export const uploadDocumentController = async (req, res) => {
   try {
@@ -34,10 +34,17 @@ export const uploadDocumentController = async (req, res) => {
     }
 
     const extension = archivo.originalname.split(".").pop();
-    const nombreArchivoStorage = `${solicitudId}/${tipoDocumento}-${Date.now()}.${extension}`;
+    // Sanitizar el nombre del tipo de documento para evitar caracteres especiales
+    const tipoDocumentoSanitizado = tipoDocumento
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+      .replace(/[^a-zA-Z0-9]/g, '_') // Reemplazar caracteres especiales con guión bajo
+      .replace(/_+/g, '_') // Reemplazar múltiples guiones bajos con uno solo
+      .toLowerCase();
+    const nombreArchivoStorage = `${solicitudId}/${tipoDocumentoSanitizado}-${Date.now()}.${extension}`;
 
     //Subir al bucket de supabase
-    const { error } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("documentos")
       .upload(nombreArchivoStorage, archivo.buffer, {
         cacheControl: "3600",
@@ -47,11 +54,15 @@ export const uploadDocumentController = async (req, res) => {
 
     if (error) {
       console.error("Error Supabase:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return res.status(500).json({
         ok: false,
-        message: "Error al subir archivo a Supabase.",
+        message: `Error al subir archivo a Supabase: ${error.message || error.error || 'Unknown error'}`,
+        details: error
       });
     }
+
+    console.log("Archivo subido exitosamente:", data);
 
     //obtener la url del archivo
     const { data: ulrData } = supabase.storage
