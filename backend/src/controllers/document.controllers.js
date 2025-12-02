@@ -34,7 +34,14 @@ export const uploadDocumentController = async (req, res) => {
     }
 
     const extension = archivo.originalname.split(".").pop();
-    const nombreArchivoStorage = `${solicitudId}/${tipoDocumento}-${Date.now()}.${extension}`;
+    // Sanitizar el nombre del tipo de documento para evitar caracteres especiales
+    const tipoDocumentoSanitizado = tipoDocumento
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+      .replace(/[^a-zA-Z0-9]/g, '_') // Reemplazar caracteres especiales con guión bajo
+      .replace(/_+/g, '_') // Reemplazar múltiples guiones bajos con uno solo
+      .toLowerCase();
+    const nombreArchivoStorage = `${solicitudId}/${tipoDocumentoSanitizado}-${Date.now()}.${extension}`;
 
     //Subir al bucket de supabase
     const { data, error } = await supabase.storage

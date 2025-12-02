@@ -2,23 +2,25 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
 import useRequestsAPI from '../hooks/useRequestsAPI';
-import { useSolicitudClaseA } from '../contexts/SolicitudClaseAContext';
+import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
 
 const FIELD_LIST = [
-  { key: 'cedula', label: 'Cédula de Identidad y Electoral' },
-  { key: 'titulo', label: 'Título Universitario y/o Especialidad' },
-  { key: 'exequatur', label: 'Exequátur' },
-  { key: 'recibo', label: 'Recibo de Depósito del Pago' },
+  { key: 'cedulaRepresentante', label: 'Cédula del Representante Legal del Establecimiento' },
+  { key: 'cedulaDirector', label: 'Cédula del Director Técnico' },
+  { key: 'tituloDirector', label: 'Título del Director Técnico' },
+  { key: 'exequaturDirector', label: 'Exequátur del Director Técnico' },
+  { key: 'permisoApertura', label: 'Permiso de apertura y/o habilitación del establecimiento vigente, o copia del volante de renovación sellado por Ventanilla Única de Servicios.' },
+  { key: 'reciboPago', label: 'Recibo de Depósito del Pago' },
 ];
 
-const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
+const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
   const navigate = useNavigate();
-  const { formData, clearFormData } = useSolicitudClaseA();
+  const { formData, clearFormData } = useSolicitudClaseB();
   const [files, setFiles] = useState({});
   const inputRefs = useRef({});
 
   const handleFileChange = (key, file) => {
-    setFiles((prev) => ({ ...prev, [key]: file }));
+    setFiles(prev => ({ ...prev, [key]: file }));
   };
 
   const triggerFileInput = (key) => {
@@ -48,7 +50,7 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
     try {
       // Crear solicitud con datos reales del formulario desde Context
       const resp = await createRequest({ 
-        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A', 
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados', 
         formulario: formData 
       });
       // El controller responde { ok: true, request }
@@ -68,7 +70,7 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
 
       // Limpiar datos del formulario del context
       clearFormData();
-      navigate('/solicitud-drogas-clase-a/exito');
+      navigate('/solicitud-drogas-clase-b/exito');
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);
       alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
@@ -79,6 +81,7 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+
       <div className="max-w-4xl mx-auto px-6 py-12">
         <button onClick={handleBack} className="text-[#4A8BDF] mb-6 inline-flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -87,7 +90,7 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
           Volver
         </button>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">Solicitud de Certificado de Inscripción de Drogas Controladas Clase A</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">Solicitud de Certificado de Inscripción de Drogas Controladas Clase B</h1>
 
         <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mx-auto" style={{ maxWidth: 620 }}>
           <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Documentos</h2>
@@ -132,4 +135,4 @@ const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
   );
 };
 
-export default DocumentosSolicitudDrogasClaseA;
+export default DocumentosSolicitudDrogasClaseB;

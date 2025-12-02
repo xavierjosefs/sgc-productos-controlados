@@ -172,7 +172,7 @@ export default function RequestsFiltered() {
                       <td className="px-6 py-5 text-sm text-gray-700 flex items-center justify-between">
                         <span>{request.tipo_servicio}</span>
                         <button 
-                          onClick={() => navigate(`/requests/${request.id}`)}
+                          onClick={() => navigate(`/requests/${request.id}/details`)}
                           className="text-[#4A8BDF] font-medium text-sm hover:text-[#3875C8] transition-colors"
                         >
                           Ver Detalle
@@ -215,7 +215,7 @@ export default function RequestsFiltered() {
                       </div>
                       <div className="pt-2">
                         <button 
-                          onClick={() => navigate(`/requests/${request.id}`)}
+                          onClick={() => navigate(`/requests/${request.id}/details`)}
                           className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors"
                         >
                           Ver Detalle
