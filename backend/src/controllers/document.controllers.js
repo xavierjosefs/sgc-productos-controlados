@@ -79,11 +79,13 @@ export const uploadDocumentController = async (req, res) => {
       archivo.size,
       url
     );
-    // Cambiar estado de la solicitud a 'Enviada'
-    await sendRequestBySoliciutudId(solicitudId);
+
+    const sendRequest = await sendRequestBySoliciutudId(solicitudId);
+
     return res.status(201).json({
       ok: true,
       message: "Documento subido correctamente.",
+      send: sendRequest,
       documento,
     });
   } catch (error) {

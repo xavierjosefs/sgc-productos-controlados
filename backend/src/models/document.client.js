@@ -31,5 +31,5 @@ export const sendRequestBySoliciutudId = async (solicitud_id) => {
     SET estado_id = (SELECT id FROM estados_solicitud WHERE nombre_mostrar = 'Enviada')
     WHERE id = $1`,[solicitud_id]);
 
-    return result.rowCount > 0;
+    return result.rowCount > 0;
 }
