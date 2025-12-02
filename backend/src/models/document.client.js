@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 
-export const findSolicitudById = async(id) => {
+export const findSolicitudById = async (id) => {
     const result = await pool.query(
         `SELECT * FROM solicitudes WHERE id = $1`,
         [id]
@@ -29,7 +29,23 @@ export const getDocumentosBySolicitudId = async (solicitud_id) => {
 export const sendRequestBySoliciutudId = async (solicitud_id) => {
     const result = await pool.query(`UPDATE solicitudes
     SET estado_id = (SELECT id FROM estados_solicitud WHERE nombre_mostrar = 'Enviada')
-    WHERE id = $1`,[solicitud_id]);
+    WHERE id = $1`, [solicitud_id]);
 
     return result.rowCount > 0;
+}
+
+export const findDocumentoById = async (id) => {
+    const result = await pool.query(
+        `SELECT * FROM documentos_solicitud WHERE id = $1`,
+        [id]
+    );
+    return result.rows[0] || null;
+}
+
+export const deleteDocumento = async (documentoId) => {
+    const result = await pool.query(
+        `DELETE FROM documentos_solicitud WHERE id = $1 RETURNING *`,
+        [documentoId]
+    );
+    return result.rows[0];
 }
