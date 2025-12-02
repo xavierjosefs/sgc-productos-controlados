@@ -52,7 +52,7 @@ export default function SolicitudImportacionMateriaPrimaFase02() {
     try {
       // Crear solicitud para Fase 02
       const resp = await createRequest({
-        nombre_servicio: 'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas - Fase 02',
+        nombre_servicio: 'Solicitud de Permiso de Importación de Materia Prima',
         formulario: { fase: 2 }
       });
       

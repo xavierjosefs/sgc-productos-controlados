@@ -45,7 +45,7 @@ export default function SolicitudImportacionMedicamentosFase01() {
     try {
       // Crear solicitud para Fase 01
       const resp = await createRequest({
-        nombre_servicio: 'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada - Fase 01',
+        nombre_servicio: 'Solicitud de Permiso de Importación de Medicamentos',
         formulario: { fase: 1 }
       });
       

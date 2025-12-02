@@ -49,7 +49,7 @@ const DocumentosSolicitudClaseBCapaC = ({ onBack }) => {
     try {
       // Crear solicitud con datos reales del formulario desde Context
       const resp = await createRequest({ 
-        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C', 
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B Capa C', 
         formulario: formData 
       });
       // El controller responde { ok: true, request }
