@@ -12,7 +12,7 @@ const FIELD_LIST = [
   { key: 'reciboPago', label: 'Recibo de Depósito del Pago' },
 ];
 
-const DocumentosSolicitudClaseBCapaC = ({ onBack, onEnviar }) => {
+const DocumentosSolicitudClaseBCapaC = ({ onBack }) => {
   const navigate = useNavigate();
   const { formData, clearFormData } = useSolicitudClaseBCapaC();
   const [files, setFiles] = useState({});

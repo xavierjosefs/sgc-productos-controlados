@@ -11,7 +11,7 @@ const FIELD_LIST = [
   { key: 'recibo', label: 'Recibo de Depósito del Pago' },
 ];
 
-const DocumentosSolicitudDrogasClaseA = ({ onBack, onEnviar }) => {
+const DocumentosSolicitudDrogasClaseA = ({ onBack }) => {
   const navigate = useNavigate();
   const { formData, clearFormData } = useSolicitudClaseA();
   const [files, setFiles] = useState({});
