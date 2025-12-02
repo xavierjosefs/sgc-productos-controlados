@@ -21,12 +21,14 @@ import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 // Clase B
 import SolicitudDrogasClaseBForm from './pages/SolicitudDrogasClaseBForm';
 import SolicitudDrogasClaseBForm2 from './pages/SolicitudDrogasClaseBForm2';
+import DocumentosSolicitudDrogasClaseB from './pages/DocumentosSolicitudDrogasClaseB';
 import SolicitudDrogasClaseBExito from './pages/SolicitudDrogasClaseBExito';
 import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 
 // Clase B Capa C
 import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
 import SolicitudClaseBCapaCActividadesForm from './pages/SolicitudClaseBCapaCActividadesForm';
+import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
 import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
 import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
 
@@ -158,6 +160,15 @@ export default function App() {
               />
 
               <Route
+                path="/solicitud-drogas-clase-b/documentos"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudDrogasClaseB />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/solicitud-drogas-clase-b/exito"
                 element={
                   <ProtectedRoute>
@@ -181,6 +192,15 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <SolicitudClaseBCapaCActividadesForm />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/solicitud-clase-b-capa-c/documentos"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudClaseBCapaC />
                   </ProtectedRoute>
                 }
               />
