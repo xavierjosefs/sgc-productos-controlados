@@ -1,7 +1,7 @@
 import express from "express";
 import { upload } from "../middleware/upload.middleware.js";
 import { createRequestController, getRequestsController, getRequestDetailsController, getSendRequestsController, getAproveRequestsController, getReturnedRequestsController, getPendingRequestsController } from "../controllers/request.controllers.js";
-import { uploadDocumentController, getDocumentosBySolicitudController } from "../controllers/document.controllers.js";
+import { uploadDocumentController, getDocumentosBySolicitudController, deleteDocumentController } from "../controllers/document.controllers.js";
 
 const router = express.Router();
 /**
@@ -43,6 +43,41 @@ router.get("/get-requests", getRequestsController);
 router.post("/:id/documents", upload.single("archivo"), uploadDocumentController);
 router.get("/:id/details", getRequestDetailsController);
 router.get("/:id/documents", getDocumentosBySolicitudController);
+
+/**
+ * @swagger
+ * /requests/{id}/documents/{documentId}:
+ *   delete:
+ *     summary: Delete a document from a request
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Request ID
+ *       - in: path
+ *         name: documentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Document ID to delete
+ *     responses:
+ *       200:
+ *         description: Document deleted successfully
+ *       400:
+ *         description: Document does not belong to the request
+ *       403:
+ *         description: User not authorized to delete documents from this request
+ *       404:
+ *         description: Document or request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/:id/documents/:documentId", deleteDocumentController);
 router.get("/send", getSendRequestsController);
 router.get("/aprove", getAproveRequestsController);
 router.get("/returned", getReturnedRequestsController);

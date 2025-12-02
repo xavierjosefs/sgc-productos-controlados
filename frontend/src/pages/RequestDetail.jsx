@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 import BadgeEstado from '../components/BadgeEstado';
 import ModalDocumento from '../components/ModalDocumento';
+import ModalConfirmacionEliminar from '../components/ModalConfirmacionEliminar';
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -22,6 +23,8 @@ const RequestDetail = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
 
   // Cargar detalle de solicitud
   const fetchDetail = async () => {
@@ -46,7 +49,8 @@ const RequestDetail = () => {
 
   // Subir documento
   const handleUpload = async (requestId, file) => {
-    await uploadDocument(requestId, file);
+    // Se envía un tipo de documento por defecto si no se especifica otro
+    await uploadDocument(requestId, file, { tipo_documento: 'Documento General' });
     await fetchDetail();
   };
 
@@ -56,19 +60,35 @@ const RequestDetail = () => {
     await fetchDetail();
   };
 
-  // Eliminar documento
-  const _handleDelete = async (documentId) => {
+  // Abrir modal de confirmación de eliminación
+  const handleDeleteClick = (document) => {
+    setDocumentToDelete(document);
+    setDeleteModalOpen(true);
+  };
+
+  // Cancelar eliminación
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setDocumentToDelete(null);
+    setDeleteError('');
+  };
+
+  // Confirmar y ejecutar eliminación
+  const handleDeleteConfirm = async () => {
+    if (!documentToDelete) return;
+
     setDeleteLoading(true);
     setDeleteError('');
     try {
-      await deleteDocument(id, documentId);
+      await deleteDocument(id, documentToDelete.id);
+      setDeleteModalOpen(false);
+      setDocumentToDelete(null);
       await fetchDetail();
     } catch (error) {
       console.error('Error deleting document:', error);
       setDeleteError(error?.message || 'Error al eliminar el documento');
     } finally {
       setDeleteLoading(false);
-      setSelectedDocument(null);
     }
   };
 
@@ -238,8 +258,8 @@ const RequestDetail = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Documentos</h2>
           {isPending && (
-            <button 
-              className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg hover:bg-[#3a7bcf]" 
+            <button
+              className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg hover:bg-[#3a7bcf]"
               onClick={() => setModalOpen(true)}
             >
               Subir documento
@@ -259,6 +279,7 @@ const RequestDetail = () => {
                   {isPending && (
                     <>
                       <button className="px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600" onClick={() => { setSelectedDocument(doc); setModalReplaceOpen(true); }}>Reemplazar</button>
+                      <button className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700" onClick={() => handleDeleteClick(doc)}>Eliminar</button>
                     </>
                   )}
                 </div>
@@ -268,7 +289,7 @@ const RequestDetail = () => {
         ) : (
           <div className="text-gray-500">No hay documentos asociados</div>
         )}
-        
+
         {isPending && (
           <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
@@ -277,6 +298,14 @@ const RequestDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Mostrar error de eliminación si existe */}
+      {deleteError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-red-800">❌ {deleteError}</p>
+        </div>
+      )}
+
       {/* Modal subir documento */}
       <ModalDocumento
         open={modalOpen}
@@ -285,6 +314,7 @@ const RequestDetail = () => {
         requestId={id}
         isReplace={false}
       />
+
       {/* Modal reemplazar documento */}
       <ModalDocumento
         open={modalReplaceOpen}
@@ -294,7 +324,15 @@ const RequestDetail = () => {
         isReplace={true}
         initialDocument={selectedDocument}
       />
-      {/* Nota: eliminacion de documentos no soportada por backend actualmente */}
+
+      {/* Modal confirmar eliminación */}
+      <ModalConfirmacionEliminar
+        open={deleteModalOpen}
+        onCancel={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        documentName={documentToDelete?.nombre_archivo || documentToDelete?.nombre || 'Documento'}
+        loading={deleteLoading}
+      />
     </div>
   );
 };
