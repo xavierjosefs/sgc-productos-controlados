@@ -160,8 +160,8 @@ export default function SolicitudImportacionMedicamentosFase02() {
 
       {/* Modal de confirmación */}
       <ModalConfirmacionEnvio
-        isOpen={confirmOpen}
-        onClose={handleCancel}
+        open={confirmOpen}
+        onCancel={handleCancel}
         onConfirm={handleConfirm}
       />
     </div>

@@ -158,8 +158,8 @@ export default function SolicitudImportacionMateriaPrimaFase01() {
 
       {/* Modal de confirmación */}
       <ModalConfirmacionEnvio
-        isOpen={confirmOpen}
-        onClose={handleCancel}
+        open={confirmOpen}
+        onCancel={handleCancel}
         onConfirm={handleConfirm}
       />
     </div>

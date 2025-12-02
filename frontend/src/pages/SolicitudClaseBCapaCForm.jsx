@@ -109,7 +109,7 @@ export default function SolicitudClaseBCapaCForm() {
   };
 
   const handleBack = () => {
-    navigate("/solicitud-drogas-clase-b-capa-c");
+    navigate("/");
   };
 
   const handleSubmit = (e) => {
@@ -153,8 +153,8 @@ export default function SolicitudClaseBCapaCForm() {
       lugarTrabajoAgenteAduanero,
     });
 
-    // Navegar a documentos
-    navigate("/solicitud-drogas-clase-b-capa-c/documentos");
+    // Navegar a actividades
+    navigate("/solicitud-clase-b-capa-c/actividades");
   };
 
   return (

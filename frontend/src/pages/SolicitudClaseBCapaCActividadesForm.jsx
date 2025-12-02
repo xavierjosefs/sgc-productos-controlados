@@ -104,7 +104,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
   };
 
   const handleBack = () => {
-    navigate("/");
+    navigate("/solicitud-clase-b-capa-c");
   };
 
   const handleSubmit = (e) => {
@@ -149,19 +149,8 @@ export default function SolicitudClaseBCapaCActividadesForm() {
       lugarTrabajoRegente,
     });
 
-    // Verificar si marcaron alguna actividad especial
-    const actividadesEspeciales = ["Importadora", "Exportadora", "Fabricante"];
-    const tieneActividadEspecial = actividades.some((act) =>
-      actividadesEspeciales.includes(act)
-    );
-
-    // Si marcaron alguna actividad especial, ir a paso 2
-    // Si no, ir directo a documentos
-    if (tieneActividadEspecial) {
-      navigate("/solicitud-drogas-clase-b-capa-c/paso-2");
-    } else {
-      navigate("/solicitud-drogas-clase-b-capa-c/documentos");
-    }
+    // Navegar a documentos
+    navigate("/solicitud-clase-b-capa-c/documentos");
   };
 
   return (
