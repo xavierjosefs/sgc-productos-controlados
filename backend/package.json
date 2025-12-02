@@ -24,6 +24,8 @@
     "nodemailer": "^7.0.10",
     "npm": "^11.6.3",
     "pg": "^8.16.3",
-    "supabase": "^2.58.5"
+    "supabase": "^2.58.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
