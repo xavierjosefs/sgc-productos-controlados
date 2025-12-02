@@ -95,14 +95,17 @@ export default function PreRegister() {
       const response = await axios.post(
         `${baseURL}/api/auth/pre-register`,
         { full_name, cedula, email },
-        { headers: { "Content-Type": "application/json" } }
+        { 
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" } 
+        }
       );
 
       setApiSuccess(response.data.message);   // ✔ Muestra mensaje de éxito
       setApiError('');                       // ✔ Limpia errores si había
-    }catch (error) {
+    } catch (error) {
       console.error('Error en registro:', error);
-      setApiError(error.message || 'Error al registrar usuario. Inténtalo de nuevo.');
+      setApiError(error.response?.data?.message || error.message || 'Error al registrar usuario. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
