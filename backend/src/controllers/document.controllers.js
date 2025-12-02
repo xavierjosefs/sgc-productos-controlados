@@ -69,9 +69,12 @@ export const uploadDocumentController = async (req, res) => {
       url
     );
 
+    const sendRequest = await sendRequestBySoliciutudId(solicitudId);
+
     return res.status(201).json({
       ok: true,
       message: "Documento subido correctamente.",
+      send: sendRequest,
       documento,
     });
   } catch (error) {
