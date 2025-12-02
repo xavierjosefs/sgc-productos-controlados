@@ -1,9 +1,8 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import ModalConfirmacionEnvio from "../components/ModalConfirmacionEnvio";
-import { useSolicitudClaseBCapaC } from "../contexts/SolicitudClaseBCapaCContext";
-import useRequestsAPI from "../hooks/useRequestsAPI";
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
+import useRequestsAPI from '../hooks/useRequestsAPI';
+import { useSolicitudClaseBCapaC } from '../contexts/SolicitudClaseBCapaCContext';
 
 const FIELD_LIST = [
   { key: 'cedulaRepresentante', label: 'Cédula del Representante de la Entidad' },
@@ -13,14 +12,10 @@ const FIELD_LIST = [
   { key: 'reciboPago', label: 'Recibo de Depósito del Pago' },
 ];
 
-export default function DocumentosSolicitudClaseBCapaC() {
+const DocumentosSolicitudClaseBCapaC = ({ onBack, onEnviar }) => {
   const navigate = useNavigate();
   const { formData, clearFormData } = useSolicitudClaseBCapaC();
-  const { createRequest, uploadDocument } = useRequestsAPI();
-  
   const [files, setFiles] = useState({});
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef({});
 
   const handleFileChange = (key, file) => {
@@ -35,24 +30,29 @@ export default function DocumentosSolicitudClaseBCapaC() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!allFilled) {
-      alert('Por favor, sube todos los documentos requeridos');
-      return;
-    }
+    if (!allFilled) return;
+    // Abrir modal de confirmación
     setConfirmOpen(true);
   };
 
+  const handleBack = () => {
+    if (typeof onBack === 'function') return onBack();
+    navigate(-1);
+  };
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { createRequest, uploadDocument } = useRequestsAPI();
+
   const handleConfirm = async () => {
     setConfirmOpen(false);
-    setIsSubmitting(true);
-    
     try {
-      // Crear solicitud
-      const resp = await createRequest({
-        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C',
-        formulario: formData
+      // Crear solicitud con datos reales del formulario desde Context
+      const resp = await createRequest({ 
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C', 
+        formulario: formData 
       });
-      
+      // El controller responde { ok: true, request }
       const newRequest = resp.request || resp;
       const requestId = newRequest.id || newRequest.request?.id;
 
@@ -67,61 +67,38 @@ export default function DocumentosSolicitudClaseBCapaC() {
         await uploadDocument(requestId, file, { tipo_documento: key });
       }
 
-      // Limpiar datos del contexto
+      // Limpiar datos del formulario del context
       clearFormData();
-      
-      // Navegar a pantalla de éxito
-      navigate('/solicitud-drogas-clase-b-capa-c/exito');
+      navigate('/solicitud-clase-b-capa-c/exito');
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);
-      alert(error?.message || 'Error al enviar la solicitud. Por favor, intenta de nuevo.');
-      setIsSubmitting(false);
+      alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
     }
   };
 
   const handleCancel = () => setConfirmOpen(false);
 
-  const handleBack = () => {
-    // Verificar si viene de página 2 (con actividades especiales)
-    const actividadesEspeciales = ["Importadora", "Exportadora", "Fabricante"];
-    const tieneActividadEspecial = formData.actividades?.some((act) =>
-      actividadesEspeciales.includes(act)
-    );
-    
-    if (tieneActividadEspecial) {
-      navigate('/solicitud-drogas-clase-b-capa-c/paso-2');
-    } else {
-      navigate('/solicitud-drogas-clase-b-capa-c');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <ClientTopbar />
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="flex items-center mb-6">
-          <button onClick={handleBack} className="text-[#4A8BDF] mr-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#4A8BDF]">
-            Documentos - Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C
-          </h1>
-        </div>
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <button onClick={handleBack} className="text-[#4A8BDF] mb-6 inline-flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver
+        </button>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* SECCIÓN: Documentos */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-            <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Documentos Requeridos</h2>
-            <p className="text-gray-600 mb-8">Suba los siguientes documentos en formato PDF:</p>
-            <div className="space-y-6">
-              {FIELD_LIST.map(field => (
-                <div key={field.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {field.label}
-                  </label>
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C</h1>
+
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mx-auto" style={{ maxWidth: 620 }}>
+          <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Documentos</h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {FIELD_LIST.map(field => (
+              <div key={field.key} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-700 mb-2">{field.label}</label>
                   <div className="flex gap-3">
                     <input
                       ref={el => (inputRefs.current[field.key] = el)}
@@ -131,44 +108,30 @@ export default function DocumentosSolicitudClaseBCapaC() {
                       className="hidden"
                       onChange={(e) => handleFileChange(field.key, e.target.files[0])}
                     />
+
                     <input
                       readOnly
                       placeholder="Solo se permiten archivos PNG, JPG o PDF"
                       value={files[field.key]?.name || ''}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-400"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400"
                     />
-                    <button
-                      type="button"
-                      onClick={() => triggerFileInput(field.key)}
-                      className="bg-[#0B57A6] hover:bg-[#084c8a] text-white font-bold py-2 px-6 rounded-lg text-sm shrink-0 whitespace-nowrap"
-                    >
-                      Subir Documento
-                    </button>
+                    <button type="button" onClick={() => triggerFileInput(field.key)} className="px-4 py-2 bg-[#0B57A6] hover:bg-[#084c8a] text-white rounded-lg whitespace-nowrap">Subir Documento</button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">Solo se permiten archivos PNG, JPG o PDF</p>
+                  <p className="text-xs text-gray-400 mt-2">Solo se permiten archivos PNG, JPG o PDF</p>
                 </div>
-              ))}
+              </div>
+            ))}
+
+            <div className="flex items-center justify-center gap-6 mt-6">
+              <button type="button" onClick={handleBack} className="px-8 py-3 bg-white border border-[#4A8BDF] text-[#4A8BDF] rounded-lg font-semibold">Volver</button>
+              <button type="submit" disabled={!allFilled} className={`${allFilled ? 'bg-[#0B57A6] hover:bg-[#084c8a] text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} px-8 py-3 rounded-lg font-semibold`}>Enviar</button>
             </div>
-          </div>
-
-          {/* Botón de acción */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={!allFilled || isSubmitting}
-              className="bg-[#0B57A6] hover:bg-[#084c8a] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200"
-            >
-              {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
+        <ModalConfirmacionEnvio open={confirmOpen} onCancel={handleCancel} onConfirm={handleConfirm} />
       </div>
-
-      <ModalConfirmacionEnvio 
-        open={confirmOpen} 
-        onCancel={handleCancel} 
-        onConfirm={handleConfirm} 
-      />
     </div>
   );
-}
+};
+
+export default DocumentosSolicitudClaseBCapaC;
