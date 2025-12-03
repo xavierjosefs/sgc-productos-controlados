@@ -1,7 +1,15 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 import Logo from '../components/Logo';
 
 export default function Login() {
+
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const navigate = useNavigate();
+
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -64,6 +72,10 @@ export default function Login() {
   // Manejar submit del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const fd = new FormData(e.currentTarget);
+    const email = fd.get("email");
+    const password = fd.get("password");
     
     if (!validateForm()) {
       return;
@@ -72,32 +84,13 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // TODO: Conectar con el endpoint del backend cuando esté listo
-      // const response = await fetch('http://localhost:3000/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     email: formData.email,
-      //     password: formData.password
-      //   })
-      // });
-      // const data = await response.json();
-      
-      // Simulación temporal del login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // TODO: Guardar token en localStorage cuando el backend esté listo
-      // if (data.token) {
-      //   localStorage.setItem('token', data.token);
-      //   if (formData.rememberMe) {
-      //     localStorage.setItem('rememberMe', 'true');
-      //   }
-      //   // Redirigir al dashboard
-      //   window.location.href = '/dashboard';
-      // }
-
-      console.log('Login exitoso con:', formData);
-      alert('Login simulado exitosamente. Conectar con backend cuando esté listo.');
+      const response = await axios.post(`${baseURL}/api/auth/login`, { email, password }, { withCredentials: true });
+      if(response.status === 200){
+        const { token, user } = response.data;
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/");
+      }
       
     } catch (error) {
       console.error('Error en login:', error);
@@ -207,7 +200,7 @@ export default function Login() {
                 />
                 <span className="ml-2 text-xs text-gray-700">Recuérdame</span>
               </label>
-              <a href="#" className="text-xs transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
+              <a href="/forgot-password" className="text-xs transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
                 Recuperar Contraseña
               </a>
             </div>
@@ -231,7 +224,7 @@ export default function Login() {
           {/* Registrarse */}
           <p className="text-center text-xs text-gray-600 -mt-4">
             ¿Aún no tienes una cuenta?{' '}
-            <a href="/register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
+            <a href="/pre-register" className="font-medium transition-colors" style={{ color: '#4A8BDF' }} onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}>
               Regístrate aquí
             </a>
           </p>
