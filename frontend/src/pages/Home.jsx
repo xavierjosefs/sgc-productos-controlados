@@ -21,8 +21,6 @@ export default function Home() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   // Estado para tipos de servicio dinámicos
   const [serviceTypes, setServiceTypes] = useState([]);
-  const [loadingServices, setLoadingServices] = useState(false);
-  const [errorServices, setErrorServices] = useState('');
   // Estados para filtros
   const [filterTipo, setFilterTipo] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
@@ -49,6 +47,20 @@ export default function Home() {
     };
     loadRequests();
   }, [getUserRequests]);
+
+  // Cargar tipos de servicio al montar el componente
+  const { getServiceTypes } = useServicesAPI();
+  useEffect(() => {
+    const loadServiceTypes = async () => {
+      try {
+        const types = await getServiceTypes();
+        setServiceTypes(Array.isArray(types) ? types : (types.data || []));
+      } catch (err) {
+        console.error('Error cargando tipos de servicio:', err);
+      }
+    };
+    loadServiceTypes();
+  }, [getServiceTypes]);
 
   // Aplicar filtros a las solicitudes
   const applyFilters = useCallback((requests) => {
@@ -84,23 +96,29 @@ export default function Home() {
     setRecentRequests(allRequests.slice(0, 5));
   };
 
-  // Cargar tipos de servicio dinámicos cuando se abre el menú
-  const { getServiceTypes } = useServicesAPI();
-  const handleOpenCreateMenu = async () => {
+  // Alternar el menú de creación de solicitudes
+  const handleOpenCreateMenu = () => {
     setShowCreateMenu(!showCreateMenu);
-    if (!showCreateMenu && serviceTypes.length === 0) {
-      setLoadingServices(true);
-      setErrorServices('');
-      try {
-        const types = await getServiceTypes();
-        // Asegurar estructura: si la API devuelve { data: [...] } o [...]
-        setServiceTypes(Array.isArray(types) ? types : (types.data || []));
-      } catch (err) {
-        console.error('Error cargando tipos de servicio:', err);
-        setErrorServices(err.message || 'Error al cargar tipos de servicio');
-      } finally {
-        setLoadingServices(false);
-      }
+  };
+
+  // Función para navegar según el tipo de servicio
+  const handleSelectService = (serviceCode) => {
+    setShowCreateMenu(false);
+    
+    // Mapeo de códigos a rutas
+    const routeMap = {
+      'LI-UPC-01': '/solicitud-drogas-clase-a',
+      'LI-UPC-02': '/solicitud-drogas-clase-b',
+      'LI-UPC-03': '/solicitud-clase-b-capa-c',
+      'LI-UPC-04': '/solicitud-importacion-materia-prima',
+      'LI-UPC-05': '/solicitud-importacion-medicamentos',
+    };
+    
+    const route = routeMap[serviceCode];
+    if (route) {
+      navigate(route);
+    } else {
+      console.error('Ruta no encontrada para el código:', serviceCode);
     }
   };
 
@@ -134,19 +152,19 @@ export default function Home() {
               </svg>
             </button>
             {showCreateMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                {loadingServices ? (
+              <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                {serviceTypes.length === 0 ? (
                   <div className="px-4 py-3 text-sm text-gray-500">Cargando tipos de servicio...</div>
-                ) : errorServices ? (
-                  <div className="px-4 py-3 text-sm text-red-500">{errorServices}</div>
-                ) : serviceTypes.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-gray-500">Los tipos de servicio se cargarán desde el backend</div>
                 ) : (
                   <ul>
                     {serviceTypes.map(type => (
                       <li key={type.id}>
-                        <button className="w-full text-left px-4 py-2 hover:bg-gray-100" onClick={() => {/* navegar al flujo correspondiente */}}>
-                          {type.nombre}
+                        <button 
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100 last:border-0"
+                          onClick={() => handleSelectService(type.codigo)}
+                        >
+                          <div className="font-medium text-[#4A8BDF]">{type.codigo}</div>
+                          <div className="text-xs text-gray-600 mt-1">{type.nombre}</div>
                         </button>
                       </li>
                     ))}
@@ -223,7 +241,11 @@ export default function Home() {
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
                 >
                   <option value="">Todos los tipos</option>
-                  {/* Los tipos se mostrarán dinámicamente cuando el backend implemente el endpoint */}
+                  {serviceTypes.map(type => (
+                    <option key={type.id} value={type.nombre}>
+                      {type.codigo} - {type.nombre}
+                    </option>
+                  ))}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
