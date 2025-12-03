@@ -12,7 +12,8 @@ import useServicesAPI from '../hooks/useServicesAPI';
  */
 export default function Home() {
   const navigate = useNavigate();
-  const { getUserRequests } = useRequestsAPI();
+  const requestsAPI = useRequestsAPI();
+  const servicesAPI = useServicesAPI();
   
   const [allRequests, setAllRequests] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]);
@@ -21,16 +22,18 @@ export default function Home() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   // Estado para tipos de servicio dinámicos
   const [serviceTypes, setServiceTypes] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
   // Estados para filtros
   const [filterTipo, setFilterTipo] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
 
-  // Cargar solicitudes
+  // Cargar solicitudes solo una vez al montar
   useEffect(() => {
     const loadRequests = async () => {
       setLoadingRequests(true);
       try {
-        const data = await getUserRequests();
+        const data = await requestsAPI.getUserRequests();
+        
         // El backend responde { ok: true, requests } o directamente un array
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
@@ -45,22 +48,31 @@ export default function Home() {
         setLoadingRequests(false);
       }
     };
+    
     loadRequests();
-  }, [getUserRequests]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Cargar tipos de servicio al montar el componente
-  const { getServiceTypes } = useServicesAPI();
+  // Cargar tipos de servicio solo una vez al montar
   useEffect(() => {
     const loadServiceTypes = async () => {
+      setLoadingServices(true);
       try {
-        const types = await getServiceTypes();
+        const types = await servicesAPI.getServiceTypes();
+        console.log('Tipos de servicio recibidos:', types);
+        
         setServiceTypes(Array.isArray(types) ? types : (types.data || []));
       } catch (err) {
         console.error('Error cargando tipos de servicio:', err);
+        setServiceTypes([]);
+      } finally {
+        setLoadingServices(false);
       }
     };
+    
     loadServiceTypes();
-  }, [getServiceTypes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Aplicar filtros a las solicitudes
   const applyFilters = useCallback((requests) => {
@@ -101,25 +113,55 @@ export default function Home() {
     setShowCreateMenu(!showCreateMenu);
   };
 
+  // Estado para mostrar sub-menú de fases
+  const [selectedServiceForPhase, setSelectedServiceForPhase] = useState(null);
+
   // Función para navegar según el tipo de servicio
-  const handleSelectService = (serviceCode) => {
+  const handleSelectService = (serviceName) => {
+    // Servicios que requieren selección de fase
+    const servicesWithPhases = [
+      'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas',
+      'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada'
+    ];
+    
+    if (servicesWithPhases.includes(serviceName)) {
+      // Mostrar sub-menú de fases
+      setSelectedServiceForPhase(serviceName);
+      return;
+    }
+    
     setShowCreateMenu(false);
     
-    // Mapeo de códigos a rutas
+    // Mapeo de nombres de servicio a rutas
     const routeMap = {
-      'LI-UPC-01': '/solicitud-drogas-clase-a',
-      'LI-UPC-02': '/solicitud-drogas-clase-b',
-      'LI-UPC-03': '/solicitud-clase-b-capa-c',
-      'LI-UPC-04': '/solicitud-importacion-materia-prima',
-      'LI-UPC-05': '/solicitud-importacion-medicamentos',
+      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A': '/solicitud-drogas-clase-a',
+      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b',
+      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas': '/solicitud-clase-b-capa-c/actividades',
     };
     
-    const route = routeMap[serviceCode];
+    const route = routeMap[serviceName];
     if (route) {
       navigate(route);
     } else {
-      console.error('Ruta no encontrada para el código:', serviceCode);
+      console.error('Ruta no encontrada para el servicio:', serviceName);
     }
+  };
+
+  // Función para navegar a una fase específica
+  const handleSelectPhase = (phase) => {
+    setShowCreateMenu(false);
+    setSelectedServiceForPhase(null);
+    
+    if (selectedServiceForPhase === 'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas') {
+      navigate(phase === 1 ? '/solicitud-importacion-materia-prima' : '/solicitud-importacion-materia-prima/fase-2');
+    } else if (selectedServiceForPhase === 'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada') {
+      navigate(phase === 1 ? '/solicitud-importacion-medicamentos' : '/solicitud-importacion-medicamentos/fase-2');
+    }
+  };
+
+  // Función para volver al menú principal
+  const handleBackToMainMenu = () => {
+    setSelectedServiceForPhase(null);
   };
 
   // Contar solicitudes por estado
@@ -153,18 +195,56 @@ export default function Home() {
             </button>
             {showCreateMenu && (
               <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                {serviceTypes.length === 0 ? (
+                {loadingServices ? (
                   <div className="px-4 py-3 text-sm text-gray-500">Cargando tipos de servicio...</div>
+                ) : serviceTypes.length === 0 ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">No hay tipos de servicio disponibles</div>
+                ) : selectedServiceForPhase ? (
+                  // Sub-menú para seleccionar fase
+                  <div>
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <button 
+                        onClick={handleBackToMainMenu}
+                        className="flex items-center text-sm text-[#4A8BDF] hover:text-[#3875C8]"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-1">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Volver
+                      </button>
+                      <div className="text-xs text-gray-600 mt-2">{selectedServiceForPhase}</div>
+                    </div>
+                    <ul>
+                      <li>
+                        <button 
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100"
+                          onClick={() => handleSelectPhase(1)}
+                        >
+                          <div className="font-medium text-[#4A8BDF]">Fase 01</div>
+                          <div className="text-xs text-gray-600 mt-1">Primera fase del proceso</div>
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700"
+                          onClick={() => handleSelectPhase(2)}
+                        >
+                          <div className="font-medium text-[#4A8BDF]">Fase 02</div>
+                          <div className="text-xs text-gray-600 mt-1">Segunda fase del proceso</div>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 ) : (
+                  // Menú principal de servicios
                   <ul>
                     {serviceTypes.map(type => (
                       <li key={type.id}>
                         <button 
                           className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100 last:border-0"
-                          onClick={() => handleSelectService(type.codigo)}
+                          onClick={() => handleSelectService(type.nombre_servicio)}
                         >
-                          <div className="font-medium text-[#4A8BDF]">{type.codigo}</div>
-                          <div className="text-xs text-gray-600 mt-1">{type.nombre}</div>
+                          <div className="text-sm text-gray-800">{type.nombre_servicio}</div>
                         </button>
                       </li>
                     ))}
@@ -234,16 +314,17 @@ export default function Home() {
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex flex-wrap gap-4 items-center justify-end">
             <div className="flex gap-4">
-              <div className="relative">
+              <div className="relative w-48">
                 <select 
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 truncate"
+                  title={filterTipo || "Todos los tipos"}
                 >
                   <option value="">Todos los tipos</option>
                   {serviceTypes.map(type => (
-                    <option key={type.id} value={type.nombre}>
-                      {type.codigo} - {type.nombre}
+                    <option key={type.id} value={type.nombre_servicio}>
+                      {type.nombre_servicio}
                     </option>
                   ))}
                 </select>

@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
 import { useSolicitudClaseA } from '../contexts/SolicitudClaseAContext';
+import useRequestsAPI from '../hooks/useRequestsAPI';
 
 const SolicitudDrogasClaseAForm = () => {
   const navigate = useNavigate();
   const { updateFormData } = useSolicitudClaseA();
+  const { createRequest } = useRequestsAPI();
   const [form, setForm] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   // usar el estado `form` para evitar warning de linter mientras se integra la lógica de envío
   useEffect(() => {
@@ -21,12 +24,43 @@ const SolicitudDrogasClaseAForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return;
-    // Guardar datos del formulario en context antes de navegar
-    updateFormData(form);
-    navigate('/solicitud-drogas-clase-a/documentos');
+    if (!isValid || submitting) return;
+    
+    setSubmitting(true);
+    try {
+      // Guardar datos del formulario en context
+      updateFormData(form);
+      
+      // Crear la solicitud en la base de datos INMEDIATAMENTE
+      const resp = await createRequest({
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A',
+        formulario: form
+      });
+      
+      const newRequest = resp.request || resp;
+      const requestId = newRequest.id || newRequest.request?.id;
+
+      if (!requestId) {
+        throw new Error('No se pudo crear la solicitud');
+      }
+
+      // Determinar a qué pantalla de documentos ir según la condición
+      const esRenovacion = form.condicion === 'Renovación';
+      const rutaDocumentos = esRenovacion 
+        ? '/solicitud-drogas-clase-a/documentos-renovacion'
+        : '/solicitud-drogas-clase-a/documentos';
+
+      // Navegar a documentos con el requestId ya creado
+      navigate(rutaDocumentos, { 
+        state: { requestId, fromForm: true } 
+      });
+    } catch (error) {
+      console.error('Error al crear solicitud:', error);
+      alert(error?.message || 'Error al guardar la solicitud. Por favor intenta de nuevo.');
+      setSubmitting(false);
+    }
   };
 
   const errors = (() => {

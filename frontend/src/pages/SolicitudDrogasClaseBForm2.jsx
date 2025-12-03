@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
 import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
+import useRequestsAPI from '../hooks/useRequestsAPI';
 
 export default function SolicitudClaseB2() {
   const navigate = useNavigate();
   const { formData: contextData, updateFormData } = useSolicitudClaseB();
+  const { createRequest } = useRequestsAPI();
+  const [submitting, setSubmitting] = useState(false);
   
   const [form, setForm] = useState({
     // Sustancias Controladas
@@ -96,19 +99,41 @@ export default function SolicitudClaseB2() {
     navigate('/solicitud-drogas-clase-b');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!isValid) {
-      alert('Por favor, completa todos los campos requeridos correctamente');
+    if (!isValid || submitting) {
+      if (!isValid) alert('Por favor, completa todos los campos requeridos correctamente');
       return;
     }
     
     // Guardar datos en el Context
     updateFormData(form);
     
-    // Navegar a página 3
-    navigate('/solicitud-drogas-clase-b/documentos');
+    // Crear la solicitud con TODOS los datos (paso 1 + paso 2)
+    setSubmitting(true);
+    try {
+      const fullFormData = { ...contextData, ...form };
+      const resp = await createRequest({
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
+        formulario: fullFormData
+      });
+      
+      const newRequest = resp.request || resp;
+      const requestId = newRequest.id || newRequest.request?.id;
+
+      if (!requestId) {
+        throw new Error('No se pudo crear la solicitud');
+      }
+
+      navigate('/solicitud-drogas-clase-b/documentos', { 
+        state: { requestId, fromForm: true } 
+      });
+    } catch (error) {
+      console.error('Error al crear solicitud:', error);
+      alert(error?.message || 'Error al guardar la solicitud. Por favor intenta de nuevo.');
+      setSubmitting(false);
+    }
   };
 
   return (

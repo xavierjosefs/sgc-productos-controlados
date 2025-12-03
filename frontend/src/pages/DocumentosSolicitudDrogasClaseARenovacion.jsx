@@ -2,21 +2,20 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
 import useRequestsAPI from '../hooks/useRequestsAPI';
-import { useSolicitudClaseBCapaC } from '../contexts/SolicitudClaseBCapaCContext';
+import { useSolicitudClaseA } from '../contexts/SolicitudClaseAContext';
 import { validateFile } from '../utils/fileValidation';
 
-const FIELD_LIST = [
-  { key: 'cedulaRepresentante', label: 'Cédula del Representante de la Entidad' },
-  { key: 'cedulaFarmaceutico', label: 'Cédula del Farmacéutico Responsable' },
-  { key: 'tituloFarmaceutico', label: 'Título del Farmacéutico Responsable' },
-  { key: 'exequaturFarmaceutico', label: 'Exequátur del Farmacéutico Responsable' },
+// Documentos para RENOVACIÓN - Todos obligatorios
+const FIELD_LIST_RENOVACION = [
+  { key: 'cedula', label: 'Cédula de Identidad y Electoral' },
+  { key: 'certificadoAnterior', label: 'Certificado Anterior, Vencido y/o Vigente' },
   { key: 'reciboPago', label: 'Recibo de Depósito del Pago' },
 ];
 
-const DocumentosSolicitudClaseBCapaC = () => {
+const DocumentosSolicitudDrogasClaseARenovacion = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { formData, clearFormData } = useSolicitudClaseBCapaC();
+  const { formData, clearFormData } = useSolicitudClaseA();
   const [files, setFiles] = useState({});
   const [fileErrors, setFileErrors] = useState({});
   const inputRefs = useRef({});
@@ -45,7 +44,7 @@ const DocumentosSolicitudClaseBCapaC = () => {
       delete newErrors[key];
       return newErrors;
     });
-    setFiles(prev => ({ ...prev, [key]: file }));
+    setFiles((prev) => ({ ...prev, [key]: file }));
   };
 
   const handleRemoveFile = (key) => {
@@ -64,7 +63,7 @@ const DocumentosSolicitudClaseBCapaC = () => {
     if (inputRefs.current[key]) inputRefs.current[key].click();
   };
 
-  const allFilled = FIELD_LIST.every(f => files[f.key]);
+  const allFilled = FIELD_LIST_RENOVACION.every(f => files[f.key]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -88,9 +87,10 @@ const DocumentosSolicitudClaseBCapaC = () => {
       let requestId = existingRequestId;
       
       // Si no viene desde el detalle NI desde el formulario, crear una nueva solicitud
+      // (esto es para compatibilidad hacia atrás, normalmente debería venir del formulario)
       if (!fromDetail && !fromForm && !existingRequestId) {
         const resp = await createRequest({
-          nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas',
+          nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A',
           formulario: formData
         });
         // El controller responde { ok: true, request }
@@ -113,7 +113,7 @@ const DocumentosSolicitudClaseBCapaC = () => {
       clearFormData();
       
       // Siempre ir a la página de éxito después de subir documentos
-      navigate('/solicitud-clase-b-capa-c/exito');
+      navigate('/solicitud-drogas-clase-a/exito');
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);
       alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
@@ -124,7 +124,6 @@ const DocumentosSolicitudClaseBCapaC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       <div className="max-w-4xl mx-auto px-6 py-12">
         <button onClick={handleBack} className="text-[#4A8BDF] mb-6 inline-flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -133,16 +132,23 @@ const DocumentosSolicitudClaseBCapaC = () => {
           Volver
         </button>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">Solicitud de Certificado de Inscripción de Drogas Controladas Clase B - Capa C</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">
+          Solicitud de Certificado de Inscripción de Drogas Controladas Clase A
+        </h1>
 
         <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mx-auto" style={{ maxWidth: 620 }}>
-          <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Documentos</h2>
+          <h2 className="text-lg font-bold text-[#2B6CB0] mb-4">Documentos para Renovación</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            ⚠️ <strong>Todos los documentos son obligatorios para solicitudes de renovación</strong>
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {FIELD_LIST.map(field => (
+            {FIELD_LIST_RENOVACION.map(field => (
               <div key={field.key} className="flex items-center gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm text-gray-700 mb-2">{field.label}</label>
+                  <label className="block text-sm text-gray-700 mb-2">
+                    {field.label} <span className="text-red-500">*</span>
+                  </label>
                   <div className="flex gap-3">
                     <input
                       ref={el => (inputRefs.current[field.key] = el)}
@@ -192,4 +198,4 @@ const DocumentosSolicitudClaseBCapaC = () => {
   );
 };
 
-export default DocumentosSolicitudClaseBCapaC;
+export default DocumentosSolicitudDrogasClaseARenovacion;

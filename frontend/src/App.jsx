@@ -15,6 +15,7 @@ import ClientLayout from './layouts/ClientLayout';
 // Clase A
 import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
 import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
+import DocumentosSolicitudDrogasClaseARenovacion from './pages/DocumentosSolicitudDrogasClaseARenovacion';
 import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
 import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
@@ -127,6 +128,15 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <DocumentosSolicitudDrogasClaseA />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/solicitud-drogas-clase-a/documentos-renovacion"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudDrogasClaseARenovacion />
                   </ProtectedRoute>
                 }
               />

@@ -100,6 +100,37 @@ const RequestDetail = () => {
   const isPending = request.estado_actual && request.estado_actual.toLowerCase().includes('pendiente');
   const formData = request.form_data || {};
 
+  // Función para navegar a la pantalla de subir documentos correspondiente
+  const handleGoToUploadDocuments = () => {
+    const serviceName = request.tipo_servicio;
+    
+    // Para Clase A, verificar si es renovación
+    if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A') {
+      const esRenovacion = formData.condicion === 'Renovación';
+      const route = esRenovacion 
+        ? '/solicitud-drogas-clase-a/documentos-renovacion'
+        : '/solicitud-drogas-clase-a/documentos';
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+      return;
+    }
+    
+    // Mapeo de servicios a rutas de documentos (resto de servicios)
+    const routeMap = {
+      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b/documentos',
+      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas': '/solicitud-clase-b-capa-c/documentos',
+      'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas': '/solicitud-importacion-materia-prima/documentos',
+      'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada': '/solicitud-importacion-medicamentos/documentos',
+    };
+    
+    const route = routeMap[serviceName];
+    if (route) {
+      // Pasar el ID de la solicitud como state para que la pantalla de documentos lo use
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+    } else {
+      console.error('Ruta de documentos no encontrada para:', serviceName);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex items-center mb-6">
@@ -132,139 +163,465 @@ const RequestDetail = () => {
           </div>
         </div>
       </div>
-      {/* Formulario Completo */}
+      {/* Formulario Completo - Dinámico según tipo de solicitud */}
       <div className="space-y-6">
-        {/* Identificación */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm text-gray-600 mb-1">Nombre Completo del Profesional</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.nombre || '-'}
+        {/* CLASE A - Profesional */}
+        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A' && (
+          <>
+            {/* Identificación */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Nombre Completo del Profesional</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.nombre || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Dirección/Correo Postal (P.O.B)</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.direccion || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Cédula de Identidad y Electoral</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.cedula || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.exequatur || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">No. Colegiatura</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.colegiatura || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Celular</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.celular || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Teléfono(s)</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.telefonos || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Correo Electrónico</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.email || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Lugar de Trabajo</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.lugarTrabajo || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Dirección del Lugar de Trabajo</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.direccionTrabajo || '-'}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm text-gray-600 mb-1">Dirección/Correo Postal (P.O.B)</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.direccion || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Cédula de Identidad y Electoral</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.cedula || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.exequatur || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">No. Colegiatura</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.colegiatura || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Celular</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.celular || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Teléfono(s)</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.telefonos || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Correo Electrónico</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.email || '-'}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Lugar de Trabajo</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.lugarTrabajo || '-'}
-              </div>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm text-gray-600 mb-1">Dirección del Lugar de Trabajo</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.direccionTrabajo || '-'}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Profesión */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Profesión</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Profesión Seleccionada</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.profesion || '-'}
-                {formData.profesion === 'Otra' && formData.profesionOtra && ` (${formData.profesionOtra})`}
+            {/* Profesión */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Profesión</h2>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Profesión Seleccionada</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.profesion || '-'}
+                      {formData.profesion === 'Otra' && formData.profesionOtra && ` (${formData.profesionOtra})`}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Categorías de Drogas Controladas</label>
+                    <div className="flex gap-4">
+                      <span className={`px-3 py-1 rounded ${formData.categoriaII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>II</span>
+                      <span className={`px-3 py-1 rounded ${formData.categoriaIII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>III</span>
+                      <span className={`px-3 py-1 rounded ${formData.categoriaIV ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>IV</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Categorías de Drogas Controladas</label>
-              <div className="flex gap-4">
-                <span className={`px-3 py-1 rounded ${formData.categoriaII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>II</span>
-                <span className={`px-3 py-1 rounded ${formData.categoriaIII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>III</span>
-                <span className={`px-3 py-1 rounded ${formData.categoriaIV ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>IV</span>
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* Condición de Solicitud */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Condición de Solicitud</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Condición</label>
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                {formData.condicion || '-'}
-                {formData.condicion === 'Otra' && formData.condicionOtra && ` (${formData.condicionOtra})`}
+        {/* CLASE B - Establecimiento Privado */}
+        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados' && (
+          <>
+            {/* Identificación de la Empresa */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Nombre de la Empresa / Razón Social</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.nombreEmpresa || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Dirección</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.direccion || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">RNC</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.rnc || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.telefono || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Correo Electrónico</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.correoElectronico || '-'}
+                  </div>
+                </div>
               </div>
             </div>
-            {formData.noCIDC && (
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">No. CIDC</label>
-                <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                  {formData.noCIDC}
+
+            {/* Actividades */}
+            {formData.actividades && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Actividades</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {formData.actividades.importadora && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Importadora</span>}
+                  {formData.actividades.exportadora && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Exportadora</span>}
+                  {formData.actividades.fabricante && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Fabricante</span>}
+                  {formData.actividades.distribuidor && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Distribuidor</span>}
+                  {formData.actividades.laboratorioAnalitico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Laboratorio Analítico</span>}
+                  {formData.actividades.farmacia && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Farmacia</span>}
+                  {formData.actividades.clinicaPrivada && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Clínica Privada</span>}
+                  {formData.actividades.clinicaVeterinaria && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Clínica Veterinaria</span>}
+                  {formData.actividades.institucionEnsenanza && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Institución de Enseñanza Superior</span>}
+                  {formData.actividades.hospitalPublico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Hospital Público</span>}
+                  {formData.actividades.investigacion && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Investigación Categoría I</span>}
+                  {formData.actividades.otra && (
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">
+                      Otra: {formData.actividades.otra}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
-            {formData.motivo && (
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Motivo</label>
-                <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                  {formData.motivo}
+
+            {/* Regente Farmacéutico */}
+            {formData.nombreRegente && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Regente Farmacéutico</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre del Regente</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.nombreRegente || '-'}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Dirección</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.direccionRegente || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Cédula</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.cedulaRegente || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.exequaturRegente || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.telefonoRegente || '-'}
+                    </div>
+                  </div>
+                  {formData.otroLugarTrabajo && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Otro Lugar de Trabajo</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.otroLugarTrabajo}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+
+            {/* Sustancias Controladas (si tiene actividades especiales) */}
+            {formData.categoriasOption && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Sustancias Controladas</h2>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Categorías</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.categoriasOption}
+                    </div>
+                  </div>
+                  {formData.codigoGrupo && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Código del Grupo</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.codigoGrupo}
+                      </div>
+                    </div>
+                  )}
+                  {formData.designacionSustancias && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Designación de Sustancias</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.designacionSustancias}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Administrador/Propietario (si tiene actividades especiales) */}
+            {formData.nombreAdministrador && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Administrador/Propietario</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.nombreAdministrador || '-'}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Dirección</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.direccionAdministrador || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Cédula</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.cedulaAdministrador || '-'}
+                    </div>
+                  </div>
+                  {formData.telefonoAdministrador && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.telefonoAdministrador}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Agente Aduanero (si tiene actividades especiales) */}
+            {formData.nombreAgenteAduanero && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Agente Aduanero</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.nombreAgenteAduanero || '-'}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Dirección</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.direccionAgenteAduanero || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Cédula</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.cedulaAgenteAduanero || '-'}
+                    </div>
+                  </div>
+                  {formData.telefonoAgenteAduanero && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.telefonoAgenteAduanero}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* CAPA C - Hospital Público */}
+        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas' && (
+          <>
+            {/* Identificación de la Empresa */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Nombre de la Empresa / Razón Social</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.nombreEmpresa || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Dirección/Cama Postal (Local)</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.direccionCamaPostal || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">RNC</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.rncEmpresa || '-'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.telefonoEmpresa || '-'}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">Correo Electrónico</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.correoEmpresa || '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actividades */}
+            {formData.actividades && formData.actividades.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Actividades</h2>
+                <div className="flex flex-wrap gap-2">
+                  {formData.actividades.map((act, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">
+                      {act}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Regente Farmacéutico */}
+            {formData.nombreRegente && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Regente Farmacéutico</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre del Regente</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.nombreRegente || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Cédula</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.cedulaRegente || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.exequaturRegente || '-'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sustancias Controladas (condicional) */}
+            {formData.categoriasSustancias && formData.categoriasSustancias.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Sustancias Controladas</h2>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Categorías</label>
+                    <div className="flex gap-2">
+                      {formData.categoriasSustancias.map((cat, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {formData.designacionSustancias && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Designación de Sustancias</label>
+                      <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                        {formData.designacionSustancias}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Condición de Solicitud (común para todos) */}
+        {(formData.condicionSolicitud || formData.condicion) && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Condición de Solicitud</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Condición</label>
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                  {formData.condicionSolicitud || formData.condicion}
+                  {formData.condicionOtra && ` - ${formData.condicionOtra}`}
+                </div>
+              </div>
+              {(formData.especifiqueNoGdc || formData.noCIDC) && (
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">No. {formData.especifiqueNoGdc ? 'GDC' : 'CIDC'}</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.especifiqueNoGdc || formData.noCIDC}
+                  </div>
+                </div>
+              )}
+              {(formData.especifiqueElMotivo || formData.motivo) && (
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Motivo</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                    {formData.especifiqueElMotivo || formData.motivo}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {/* Documentos asociados */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h2 className="text-lg font-semibold">Documentos</h2>
-          {isPending && (
-            <button
-              className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg hover:bg-[#3a7bcf]"
-              onClick={() => setModalOpen(true)}
-            >
-              Subir documento
-            </button>
-          )}
         </div>
         {request.documentos && request.documentos.length > 0 ? (
           <ul className="space-y-4">
@@ -292,9 +649,22 @@ const RequestDetail = () => {
 
         {isPending && (
           <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              ⚠️ Esta solicitud está pendiente. Sube los documentos faltantes y envía la solicitud para que sea procesada.
-            </p>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-yellow-800 mb-3">
+                  ⚠️ Esta solicitud está pendiente. Debes subir los documentos requeridos y enviar la solicitud para que sea procesada.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleGoToUploadDocuments}
+              className="w-full mt-3 px-6 py-3 bg-[#4A8BDF] text-white rounded-lg font-medium hover:bg-[#3875C8] transition-colors flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              Ir a Subir Documentos
+            </button>
           </div>
         )}
       </div>

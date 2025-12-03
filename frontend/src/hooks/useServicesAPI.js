@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Crear instancia axios similar a useRequestsAPI
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ export default function useServicesAPI() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/service-types');
+      const res = await api.get('/api/service-types');
       return res.data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Error al obtener tipos de servicio';

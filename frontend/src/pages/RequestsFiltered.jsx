@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
 import BadgeEstado from '../components/BadgeEstado';
 import useRequestsAPI from '../hooks/useRequestsAPI';
+import useServicesAPI from '../hooks/useServicesAPI';
 
 /**
  * Página de solicitudes filtradas por estado
@@ -11,11 +12,14 @@ export default function RequestsFiltered() {
   const { status } = useParams();
   const navigate = useNavigate();
   const { getUserRequests } = useRequestsAPI();
+  const servicesAPI = useServicesAPI();
   
   const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterTipo, setFilterTipo] = useState('');
+  const [serviceTypes, setServiceTypes] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
 
   // Mapeo de nombres de estados con colores
   const statusConfig = {
@@ -26,6 +30,27 @@ export default function RequestsFiltered() {
   };
 
   const currentStatus = statusConfig[status] || statusConfig.enviadas;
+
+  // Cargar tipos de servicio
+  useEffect(() => {
+    const loadServiceTypes = async () => {
+      setLoadingServices(true);
+      try {
+        const types = await servicesAPI.getServiceTypes();
+        console.log('Tipos de servicio recibidos:', types);
+        
+        setServiceTypes(Array.isArray(types) ? types : (types.data || []));
+      } catch (err) {
+        console.error('Error cargando tipos de servicio:', err);
+        setServiceTypes([]);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+    
+    loadServiceTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cargar y filtrar solicitudes por estado
   useEffect(() => {
@@ -106,14 +131,20 @@ export default function RequestsFiltered() {
           {/* Filtro de Tipo */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-end items-center gap-4">
-              <div className="relative">
+              <div className="relative w-48">
                 <select 
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 min-w-[200px]"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 truncate"
+                  title={filterTipo || "Todos los tipos"}
+                  disabled={loadingServices}
                 >
-                  <option value="">Tipo</option>
-                  {/* Los tipos se cargarán dinámicamente desde el backend */}
+                  <option value="">Todos los tipos</option>
+                  {serviceTypes.map((service) => (
+                    <option key={service.id} value={service.nombre_servicio}>
+                      {service.nombre_servicio}
+                    </option>
+                  ))}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -137,25 +168,26 @@ export default function RequestsFiltered() {
           </div>
 
           {/* Tabla - Desktop */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-auto max-h-[600px]">
             <table className="w-full">
               <thead>
                 <tr className="bg-[#4A8BDF]">
-                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
                   <th className="px-6 py-4 text-left text-white font-semibold text-sm">FECHA CREACIÓN</th>
                   <th className="px-6 py-4 text-left text-white font-semibold text-sm">TIPO DE SERVICIO</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold text-sm">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                       Cargando solicitudes...
                     </td>
                   </tr>
                 ) : filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                       No hay solicitudes con este estado
                     </td>
                   </tr>
@@ -165,17 +197,17 @@ export default function RequestsFiltered() {
                       key={request.id} 
                       className={`${index % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'} hover:bg-gray-100 transition-colors`}
                     >
-                      <td className="px-6 py-5 text-sm text-gray-700">{request.codigo}</td>
+                      <td className="px-6 py-5 text-sm text-gray-700">{request.id}</td>
                       <td className="px-6 py-5 text-sm text-gray-700">
                         {new Date(request.fecha_creacion).toLocaleDateString('es-ES')}
                       </td>
-                      <td className="px-6 py-5 text-sm text-gray-700 flex items-center justify-between">
-                        <span>{request.tipo_servicio}</span>
+                      <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio}</td>
+                      <td className="px-6 py-5">
                         <button 
                           onClick={() => navigate(`/requests/${request.id}/details`)}
-                          className="text-[#4A8BDF] font-medium text-sm hover:text-[#3875C8] transition-colors"
+                          className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg hover:bg-[#3875C8] transition-colors text-sm font-medium"
                         >
-                          Ver Detalle
+                          Ver detalles
                         </button>
                       </td>
                     </tr>
@@ -200,8 +232,8 @@ export default function RequestsFiltered() {
                   >
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
-                        <span className="text-xs text-gray-500">Código</span>
-                        <span className="font-semibold text-sm text-gray-900">{request.codigo}</span>
+                        <span className="text-xs text-gray-500">ID</span>
+                        <span className="font-semibold text-sm text-gray-900">{request.id}</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <span className="text-xs text-gray-500">Fecha</span>
@@ -216,9 +248,9 @@ export default function RequestsFiltered() {
                       <div className="pt-2">
                         <button 
                           onClick={() => navigate(`/requests/${request.id}/details`)}
-                          className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors"
+                          className="w-full px-4 py-2 rounded-lg text-sm font-medium bg-[#4A8BDF] text-white hover:bg-[#3875C8] transition-colors"
                         >
-                          Ver Detalle
+                          Ver detalles
                         </button>
                       </div>
                     </div>

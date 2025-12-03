@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientTopbar from '../components/ClientTopbar';
 import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
+import useRequestsAPI from '../hooks/useRequestsAPI';
 
 export default function SolicitudClaseB() {
   const navigate = useNavigate();
   const { updateFormData } = useSolicitudClaseB();
+  const { createRequest } = useRequestsAPI();
+  const [submitting, setSubmitting] = useState(false);
   
   const [form, setForm] = useState({
     nombreEmpresa: '',
@@ -138,11 +141,11 @@ export default function SolicitudClaseB() {
 
   const isValid = Object.keys(errors).length === 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!isValid) {
-      alert('Por favor, completa todos los campos requeridos correctamente');
+    if (!isValid || submitting) {
+      if (!isValid) alert('Por favor, completa todos los campos requeridos correctamente');
       return;
     }
     
@@ -154,9 +157,32 @@ export default function SolicitudClaseB() {
     const tieneActividadesEspeciales = importadora || exportadora || fabricante;
     
     if (tieneActividadesEspeciales) {
+      // Si tiene actividades especiales, ir al paso 2 (aún no crear solicitud)
       navigate('/solicitud-drogas-clase-b/paso-2');
     } else {
-      navigate('/solicitud-drogas-clase-b/documentos');
+      // Si NO tiene actividades especiales, crear la solicitud ahora
+      setSubmitting(true);
+      try {
+        const resp = await createRequest({
+          nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
+          formulario: form
+        });
+        
+        const newRequest = resp.request || resp;
+        const requestId = newRequest.id || newRequest.request?.id;
+
+        if (!requestId) {
+          throw new Error('No se pudo crear la solicitud');
+        }
+
+        navigate('/solicitud-drogas-clase-b/documentos', { 
+          state: { requestId, fromForm: true } 
+        });
+      } catch (error) {
+        console.error('Error al crear solicitud:', error);
+        alert(error?.message || 'Error al guardar la solicitud. Por favor intenta de nuevo.');
+        setSubmitting(false);
+      }
     }
   };
 

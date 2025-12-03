@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
@@ -14,12 +14,18 @@ const FIELD_LIST = [
   { key: 'reciboPago', label: 'Recibo de Depósito del Pago' },
 ];
 
-const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
+const DocumentosSolicitudDrogasClaseB = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { formData, clearFormData } = useSolicitudClaseB();
   const [files, setFiles] = useState({});
   const [fileErrors, setFileErrors] = useState({});
   const inputRefs = useRef({});
+  
+  // Detectar si viene desde RequestDetail o desde el formulario con una solicitud existente
+  const existingRequestId = location.state?.requestId;
+  const fromDetail = location.state?.fromDetail;
+  const fromForm = location.state?.fromForm;
 
   const handleFileChange = (key, file) => {
     if (!file) return;
@@ -43,6 +49,18 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
     setFiles(prev => ({ ...prev, [key]: file }));
   };
 
+  const handleRemoveFile = (key) => {
+    setFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[key];
+      return newFiles;
+    });
+    // Limpiar el input file
+    if (inputRefs.current[key]) {
+      inputRefs.current[key].value = '';
+    }
+  };
+
   const triggerFileInput = (key) => {
     if (inputRefs.current[key]) inputRefs.current[key].click();
   };
@@ -57,28 +75,32 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
   };
 
   const handleBack = () => {
-    if (typeof onBack === 'function') return onBack();
-    navigate(-1);
+    navigate('/');
   };
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const { createRequest, uploadDocument } = useRequestsAPI();
+  // eslint-disable-next-line no-unused-vars
+  const { createRequest, uploadDocument, deleteDocument } = useRequestsAPI();
 
   const handleConfirm = async () => {
     setConfirmOpen(false);
     try {
-      // Crear solicitud con datos reales del formulario desde Context
-      const resp = await createRequest({
-        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
-        formulario: formData
-      });
-      // El controller responde { ok: true, request }
-      const newRequest = resp.request || resp;
-      const requestId = newRequest.id || newRequest.request?.id;
+      let requestId = existingRequestId;
+      
+      // Si no viene desde el detalle NI desde el formulario, crear una nueva solicitud
+      if (!fromDetail && !fromForm && !existingRequestId) {
+        const resp = await createRequest({
+          nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
+          formulario: formData
+        });
+        // El controller responde { ok: true, request }
+        const newRequest = resp.request || resp;
+        requestId = newRequest.id || newRequest.request?.id;
 
-      if (!requestId) {
-        throw new Error('No se pudo obtener el ID de la solicitud creada');
+        if (!requestId) {
+          throw new Error('No se pudo obtener el ID de la solicitud creada');
+        }
       }
 
       // Subir todos los archivos
@@ -90,6 +112,8 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
 
       // Limpiar datos del formulario del context
       clearFormData();
+      
+      // Siempre ir a la página de éxito después de subir documentos
       navigate('/solicitud-drogas-clase-b/exito');
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);
@@ -136,6 +160,16 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
                       value={files[field.key]?.name || ''}
                       className={`flex-1 px-4 py-3 border rounded-lg bg-white placeholder-gray-400 ${fileErrors[field.key] ? 'border-red-500' : 'border-gray-300'}`}
                     />
+                    {files[field.key] && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(field.key)}
+                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                        title="Eliminar archivo"
+                      >
+                        ✕
+                      </button>
+                    )}
                     <button type="button" onClick={() => triggerFileInput(field.key)} className="px-4 py-2 bg-[#0B57A6] hover:bg-[#084c8a] text-white rounded-lg whitespace-nowrap">Subir Documento</button>
                   </div>
                   {fileErrors[field.key] ? (

@@ -2,10 +2,13 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import ClientTopbar from "../components/ClientTopbar";
 import { useSolicitudClaseBCapaC } from "../contexts/SolicitudClaseBCapaCContext";
+import useRequestsAPI from '../hooks/useRequestsAPI';
 
 export default function SolicitudClaseBCapaCForm() {
   const navigate = useNavigate();
   const { formData, updateFormData } = useSolicitudClaseBCapaC();
+  const { createRequest } = useRequestsAPI();
+  const [submitting, setSubmitting] = useState(false);
 
   const [categoriasSustancias, setCategoriasSustancias] = useState(
     formData.categoriasSustancias || []
@@ -109,10 +112,10 @@ export default function SolicitudClaseBCapaCForm() {
   };
 
   const handleBack = () => {
-    navigate("/");
+    navigate("/solicitud-clase-b-capa-c/actividades");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Primero activamos attemptedSubmit para mostrar errores
@@ -129,13 +132,13 @@ export default function SolicitudClaseBCapaCForm() {
     }
 
     // En el segundo submit, verificar si es válido
-    if (!isValid) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!isValid || submitting) {
+      if (!isValid) window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // Guardar datos en el contexto
-    updateFormData({
+    // Datos de este formulario
+    const currentFormData = {
       categoriasSustancias,
       codigoGrupo,
       designacionSustancias,
@@ -151,10 +154,35 @@ export default function SolicitudClaseBCapaCForm() {
       rnc2,
       telefonoAgenteAduanero,
       lugarTrabajoAgenteAduanero,
-    });
+    };
 
-    // Navegar a actividades
-    navigate("/solicitud-clase-b-capa-c/actividades");
+    // Guardar en el contexto
+    updateFormData(currentFormData);
+
+    // Crear la solicitud con TODOS los datos
+    setSubmitting(true);
+    try {
+      const fullFormData = { ...formData, ...currentFormData };
+      const resp = await createRequest({
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas',
+        formulario: fullFormData
+      });
+      
+      const newRequest = resp.request || resp;
+      const requestId = newRequest.id || newRequest.request?.id;
+
+      if (!requestId) {
+        throw new Error('No se pudo crear la solicitud');
+      }
+
+      navigate("/solicitud-clase-b-capa-c/documentos", { 
+        state: { requestId, fromForm: true } 
+      });
+    } catch (error) {
+      console.error('Error al crear solicitud:', error);
+      alert(error?.message || 'Error al guardar la solicitud. Por favor intenta de nuevo.');
+      setSubmitting(false);
+    }
   };
 
   return (
