@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
 import useRequestsAPI from '../hooks/useRequestsAPI';
 import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
+import { validateFile } from '../utils/fileValidation';
 
 const FIELD_LIST = [
   { key: 'cedulaRepresentante', label: 'Cédula del Representante Legal del Establecimiento' },
@@ -17,9 +18,28 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
   const navigate = useNavigate();
   const { formData, clearFormData } = useSolicitudClaseB();
   const [files, setFiles] = useState({});
+  const [fileErrors, setFileErrors] = useState({});
   const inputRefs = useRef({});
 
   const handleFileChange = (key, file) => {
+    if (!file) return;
+
+    const error = validateFile(file);
+    if (error) {
+      setFileErrors((prev) => ({ ...prev, [key]: error }));
+      setFiles((prev) => {
+        const newFiles = { ...prev };
+        delete newFiles[key];
+        return newFiles;
+      });
+      return;
+    }
+
+    setFileErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[key];
+      return newErrors;
+    });
     setFiles(prev => ({ ...prev, [key]: file }));
   };
 
@@ -49,9 +69,9 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
     setConfirmOpen(false);
     try {
       // Crear solicitud con datos reales del formulario desde Context
-      const resp = await createRequest({ 
-        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados', 
-        formulario: formData 
+      const resp = await createRequest({
+        nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
+        formulario: formData
       });
       // El controller responde { ok: true, request }
       const newRequest = resp.request || resp;
@@ -114,11 +134,15 @@ const DocumentosSolicitudDrogasClaseB = ({ onBack }) => {
                       readOnly
                       placeholder="Solo se permiten archivos PNG, JPG o PDF"
                       value={files[field.key]?.name || ''}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400"
+                      className={`flex-1 px-4 py-3 border rounded-lg bg-white placeholder-gray-400 ${fileErrors[field.key] ? 'border-red-500' : 'border-gray-300'}`}
                     />
                     <button type="button" onClick={() => triggerFileInput(field.key)} className="px-4 py-2 bg-[#0B57A6] hover:bg-[#084c8a] text-white rounded-lg whitespace-nowrap">Subir Documento</button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">Solo se permiten archivos PNG, JPG o PDF</p>
+                  {fileErrors[field.key] ? (
+                    <p className="text-xs text-red-500 mt-2">{fileErrors[field.key]}</p>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-2">Solo se permiten archivos PNG, JPG o PDF</p>
+                  )}
                 </div>
               </div>
             ))}
