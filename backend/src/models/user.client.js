@@ -71,12 +71,12 @@ export const login = async (email, password) => {
   }
 };
 
-export const createRequest = async (user_id, tipo_servicio_id, formulario) => {
+export const createRequest = async (user_id, tipo_servicio_id, formulario, condicion) => {
   const result = await pool.query(
-    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data)
-     VALUES ($1, $2, $3)
+    `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data, tipo_solicitud)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [user_id, tipo_servicio_id, formulario]
+    [user_id, tipo_servicio_id, formulario, condicion]
   );
 
   return result.rows[0];

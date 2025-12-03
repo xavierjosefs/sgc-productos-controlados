@@ -23,6 +23,8 @@ export const createRequestController = async (req, res) => {
         if (!formulario || typeof formulario !== 'object') {
             return res.status(400).json({ message: "Formulario inválido" });
         }
+        
+        const condicion = formulario.condicion;
 
         // Obtener cedula desde token
         const cedula = req.user.cedula;
@@ -31,7 +33,8 @@ export const createRequestController = async (req, res) => {
         const newRequest = await createRequest(
             cedula,
             tipo_servicio_id,
-            formulario
+            formulario,
+            condicion
         );
 
         return res.status(201).json({
