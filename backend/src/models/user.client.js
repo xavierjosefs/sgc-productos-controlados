@@ -207,3 +207,26 @@ export const findUserByCedulaWithRole = async (cedula) => {
   `, [cedula]);
   return result.rows[0];
 };
+
+/**
+ * Get requests for Ventanilla role
+ * Returns requests with estado 'ENVIADA' (id: 12)
+ */
+export const getRequestsForVentanilla = async () => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      u.full_name AS nombre_cliente,
+      ts.nombre_servicio AS tipo_servicio,
+      s.fecha_creacion,
+      e.nombre_mostrar AS estado_actual
+    FROM solicitudes s
+    JOIN users u ON s.user_id = u.cedula
+    JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e ON s.estado_id = e.id
+    WHERE s.estado_id = 12
+    ORDER BY s.fecha_creacion DESC
+  `);
+  return result.rows;
+};
