@@ -1,5 +1,5 @@
 // Configuración del endpoint del backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * Servicio de autenticación
@@ -29,7 +29,7 @@ export const authService = {
       }
 
       const data = await response.json();
-      
+
       // Guardar token en localStorage
       if (data.token) {
         localStorage.setItem('token', data.token);

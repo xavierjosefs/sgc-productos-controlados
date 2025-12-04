@@ -44,7 +44,6 @@ export const findUserByCedula = async (cedula) => {
   return result.rows[0];
 };
 
-
 // Funcion para hacer login
 export const login = async (email, password) => {
   try {
@@ -75,12 +74,10 @@ export const login = async (email, password) => {
       throw error;
     }
 
-
     delete user.password_hash;
 
     return { user };
   } catch (err) {
-    // Si no tiene statusCode, asumimos 500
     if (!err.statusCode) {
       err.statusCode = 500;
       err.message = "Error interno en el servidor";
@@ -145,7 +142,7 @@ export const getRequestDetailsById = async (id) => {
     JOIN estados_solicitud e
       ON s.estado_id = e.id
     WHERE s.id = $1
-  `,[id]);
+  `, [id]);
 
   return result.rows[0] || null;
 };
@@ -190,3 +187,23 @@ export const getStatuses = async () => {
 
   return result.rows || null;
 }
+
+/**
+ * Find user by cedula with role information
+ * Used by getProfile controller
+ */
+export const findUserByCedulaWithRole = async (cedula) => {
+  const result = await pool.query(`
+    SELECT 
+      u.cedula,
+      u.full_name,
+      u.email,
+      u.is_active,
+      u.role_id,
+      r.name as role_name 
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    WHERE u.cedula = $1
+  `, [cedula]);
+  return result.rows[0];
+};
