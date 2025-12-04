@@ -1,5 +1,6 @@
 import express from "express";
-import { preRegister, getPreData, registerComplete, loginUser } from "../controllers/auth.controllers.js";
+import { preRegister, getPreData, registerComplete, loginUser, getProfile } from "../controllers/auth.controllers.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -60,6 +61,7 @@ router.post("/register-complete", registerComplete);
  *         description: Unauthorized
  */
 router.post("/login", loginUser);
+router.get("/me", authMiddleware, getProfile);
 
 
 export default router;

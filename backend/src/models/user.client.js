@@ -145,7 +145,7 @@ export const getRequestDetailsById = async (id) => {
     JOIN estados_solicitud e
       ON s.estado_id = e.id
     WHERE s.id = $1
-  `,[id]);
+  `, [id]);
 
   return result.rows[0] || null;
 };

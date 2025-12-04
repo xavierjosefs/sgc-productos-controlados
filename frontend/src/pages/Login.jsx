@@ -45,7 +45,7 @@ export default function Login() {
   // Validar formulario
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.email) {
       newErrors.email = 'El correo es requerido';
     } else if (!validateEmail(formData.email)) {
@@ -65,7 +65,7 @@ export default function Login() {
   // Manejar submit del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -74,17 +74,15 @@ export default function Login() {
 
     try {
       const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      
+
       const response = await axios.post(`${baseURL}/api/auth/login`, {
         email: formData.email,
         password: formData.password
-      }, {
-        withCredentials: true,
       });
 
       const data = response.data;
-      
-      // Guardar token y datos del usuario en localStorage
+
+      // Guardar token en localStorage
       if (data.token) {
         localStorage.setItem('token', data.token);
         if (data.user) {
@@ -93,18 +91,18 @@ export default function Login() {
         if (formData.rememberMe) {
           localStorage.setItem('rememberMe', 'true');
         }
-        
-        // Redirigir al dashboard
+
+        // Redirigir al dashboard - el AuthContext se encargará de cargar el perfil
         window.location.href = '/';
       } else {
         throw new Error('No se recibió el token de autenticación');
       }
-      
+
     } catch (error) {
       console.error('Error en login:', error);
-      setErrors(prev => ({ 
-        ...prev, 
-        password: error.response?.data?.message || error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
+      setErrors(prev => ({
+        ...prev,
+        password: error.response?.data?.message || error.message || 'Error al iniciar sesión. Verifica tus credenciales.'
       }));
     } finally {
       setIsLoading(false);
@@ -145,9 +143,8 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="ejemplo@gmail.com"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.email && (
@@ -168,9 +165,8 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   style={{ '--tw-ring-color': '#4A8BDF' }}
                 />
                 <button
@@ -242,13 +238,13 @@ export default function Login() {
       {/* Lado derecho - Imagen de fondo */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden rounded-l-[48px]">
         {/* Imagen de fondo con overlay */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url(/login-background.jpg)',
           }}
         ></div>
-        
+
         {/* Overlay oscuro */}
         <div className="absolute inset-0 bg-black/40"></div>
       </div>

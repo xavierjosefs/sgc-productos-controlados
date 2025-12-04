@@ -5,12 +5,22 @@ import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Home from './pages/Home';
 import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
-import ClientLayout from './layouts/ClientLayout';
+import RoleBasedRedirect from './components/RoleBasedRedirect';
+
+import { AuthProvider } from './context/AuthContext';
+
+// Role-specific dashboards
+import ClienteDashboard from './pages/cliente/Dashboard';
+import VentanillaDashboard from './pages/ventanilla/Dashboard';
+import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
+import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
+import DireccionDashboard from './pages/direccion/Dashboard';
+import DncdDashboard from './pages/dncd/Dashboard';
+import AdminDashboard from './pages/admin/Dashboard';
 
 // Clase A
 import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
@@ -46,246 +56,305 @@ import SolicitudImportacionMedicamentosExito from './pages/SolicitudImportacionM
 export default function App() {
   return (
     <BrowserRouter>
-      <SolicitudClaseAProvider>
-        <SolicitudClaseBProvider>
-          <SolicitudClaseBCapaCProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/pre-register" element={<PreRegister />} />
-              <Route path="/register" element={<Navigate to="/pre-register" replace />} />
-              <Route path="/pre-data" element={<CompleteRegister />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <AuthProvider>
+        <SolicitudClaseAProvider>
+          <SolicitudClaseBProvider>
+            <SolicitudClaseBCapaCProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/pre-register" element={<PreRegister />} />
+                <Route path="/register" element={<Navigate to="/pre-register" replace />} />
+                <Route path="/pre-data" element={<CompleteRegister />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-              {/* Protected routes - cada página maneja su propio layout */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Root route - redirects based on role */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRedirect />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/support"
-                element={
-                  <ProtectedRoute>
-                    <Support />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Role-specific dashboard routes */}
+                <Route
+                  path="/cliente"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <ClienteDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/requests"
-                element={
-                  <ProtectedRoute>
-                    <Requests />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/ventanilla"
+                  element={
+                    <ProtectedRoute allowedRoles={['ventanilla']}>
+                      <VentanillaDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/requests/:id/details"
-                element={
-                  <ProtectedRoute>
-                    <RequestDetail />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/tecnico-controlados"
+                  element={
+                    <ProtectedRoute allowedRoles={['tecnico_controlados']}>
+                      <TecnicoControladosDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/requests/:status"
-                element={
-                  <ProtectedRoute>
-                    <RequestsFiltered />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/director-controlados"
+                  element={
+                    <ProtectedRoute allowedRoles={['director_controlados']}>
+                      <DirectorControladosDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/requests/:id"
-                element={
-                  <ProtectedRoute>
-                    <RequestDetail />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/direccion"
+                  element={
+                    <ProtectedRoute allowedRoles={['direccion']}>
+                      <DireccionDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Solicitud Drogas Clase A flow */}
-              <Route
-                path="/solicitud-drogas-clase-a"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudDrogasClaseAForm />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/dncd"
+                  element={
+                    <ProtectedRoute allowedRoles={['dncd']}>
+                      <DncdDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-a/documentos"
-                element={
-                  <ProtectedRoute>
-                    <DocumentosSolicitudDrogasClaseA />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-a/documentos-renovacion"
-                element={
-                  <ProtectedRoute>
-                    <DocumentosSolicitudDrogasClaseARenovacion />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Shared protected routes (accessible by multiple roles) */}
+                <Route
+                  path="/support"
+                  element={
+                    <ProtectedRoute>
+                      <Support />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-a/exito"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudEnviadaExito />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/requests"
+                  element={
+                    <ProtectedRoute>
+                      <Requests />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Solicitud Drogas Clase B flow */}
-              <Route
-                path="/solicitud-drogas-clase-b"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudDrogasClaseBForm />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/requests/:id/details"
+                  element={
+                    <ProtectedRoute>
+                      <RequestDetail />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-b/fase-2"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudDrogasClaseBForm2 />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/requests/:status"
+                  element={
+                    <ProtectedRoute>
+                      <RequestsFiltered />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-b/documentos"
-                element={
-                  <ProtectedRoute>
-                    <DocumentosSolicitudDrogasClaseB />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Solicitud Drogas Clase A flow */}
+                <Route
+                  path="/solicitud-drogas-clase-a"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudDrogasClaseAForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-drogas-clase-b/exito"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudDrogasClaseBExito />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-a/documentos"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudDrogasClaseA />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Solicitud Clase B Capa C flow */}
-              <Route
-                path="/solicitud-clase-b-capa-c"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudClaseBCapaCForm />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-a/documentos-renovacion"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudDrogasClaseARenovacion />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-clase-b-capa-c/actividades"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudClaseBCapaCActividadesForm />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-a/exito"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudEnviadaExito />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-clase-b-capa-c/documentos"
-                element={
-                  <ProtectedRoute>
-                    <DocumentosSolicitudClaseBCapaC />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Solicitud Drogas Clase B flow */}
+                <Route
+                  path="/solicitud-drogas-clase-b"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudDrogasClaseBForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-clase-b-capa-c/exito"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudClaseBCapaCExito />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-b/fase-2"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudDrogasClaseBForm2 />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Solicitud Importación Materia Prima flow */}
-              <Route
-                path="/solicitud-importacion-materia-prima"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMateriaPrimaFase01 />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-b/documentos"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudDrogasClaseB />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-importacion-materia-prima/fase-2"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMateriaPrimaFase02 />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-drogas-clase-b/exito"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudDrogasClaseBExito />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-importacion-materia-prima/exito"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMateriaPrimaExito />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Solicitud Clase B Capa C flow */}
+                <Route
+                  path="/solicitud-clase-b-capa-c"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudClaseBCapaCForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Solicitud Importación Medicamentos flow */}
-              <Route
-                path="/solicitud-importacion-medicamentos"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMedicamentosFase01 />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-clase-b-capa-c/actividades"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudClaseBCapaCActividadesForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-importacion-medicamentos/fase-2"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMedicamentosFase02 />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-clase-b-capa-c/documentos"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudClaseBCapaC />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/solicitud-importacion-medicamentos/exito"
-                element={
-                  <ProtectedRoute>
-                    <SolicitudImportacionMedicamentosExito />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/solicitud-clase-b-capa-c/exito"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudClaseBCapaCExito />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Legacy redirects */}
-              <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
-            </Routes>
-          </SolicitudClaseBCapaCProvider>
-        </SolicitudClaseBProvider>
-      </SolicitudClaseAProvider>
+                {/* Solicitud Importación Materia Prima flow */}
+                <Route
+                  path="/solicitud-importacion-materia-prima"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMateriaPrimaFase01 />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-importacion-materia-prima/fase-2"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMateriaPrimaFase02 />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-importacion-materia-prima/exito"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMateriaPrimaExito />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Solicitud Importación Medicamentos flow */}
+                <Route
+                  path="/solicitud-importacion-medicamentos"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMedicamentosFase01 />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-importacion-medicamentos/fase-2"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMedicamentosFase02 />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-importacion-medicamentos/exito"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <SolicitudImportacionMedicamentosExito />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Legacy redirects */}
+                <Route path="/mis-solicitudes" element={<Navigate to="/" replace />} />
+              </Routes>
+
+            </SolicitudClaseBCapaCProvider>
+          </SolicitudClaseBProvider>
+        </SolicitudClaseAProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
