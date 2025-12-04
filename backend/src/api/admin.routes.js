@@ -1,5 +1,5 @@
 import express from "express";
-import { adminCreateInternalUser, getAllUsersController, changeUserRoleController, getAllRequestsController } from "../controllers/admin.controllers.js";
+import { adminCreateInternalUser, getAllUsersController, changeUserRoleController, getAllRequestsController, changeUserStatusController, adminCreateServiceController, getAllServicesController, getAllFormsController } from "../controllers/admin.controllers.js";
 import { getRequestsByStatusController } from "../controllers/request.controllers.js";
 
 const router = express.Router();
@@ -9,4 +9,9 @@ router.get("/get-users", getAllUsersController);
 router.get("/get-requests/:status", getRequestsByStatusController);
 router.put("/change-role", changeUserRoleController);
 router.get("/get-all-requests", getAllRequestsController);
+router.put("/users/:cedula/toggle-status", changeUserStatusController);
+router.post("/create-service", adminCreateServiceController);
+router.get("/get-services", getAllServicesController);
+router.get("/get-forms", getAllFormsController);
+
 export default router;

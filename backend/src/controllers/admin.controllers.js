@@ -1,6 +1,6 @@
 import {findUserByEmail, findUserByCedula} from "../models/user.client.js";
 import { createPendingUser } from "../models/pending.client.js";
-import  {getAllUsers, changeUserRole, getAllRequest}  from "../models/admin.client.js";
+import  {getAllUsers, changeUserRole, getAllRequest, changeUserStatus, createService, findServiceByCodigo, getServices, getFormTypes}  from "../models/admin.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 import crypto from "crypto";
@@ -76,3 +76,64 @@ export const getAllRequestsController = async (req, res) => {
       res.status(500).json({ error: "Error obteniendo solicitudes." });
   }
 };
+
+export const changeUserStatusController = async (req, res) => {
+  try {
+    const { cedula } = req.params;
+
+    const updatedUser = await changeUserStatus(cedula);
+
+    res.json({
+      ok: true,
+      message: "Estado de usuario actualizado.",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "Usuario no encontrado") {
+      return res.status(404).json({ ok: false, error: error.message });
+    }
+
+    res.status(500).json({
+      ok: false,
+      error: "Error actualizando estado de usuario."
+    });
+  }
+};
+
+export const adminCreateServiceController = async (req, res) => {
+  try {
+    const { codigo_servicio, nombre_servicio, precio, documentos_requeridos, formulario } = req.body;
+    // console.log(formulario) 
+    const existService = await findServiceByCodigo(codigo_servicio);
+    if (existService) {
+      return res.status(400).json({ error: "El código de servicio ya existe." });
+    }
+    const newService = await createService(codigo_servicio, nombre_servicio, precio, documentos_requeridos, formulario);
+    res.json({ message: "Servicio creado exitosamente.", service: newService });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error creando servicio." }); 
+  }
+};
+
+export const getAllServicesController = async (req, res) => {
+  try {
+    const services = await getServices();
+    res.json({ services });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo servicios." });
+  }
+}
+
+export const getAllFormsController = async (req, res) => {
+  try {
+    const forms = await getFormTypes();
+    res.json({ forms });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo formularios." });
+  }
+}
