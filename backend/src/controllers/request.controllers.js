@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/user.client.js";
+import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId, getRequestsByStatus, getStatuses } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 
 export const createRequestController = async (req, res) => {
@@ -181,3 +181,36 @@ export const getPendingRequestsController = async (req, res) => {
         });
     }
 }
+
+export const getRequestsByStatusController = async (req, res) => {
+    try {
+        const status = req.params.status;
+        const requests = await getRequestsByStatus(status);
+        return res.status(200).json({
+            ok: true,
+            requests
+        });
+    }catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+export const getRequestsStatusController = async (req, res) => {
+    try {
+        const statuses = await getStatuses();
+        return res.status(200).json({
+            ok: true,
+            statuses: statuses
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};

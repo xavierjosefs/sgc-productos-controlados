@@ -1,6 +1,6 @@
-import {findUserByEmail} from "../models/user.client.js";
+import {findUserByEmail, findUserByCedula} from "../models/user.client.js";
 import { createPendingUser } from "../models/pending.client.js";
-import  {getAllUsers}  from "../models/admin.client.js";
+import  {getAllUsers, changeUserRole, getAllRequest}  from "../models/admin.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 import crypto from "crypto";
@@ -50,4 +50,29 @@ export const getAllUsersController = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: "Error obteniendo usuarios." });
     }
+};
+
+export const changeUserRoleController = async (req, res) => {
+    try {
+        const { cedula, newRole } = req.body;
+        const user = await findUserByCedula(cedula);
+        if (!user) {
+            return res.status(404).json({ error: "Usuario no encontrado." });
+        }
+        await changeUserRole(cedula, newRole);
+        res.json({ message: "Rol de usuario actualizado." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error actualizando rol de usuario." });
+    }
+};
+
+export const getAllRequestsController = async (req, res) => {
+  try {
+      const requests = await getAllRequest();
+      res.json({ requests });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error obteniendo solicitudes." });
+  }
 };

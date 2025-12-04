@@ -80,7 +80,7 @@ export const loginUser = async (req, res) => {
 
   try {
     const { user } = await login(email, password);
-    const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
+    const token = jwt.sign({cedula: user.cedula, role: user.role_id}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
     return res.status(200).json({
       ok: true,
