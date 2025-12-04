@@ -186,7 +186,13 @@ export default function SolicitudClaseBCapaCActividadesForm() {
           throw new Error('No se pudo crear la solicitud');
         }
 
-        navigate("/solicitud-clase-b-capa-c/documentos", { 
+        // Determinar a qué pantalla de documentos ir según la condición
+        const esExtraviado = condicionSolicitud === 'Robo o Perdida';
+        const rutaDocumentos = esExtraviado 
+          ? '/solicitud-clase-b-capa-c/documentos-extraviado'
+          : '/solicitud-clase-b-capa-c/documentos';
+
+        navigate(rutaDocumentos, { 
           state: { requestId, fromForm: true } 
         });
       } catch (error) {
@@ -484,6 +490,18 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 <span className="text-sm text-gray-700">d) QFC revalidado, suspendido</span>
               </label>
 
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="condicionSolicitud"
+                  value="Robo o Perdida"
+                  checked={condicionSolicitud === "Robo o Perdida"}
+                  onChange={(e) => setCondicionSolicitud(e.target.value)}
+                  className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
+                />
+                <span className="text-sm text-gray-700">e) Robo o Perdida</span>
+              </label>
+
               <div className="space-y-2">
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
@@ -494,7 +512,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                     onChange={(e) => setCondicionSolicitud(e.target.value)}
                     className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                   />
-                  <span className="text-sm text-gray-700">e) Otro, especifique</span>
+                  <span className="text-sm text-gray-700">f) Otro, especifique</span>
                 </label>
 
                 {condicionSolicitud === "Otro, especifique" && (
@@ -512,30 +530,34 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm text-gray-700">
-                  Si su respuesta fue b o c, especifique el No. GDC:
-                </label>
-                <input
-                  type="text"
-                  value={especifiqueNoGdc}
-                  onChange={(e) => setEspecifiqueNoGdc(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
-                  placeholder="Ingrese el número"
-                />
-              </div>
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600 mb-2 block">
+                      Si su respuesta fue <strong>b</strong> o <strong>c</strong>, especifique el No. GDC:
+                    </label>
+                    <input
+                      type="text"
+                      value={especifiqueNoGdc}
+                      onChange={(e) => setEspecifiqueNoGdc(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                      placeholder=""
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm text-gray-700">
-                  Si su respuesta fue d, especifique el motivo:
-                </label>
-                <textarea
-                  value={especifiqueElMotivo}
-                  onChange={(e) => setEspecifiqueElMotivo(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
-                  placeholder="Describa el motivo"
-                />
+                  <div>
+                    <label className="text-sm text-gray-600 mb-2 block">
+                      Si su respuesta fue <strong>d</strong> o <strong>e</strong>, especifique el motivo:
+                    </label>
+                    <textarea
+                      value={especifiqueElMotivo}
+                      onChange={(e) => setEspecifiqueElMotivo(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                      placeholder=""
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -635,6 +657,16 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                   placeholder="Lugar de trabajo"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Pago */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+            <h2 className="text-lg font-bold text-[#2B6CB0] mb-4">Pago</h2>
+            <div className="text-gray-700 text-sm leading-relaxed space-y-2">
+              <p><span className="font-medium">Cuenta de Ingresos Externos – DNCD (BanReservas)</span></p>
+              <p>No.: 100-01-240-012653-9</p>
+              <p className="font-semibold">Costo del Servicio: RD$500.00</p>
             </div>
           </div>
 

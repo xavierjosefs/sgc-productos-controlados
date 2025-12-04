@@ -1,0 +1,201 @@
+import React, { useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import ModalConfirmacionEnvio from '../components/ModalConfirmacionEnvio';
+import useRequestsAPI from '../hooks/useRequestsAPI';
+import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
+import { validateFile } from '../utils/fileValidation';
+
+// Documentos para ROBO O PERDIDA - Todos obligatorios
+const FIELD_LIST_EXTRAVIADO = [
+  { key: 'cedula', label: 'Cédula de Identidad y Electoral' },
+  { key: 'certificacionPolicia', label: 'Certificación de Robo o Pérdida Emitida por la Policía Nacional' },
+  { key: 'reciboPago', label: 'Recibo de Depósito del Pago (no debe tener más de tres (03) meses de emitido)' },
+];
+
+const DocumentosSolicitudDrogasClaseBExtraviado = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { formData, clearFormData } = useSolicitudClaseB();
+  const [files, setFiles] = useState({});
+  const [fileErrors, setFileErrors] = useState({});
+  const inputRefs = useRef({});
+  
+  // Detectar si viene desde RequestDetail o desde el formulario con una solicitud existente
+  const existingRequestId = location.state?.requestId;
+  const fromDetail = location.state?.fromDetail;
+  const fromForm = location.state?.fromForm;
+
+  const handleFileChange = (key, file) => {
+    if (!file) return;
+
+    const error = validateFile(file);
+    if (error) {
+      setFileErrors((prev) => ({ ...prev, [key]: error }));
+      setFiles((prev) => {
+        const newFiles = { ...prev };
+        delete newFiles[key];
+        return newFiles;
+      });
+      return;
+    }
+
+    setFileErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[key];
+      return newErrors;
+    });
+    setFiles((prev) => ({ ...prev, [key]: file }));
+  };
+
+  const handleRemoveFile = (key) => {
+    setFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[key];
+      return newFiles;
+    });
+    // Limpiar el input file
+    if (inputRefs.current[key]) {
+      inputRefs.current[key].value = '';
+    }
+  };
+
+  const triggerFileInput = (key) => {
+    if (inputRefs.current[key]) inputRefs.current[key].click();
+  };
+
+  const allFilled = FIELD_LIST_EXTRAVIADO.every(f => files[f.key]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!allFilled) return;
+    // Abrir modal de confirmación
+    setConfirmOpen(true);
+  };
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // eslint-disable-next-line no-unused-vars
+  const { createRequest, uploadDocument, deleteDocument } = useRequestsAPI();
+
+  const handleConfirm = async () => {
+    setConfirmOpen(false);
+    try {
+      let requestId = existingRequestId;
+      
+      // Si no viene desde el detalle NI desde el formulario, crear una nueva solicitud
+      // (esto es para compatibilidad hacia atrás, normalmente debería venir del formulario)
+      if (!fromDetail && !fromForm && !existingRequestId) {
+        const resp = await createRequest({
+          nombre_servicio: 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados',
+          formulario: formData
+        });
+        // El controller responde { ok: true, request }
+        const newRequest = resp.request || resp;
+        requestId = newRequest.id || newRequest.request?.id;
+
+        if (!requestId) {
+          throw new Error('No se pudo obtener el ID de la solicitud creada');
+        }
+      }
+
+      // Subir todos los archivos
+      const entries = Object.entries(files);
+      for (const [key, file] of entries) {
+        if (!file) continue;
+        await uploadDocument(requestId, file, { tipo_documento: key });
+      }
+
+      // Limpiar datos del formulario del context
+      clearFormData();
+      
+      // Siempre ir a la página de éxito después de subir documentos
+      navigate('/success');
+    } catch (error) {
+      console.error('Error durante el envío de documentos:', error);
+      alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
+    }
+  };
+
+  const handleCancel = () => setConfirmOpen(false);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <button onClick={handleBack} className="text-[#4A8BDF] mb-6 inline-flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver
+        </button>
+
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-[#2B6CB0] mb-8">
+          Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados
+        </h1>
+
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mx-auto" style={{ maxWidth: 620 }}>
+          <h2 className="text-lg font-bold text-[#2B6CB0] mb-4">Documentos</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            ⚠️ <strong>Todos los documentos son obligatorios para solicitudes de Robo o Perdida</strong>
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {FIELD_LIST_EXTRAVIADO.map(field => (
+              <div key={field.key} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-700 mb-2">
+                    {field.label} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      ref={el => (inputRefs.current[field.key] = el)}
+                      type="file"
+                      name={field.key}
+                      accept=".png,.jpg,.jpeg,.pdf"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(field.key, e.target.files[0])}
+                    />
+
+                    <input
+                      readOnly
+                      placeholder="Solo se permiten archivos PNG, JPG o PDF"
+                      value={files[field.key]?.name || ''}
+                      className={`flex-1 px-4 py-3 border rounded-lg bg-white placeholder-gray-400 ${fileErrors[field.key] ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    {files[field.key] && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(field.key)}
+                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                        title="Eliminar archivo"
+                      >
+                        ✕
+                      </button>
+                    )}
+                    <button type="button" onClick={() => triggerFileInput(field.key)} className="px-4 py-2 bg-[#0B57A6] hover:bg-[#084c8a] text-white rounded-lg whitespace-nowrap">Subir Documento</button>
+                  </div>
+                  {fileErrors[field.key] ? (
+                    <p className="text-xs text-red-500 mt-2">{fileErrors[field.key]}</p>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-2">Solo se permiten archivos PNG, JPG o PDF</p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="flex items-center justify-center gap-6 mt-6">
+              <button type="button" onClick={handleBack} className="px-8 py-3 bg-white border border-[#4A8BDF] text-[#4A8BDF] rounded-lg font-semibold">Volver</button>
+              <button type="submit" disabled={!allFilled} className={`${allFilled ? 'bg-[#0B57A6] hover:bg-[#084c8a] text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} px-8 py-3 rounded-lg font-semibold`}>Enviar</button>
+            </div>
+          </form>
+        </div>
+        <ModalConfirmacionEnvio open={confirmOpen} onCancel={handleCancel} onConfirm={handleConfirm} />
+      </div>
+    </div>
+  );
+};
+
+export default DocumentosSolicitudDrogasClaseBExtraviado;

@@ -175,7 +175,13 @@ export default function SolicitudClaseBCapaCForm() {
         throw new Error('No se pudo crear la solicitud');
       }
 
-      navigate("/solicitud-clase-b-capa-c/documentos", { 
+      // Determinar a qué pantalla de documentos ir según la condición
+      const esExtraviado = fullFormData.condicionSolicitud === 'Robo o Perdida';
+      const rutaDocumentos = esExtraviado 
+        ? '/solicitud-clase-b-capa-c/documentos-extraviado'
+        : '/solicitud-clase-b-capa-c/documentos';
+
+      navigate(rutaDocumentos, { 
         state: { requestId, fromForm: true } 
       });
     } catch (error) {

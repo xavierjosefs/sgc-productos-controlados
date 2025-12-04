@@ -48,9 +48,14 @@ const SolicitudDrogasClaseAForm = () => {
 
       // Determinar a qué pantalla de documentos ir según la condición
       const esRenovacion = form.condicion === 'Renovación';
-      const rutaDocumentos = esRenovacion 
-        ? '/solicitud-drogas-clase-a/documentos-renovacion'
-        : '/solicitud-drogas-clase-a/documentos';
+      const esExtraviado = form.condicion === 'Robo o Perdida';
+      
+      let rutaDocumentos = '/solicitud-drogas-clase-a/documentos';
+      if (esRenovacion) {
+        rutaDocumentos = '/solicitud-drogas-clase-a/documentos-renovacion';
+      } else if (esExtraviado) {
+        rutaDocumentos = '/solicitud-drogas-clase-a/documentos-extraviado';
+      }
 
       // Navegar a documentos con el requestId ya creado
       navigate(rutaDocumentos, { 
@@ -87,7 +92,7 @@ const SolicitudDrogasClaseAForm = () => {
       if (!form.noCIDC || String(form.noCIDC).trim() === '') out.noCIDC = 'Ingrese el número CIDC';
     }
 
-    if (['Solicitud anterior negada','CIDC revocada, suspendida','Otra'].includes(form.condicion)) {
+    if (['Solicitud anterior negada','CIDC revocada, suspendida','Robo o Perdida','Otra'].includes(form.condicion)) {
       if (!form.motivo || String(form.motivo).trim() === '') out.motivo = 'Explique el motivo';
     }
 
@@ -117,66 +122,64 @@ const SolicitudDrogasClaseAForm = () => {
 
         <form className="space-y-8" onSubmit={handleSubmit}>
           {/* Identificación Card */}
-            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-              <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Identificación</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-700 mb-2">Nombre Completo del Profesional</label>
-                  <input name="nombre" placeholder="" onChange={handleChange} className={`${errors.nombre ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`} aria-invalid={!!errors.nombre} />
-                  {errors.nombre && <p className="text-xs text-red-500 mt-2">{errors.nombre}</p>}
-                </div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+            <h2 className="text-lg font-bold text-[#2B6CB0] mb-6">Identificación</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">Cédula de Identidad y Electoral</label>
+                <input name="cedula" placeholder="000-0000000-0" onChange={handleChange} className={`${errors.cedula ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg placeholder-gray-400`} aria-invalid={!!errors.cedula} />
+                {errors.cedula && <p className="text-xs text-red-500 mt-2">{errors.cedula}</p>}
+              </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-700 mb-2">Dirección/Correo Postal (P.O.B)</label>
-                  <textarea name="direccion" placeholder="" onChange={handleChange} rows={3} className={`${errors.direccion ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`} aria-invalid={!!errors.direccion}></textarea>
-                  {errors.direccion && <p className="text-xs text-red-500 mt-2">{errors.direccion}</p>}
-                </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">Nombre Completo del Profesional</label>
+                <input name="nombre" placeholder="" onChange={handleChange} className={`${errors.nombre ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`} aria-invalid={!!errors.nombre} />
+                {errors.nombre && <p className="text-xs text-red-500 mt-2">{errors.nombre}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Cédula de Identidad y Electoral</label>
-                  <input name="cedula" placeholder="000-0000000-0" onChange={handleChange} className={`${errors.cedula ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg placeholder-gray-400`} aria-invalid={!!errors.cedula} />
-                  {errors.cedula && <p className="text-xs text-red-500 mt-2">{errors.cedula}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Exequátur</label>
-                  <input name="exequatur" placeholder="" onChange={handleChange} className={`${errors.exequatur ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.exequatur} />
-                  {errors.exequatur && <p className="text-xs text-red-500 mt-2">{errors.exequatur}</p>}
-                </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">Exequátur</label>
+                <input name="exequatur" placeholder="" onChange={handleChange} className={`${errors.exequatur ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.exequatur} />
+                {errors.exequatur && <p className="text-xs text-red-500 mt-2">{errors.exequatur}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">No. Colegiatura</label>
-                  <input name="colegiatura" placeholder="" onChange={handleChange} className={`${errors.colegiatura ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.colegiatura} />
-                  {errors.colegiatura && <p className="text-xs text-red-500 mt-2">{errors.colegiatura}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Celular</label>
-                  <input name="celular" placeholder="000-000-0000" onChange={handleChange} className={`${errors.celular ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.celular} />
-                  {errors.celular && <p className="text-xs text-red-500 mt-2">{errors.celular}</p>}
-                </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">No. Colegiatura</label>
+                <input name="colegiatura" placeholder="" onChange={handleChange} className={`${errors.colegiatura ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.colegiatura} />
+                {errors.colegiatura && <p className="text-xs text-red-500 mt-2">{errors.colegiatura}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Teléfono(s)</label>
-                  <input name="telefonos" placeholder="" onChange={handleChange} className={`${errors.telefonos ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.telefonos} />
-                  {errors.telefonos && <p className="text-xs text-red-500 mt-2">{errors.telefonos}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Correo Electrónico</label>
-                  <input name="email" type="email" placeholder="ejemplo@gmail.com" onChange={handleChange} className={`${errors.email ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg placeholder-gray-400`} aria-invalid={!!errors.email} />
-                  {errors.email && <p className="text-xs text-red-500 mt-2">{errors.email}</p>}
-                </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">Dirección/Correo Postal (P.O.B)</label>
+                <input name="direccion" placeholder="" onChange={handleChange} className={`${errors.direccion ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`} aria-invalid={!!errors.direccion} />
+                {errors.direccion && <p className="text-xs text-red-500 mt-2">{errors.direccion}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Lugar de Trabajo</label>
-                  <input name="lugarTrabajo" placeholder="" onChange={handleChange} className={`${errors.lugarTrabajo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.lugarTrabajo} />
-                  {errors.lugarTrabajo && <p className="text-xs text-red-500 mt-2">{errors.lugarTrabajo}</p>}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-700 mb-2">Dirección del Lugar de Trabajo</label>
-                  <input name="direccionTrabajo" placeholder="" onChange={handleChange} className={`${errors.direccionTrabajo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.direccionTrabajo} />
-                  {errors.direccionTrabajo && <p className="text-xs text-red-500 mt-2">{errors.direccionTrabajo}</p>}
-                </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">Celular</label>
+                <input name="celular" placeholder="000-000-0000" onChange={handleChange} className={`${errors.celular ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.celular} />
+                {errors.celular && <p className="text-xs text-red-500 mt-2">{errors.celular}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">Correo Electrónico</label>
+                <input name="email" type="email" placeholder="ejemplo@gmail.com" onChange={handleChange} className={`${errors.email ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg placeholder-gray-400`} aria-invalid={!!errors.email} />
+                {errors.email && <p className="text-xs text-red-500 mt-2">{errors.email}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">Lugar de Trabajo</label>
+                <input name="lugarTrabajo" placeholder="" onChange={handleChange} className={`${errors.lugarTrabajo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.lugarTrabajo} />
+                {errors.lugarTrabajo && <p className="text-xs text-red-500 mt-2">{errors.lugarTrabajo}</p>}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">Dirección del Lugar de Trabajo</label>
+                <input name="direccionTrabajo" placeholder="" onChange={handleChange} className={`${errors.direccionTrabajo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`} aria-invalid={!!errors.direccionTrabajo} />
+                {errors.direccionTrabajo && <p className="text-xs text-red-500 mt-2">{errors.direccionTrabajo}</p>}
               </div>
             </div>
+          </div>
 
           {/* Profesión Card */}
           <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
@@ -223,9 +226,10 @@ const SolicitudDrogasClaseAForm = () => {
               <label className="flex items-center gap-4"><input type="radio" name="condicion" value="Renovación" onChange={handleChange} className="w-5 h-5" /> <span className="text-gray-700">b) Renovación</span></label>
               <label className="flex items-center gap-4"><input type="radio" name="condicion" value="Solicitud anterior negada" onChange={handleChange} className="w-5 h-5" /> <span className="text-gray-700">c) Solicitud anterior negada</span></label>
               <label className="flex items-center gap-4"><input type="radio" name="condicion" value="CIDC revocada, suspendida" onChange={handleChange} className="w-5 h-5" /> <span className="text-gray-700">d) CIDC reprobado, suspendido</span></label>
+              <label className="flex items-center gap-4"><input type="radio" name="condicion" value="Robo o Perdida" onChange={handleChange} className="w-5 h-5" /> <span className="text-gray-700">e) Robo o Perdida</span></label>
               <div className="flex items-center gap-4">
                 <input type="radio" name="condicion" value="Otra" onChange={handleChange} className="w-5 h-5" />
-                <span className="text-gray-700">e) Otra, especifique:</span>
+                <span className="text-gray-700">f) Otra, especifique:</span>
                 <input name="condicionOtra" placeholder="" onChange={handleChange} className={`${errors.condicionOtra ? 'border-red-500' : 'border-gray-300'} flex-1 px-4 py-3 border rounded-lg`} aria-invalid={!!errors.condicionOtra} />
               </div>
 

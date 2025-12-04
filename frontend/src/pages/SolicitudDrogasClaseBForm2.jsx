@@ -126,7 +126,13 @@ export default function SolicitudClaseB2() {
         throw new Error('No se pudo crear la solicitud');
       }
 
-      navigate('/solicitud-drogas-clase-b/documentos', { 
+      // Determinar a qué pantalla de documentos ir según la condición
+      const esExtraviado = fullFormData.condicion === 'e) Robo o Perdida';
+      const rutaDocumentos = esExtraviado 
+        ? '/solicitud-drogas-clase-b/documentos-extraviado'
+        : '/solicitud-drogas-clase-b/documentos';
+
+      navigate(rutaDocumentos, { 
         state: { requestId, fromForm: true } 
       });
     } catch (error) {

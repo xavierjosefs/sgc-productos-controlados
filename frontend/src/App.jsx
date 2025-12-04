@@ -16,6 +16,7 @@ import ClientLayout from './layouts/ClientLayout';
 import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
 import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
 import DocumentosSolicitudDrogasClaseARenovacion from './pages/DocumentosSolicitudDrogasClaseARenovacion';
+import DocumentosSolicitudDrogasClaseAExtraviado from './pages/DocumentosSolicitudDrogasClaseAExtraviado';
 import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
 import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
@@ -23,6 +24,7 @@ import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 import SolicitudDrogasClaseBForm from './pages/SolicitudDrogasClaseBForm';
 import SolicitudDrogasClaseBForm2 from './pages/SolicitudDrogasClaseBForm2';
 import DocumentosSolicitudDrogasClaseB from './pages/DocumentosSolicitudDrogasClaseB';
+import DocumentosSolicitudDrogasClaseBExtraviado from './pages/DocumentosSolicitudDrogasClaseBExtraviado';
 import SolicitudDrogasClaseBExito from './pages/SolicitudDrogasClaseBExito';
 import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 
@@ -30,6 +32,7 @@ import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
 import SolicitudClaseBCapaCActividadesForm from './pages/SolicitudClaseBCapaCActividadesForm';
 import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
+import DocumentosSolicitudClaseBCapaCExtraviado from './pages/DocumentosSolicitudClaseBCapaCExtraviado';
 import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
 import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
 
@@ -142,6 +145,15 @@ export default function App() {
               />
 
               <Route
+                path="/solicitud-drogas-clase-a/documentos-extraviado"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudDrogasClaseAExtraviado />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/solicitud-drogas-clase-a/exito"
                 element={
                   <ProtectedRoute>
@@ -179,6 +191,15 @@ export default function App() {
               />
 
               <Route
+                path="/solicitud-drogas-clase-b/documentos-extraviado"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudDrogasClaseBExtraviado />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/solicitud-drogas-clase-b/exito"
                 element={
                   <ProtectedRoute>
@@ -211,6 +232,15 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <DocumentosSolicitudClaseBCapaC />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/solicitud-clase-b-capa-c/documentos-extraviado"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudClaseBCapaCExtraviado />
                   </ProtectedRoute>
                 }
               />
