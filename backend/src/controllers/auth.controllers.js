@@ -61,19 +61,26 @@ export const registerComplete = async (req, res) => {
     return res.status(400).json({ ok: false, message: "Token inválido o expirado" });
   }
 
-  await createUser(pending.full_name,pending.cedula ,pending.email, password);
-  await deletePendingUser(pending.cedula);
+  await createUser(
+    pending.full_name,
+    pending.cedula,
+    pending.email,
+    password,
+    pending.role_id
+  );
 
+  await deletePendingUser(pending.cedula);
 
   res.json({ ok: true, message: "Registro completado con éxito" });
 };
+
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const { user } = await login(email, password);
-    const token = jwt.sign({cedula: user.cedula}, process.env.SECRET_KEY,{ expiresIn: "8h" })
+    const token = jwt.sign({cedula: user.cedula, role: user.role_id}, process.env.SECRET_KEY,{ expiresIn: "8h" })
 
     return res.status(200).json({
       ok: true,

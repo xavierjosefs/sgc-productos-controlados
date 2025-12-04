@@ -1,6 +1,6 @@
 import express from "express";
 import { upload } from "../middleware/upload.middleware.js";
-import { createRequestController, getRequestsController, getRequestDetailsController, getSendRequestsController, getAproveRequestsController, getReturnedRequestsController, getPendingRequestsController } from "../controllers/request.controllers.js";
+import { createRequestController, getRequestsController, getRequestDetailsController, getSendRequestsController, getAproveRequestsController, getReturnedRequestsController, getPendingRequestsController, getRequestsStatusController } from "../controllers/request.controllers.js";
 import { uploadDocumentController, getDocumentosBySolicitudController, deleteDocumentController } from "../controllers/document.controllers.js";
 
 const router = express.Router();
@@ -82,5 +82,7 @@ router.get("/send", getSendRequestsController);
 router.get("/aprove", getAproveRequestsController);
 router.get("/returned", getReturnedRequestsController);
 router.get("/pending", getPendingRequestsController);
+router.get("/status", getRequestsStatusController);
+
 
 export default router;
