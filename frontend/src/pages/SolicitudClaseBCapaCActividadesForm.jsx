@@ -70,6 +70,23 @@ export default function SolicitudClaseBCapaCActividadesForm() {
     if (condicionSolicitud === "Otro, especifique" && !otraCondicion.trim()) {
       newErrors.otraCondicion = "Debe especificar la condición";
     }
+    
+    // Validar campos condicionales según la opción seleccionada
+    // b o d requieren No. CIDC
+    if (condicionSolicitud === "Renovación" || condicionSolicitud === "CIDC reprobado, suspendido") {
+      if (!especifiqueNoGdc.trim()) {
+        newErrors.especifiqueNoGdc = "Este campo es obligatorio para esta opción";
+      }
+    }
+    
+    // c, d o e requieren motivo
+    if (condicionSolicitud === "Solicitud anterior negada" ||
+        condicionSolicitud === "CIDC reprobado, suspendido" || 
+        condicionSolicitud === "Robo o Perdida") {
+      if (!especifiqueElMotivo.trim()) {
+        newErrors.especifiqueElMotivo = "Este campo es obligatorio para esta opción";
+      }
+    }
 
     // Regente Farmacéutico
     if (!nombreRegente.trim()) newErrors.nombreRegente = "Este campo es obligatorio";
@@ -93,6 +110,8 @@ export default function SolicitudClaseBCapaCActividadesForm() {
     actividades,
     otraCondicion,
     condicionSolicitud,
+    especifiqueNoGdc,
+    especifiqueElMotivo,
     nombreRegente,
     direccionRegente,
     cedulaRegente,
@@ -451,12 +470,12 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 <input
                   type="radio"
                   name="condicionSolicitud"
-                  value="Primera solicitud"
-                  checked={condicionSolicitud === "Primera solicitud"}
+                  value="Primera Solicitud"
+                  checked={condicionSolicitud === "Primera Solicitud"}
                   onChange={(e) => setCondicionSolicitud(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                 />
-                <span className="text-sm text-gray-700">a) Primera solicitud</span>
+                <span className="text-sm text-gray-700">a) Primera Solicitud</span>
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
@@ -475,24 +494,24 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 <input
                   type="radio"
                   name="condicionSolicitud"
-                  value="Solicitud-cambiar negocio"
-                  checked={condicionSolicitud === "Solicitud-cambiar negocio"}
+                  value="Solicitud anterior negada"
+                  checked={condicionSolicitud === "Solicitud anterior negada"}
                   onChange={(e) => setCondicionSolicitud(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                 />
-                <span className="text-sm text-gray-700">c) Solicitud-cambiar negocio</span>
+                <span className="text-sm text-gray-700">c) Solicitud anterior negada</span>
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="radio"
                   name="condicionSolicitud"
-                  value="QFC revalidado, suspendido"
-                  checked={condicionSolicitud === "QFC revalidado, suspendido"}
+                  value="CIDC reprobado, suspendido"
+                  checked={condicionSolicitud === "CIDC reprobado, suspendido"}
                   onChange={(e) => setCondicionSolicitud(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                 />
-                <span className="text-sm text-gray-700">d) QFC revalidado, suspendido</span>
+                <span className="text-sm text-gray-700">d) CIDC reprobado, suspendido</span>
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
@@ -539,28 +558,48 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-600 mb-2 block">
-                      Si su respuesta fue <strong>b</strong> o <strong>c</strong>, especifique el No. GDC:
+                      Si su respuesta fue <strong>b o d</strong>, escriba el <strong>No. CIDC:</strong>
+                      {(condicionSolicitud === "Renovación" || condicionSolicitud === "CIDC reprobado, suspendido") && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
                     <input
                       type="text"
                       value={especifiqueNoGdc}
                       onChange={(e) => setEspecifiqueNoGdc(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                      className={`w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] ${
+                        errors.especifiqueNoGdc ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder=""
+                      aria-invalid={!!errors.especifiqueNoGdc}
                     />
+                    {errors.especifiqueNoGdc && (
+                      <p className="text-xs text-red-500 mt-2">{errors.especifiqueNoGdc}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="text-sm text-gray-600 mb-2 block">
-                      Si su respuesta fue <strong>d</strong> o <strong>e</strong>, especifique el motivo:
+                      Si su respuesta fue <strong>c, d o e</strong> explique el motivo:
+                      {(condicionSolicitud === "Solicitud anterior negada" ||
+                        condicionSolicitud === "CIDC reprobado, suspendido" || 
+                        condicionSolicitud === "Robo o Perdida") && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
                     <textarea
                       value={especifiqueElMotivo}
                       onChange={(e) => setEspecifiqueElMotivo(e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                      className={`w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] ${
+                        errors.especifiqueElMotivo ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder=""
+                      aria-invalid={!!errors.especifiqueElMotivo}
                     />
+                    {errors.especifiqueElMotivo && (
+                      <p className="text-xs text-red-500 mt-2">{errors.especifiqueElMotivo}</p>
+                    )}
                   </div>
                 </div>
               </div>

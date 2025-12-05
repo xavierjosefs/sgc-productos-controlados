@@ -80,12 +80,16 @@ const DocumentosSolicitudClaseBCapaCRenovacion = () => {
   };
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // eslint-disable-next-line no-unused-vars
   const { createRequest, uploadDocument, deleteDocument } = useRequestsAPI();
 
   const handleConfirm = async () => {
+    if (isSubmitting) return; // Prevenir doble click
+    
     setConfirmOpen(false);
+    setIsSubmitting(true);
     try {
       let requestId = existingRequestId;
       
@@ -124,6 +128,7 @@ const DocumentosSolicitudClaseBCapaCRenovacion = () => {
     } catch (error) {
       console.error('Error durante el envío de documentos:', error);
       alert(error?.message || 'Error al enviar la solicitud. Revisa la consola.');
+      setIsSubmitting(false); // Resetear en caso de error
     }
   };
 
@@ -195,8 +200,10 @@ const DocumentosSolicitudClaseBCapaCRenovacion = () => {
             ))}
 
             <div className="flex items-center justify-center gap-6 mt-6">
-              <button type="button" onClick={handleBack} className="px-8 py-3 bg-white border border-[#4A8BDF] text-[#4A8BDF] rounded-lg font-semibold">Volver</button>
-              <button type="submit" disabled={!allFilled} className={`${allFilled ? 'bg-[#0B57A6] hover:bg-[#084c8a] text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} px-8 py-3 rounded-lg font-semibold`}>Enviar</button>
+              <button type="button" onClick={handleBack} disabled={isSubmitting} className="px-8 py-3 bg-white border border-[#4A8BDF] text-[#4A8BDF] rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed">Volver</button>
+              <button type="submit" disabled={!allFilled || isSubmitting} className={`${allFilled && !isSubmitting ? 'bg-[#0B57A6] hover:bg-[#084c8a] text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} px-8 py-3 rounded-lg font-semibold`}>
+                {isSubmitting ? 'Enviando...' : 'Enviar'}
+              </button>
             </div>
           </form>
         </div>
