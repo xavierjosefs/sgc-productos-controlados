@@ -32,6 +32,7 @@ import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
 import SolicitudClaseBCapaCActividadesForm from './pages/SolicitudClaseBCapaCActividadesForm';
 import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
+import DocumentosSolicitudClaseBCapaCRenovacion from './pages/DocumentosSolicitudClaseBCapaCRenovacion';
 import DocumentosSolicitudClaseBCapaCExtraviado from './pages/DocumentosSolicitudClaseBCapaCExtraviado';
 import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
 import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
@@ -232,6 +233,15 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <DocumentosSolicitudClaseBCapaC />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/solicitud-clase-b-capa-c/documentos-renovacion"
+                element={
+                  <ProtectedRoute>
+                    <DocumentosSolicitudClaseBCapaCRenovacion />
                   </ProtectedRoute>
                 }
               />

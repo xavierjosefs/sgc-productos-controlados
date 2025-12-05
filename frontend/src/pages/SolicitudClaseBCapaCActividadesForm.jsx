@@ -187,10 +187,15 @@ export default function SolicitudClaseBCapaCActividadesForm() {
         }
 
         // Determinar a qué pantalla de documentos ir según la condición
+        const esRenovacion = condicionSolicitud === 'Renovación';
         const esExtraviado = condicionSolicitud === 'Robo o Perdida';
-        const rutaDocumentos = esExtraviado 
-          ? '/solicitud-clase-b-capa-c/documentos-extraviado'
-          : '/solicitud-clase-b-capa-c/documentos';
+        
+        let rutaDocumentos = '/solicitud-clase-b-capa-c/documentos';
+        if (esRenovacion) {
+          rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-renovacion';
+        } else if (esExtraviado) {
+          rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-extraviado';
+        }
 
         navigate(rutaDocumentos, { 
           state: { requestId, fromForm: true } 

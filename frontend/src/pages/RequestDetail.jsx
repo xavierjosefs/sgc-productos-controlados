@@ -97,7 +97,9 @@ const RequestDetail = () => {
   if (!request) return <div className="py-12 text-center text-gray-500">Solicitud no encontrada</div>;
 
   // Determinar si es editable (solo pendientes)
-  const isPending = request.estado_actual && request.estado_actual.toLowerCase().includes('pendiente');
+  // Usar la misma lógica que Home.jsx y RequestsFiltered.jsx
+  const estadoLower = (request.estado_actual || '').toLowerCase();
+  const isPending = estadoLower.includes('pendiente') || estadoLower.includes('revisión') || estadoLower.includes('evaluación');
   const formData = request.form_data || {};
 
   // Función para navegar a la pantalla de subir documentos correspondiente
@@ -130,12 +132,18 @@ const RequestDetail = () => {
       return;
     }
     
-    // Para Clase B Capa C (Hospitales Públicos), verificar si es extraviado
+    // Para Clase B Capa C (Hospitales Públicos), verificar si es renovación o extraviado
     if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas') {
+      const esRenovacion = formData.condicionSolicitud === 'Renovación';
       const esExtraviado = formData.condicionSolicitud === 'Robo o Perdida';
-      const route = esExtraviado 
-        ? '/solicitud-clase-b-capa-c/documentos-extraviado'
-        : '/solicitud-clase-b-capa-c/documentos';
+      
+      let route = '/solicitud-clase-b-capa-c/documentos';
+      if (esRenovacion) {
+        route = '/solicitud-clase-b-capa-c/documentos-renovacion';
+      } else if (esExtraviado) {
+        route = '/solicitud-clase-b-capa-c/documentos-extraviado';
+      }
+      
       navigate(route, { state: { requestId: request.id, fromDetail: true } });
       return;
     }
