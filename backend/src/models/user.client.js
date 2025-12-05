@@ -230,3 +230,11 @@ export const getRequestsForVentanilla = async () => {
   `);
   return result.rows;
 };
+
+export const updateRequestStatus = async (requestId, statusId) => {
+  const result = await pool.query(
+    `UPDATE solicitudes SET estado_id = $1 WHERE id = $2 RETURNING *`,
+    [statusId, requestId]
+  );
+  return result.rows[0];
+};

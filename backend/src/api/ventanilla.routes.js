@@ -28,4 +28,34 @@ const router = express.Router();
  */
 router.get("/requests", getVentanillaRequestsController);
 
+/**
+ * @swagger
+ * /ventanilla/validate/{id}:
+ *   post:
+ *     summary: Validate a request (Cumple/No Cumple)
+ *     tags: [Ventanilla]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *               reasons:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Request updated
+ */
+import { validateRequestController } from "../controllers/ventanilla.controllers.js";
+router.post("/validate/:id", validateRequestController);
+
 export default router;

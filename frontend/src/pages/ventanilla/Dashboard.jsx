@@ -82,18 +82,7 @@ export default function VentanillaDashboard() {
                     </div>
                 </div>
 
-                {/* Acciones Rápidas */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Acciones Rápidas</h2>
-                    <div className="flex gap-4">
-                        <button className="px-6 py-3 bg-[#4A8BDF] text-white rounded-lg font-medium hover:bg-[#3875C8] transition-colors">
-                            Recibir Nueva Solicitud
-                        </button>
-                        <button className="px-6 py-3 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors">
-                            Buscar Solicitud
-                        </button>
-                    </div>
-                </div>
+
 
                 {/* Error Message */}
                 {error && (
