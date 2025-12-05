@@ -23,7 +23,7 @@ export const createRequestController = async (req, res) => {
         if (!formulario || typeof formulario !== 'object') {
             return res.status(400).json({ message: "Formulario inválido" });
         }
-        
+
         const condicion = formulario.condicion;
 
         // Obtener cedula desde token
@@ -55,22 +55,22 @@ export const createRequestController = async (req, res) => {
 };
 
 export const getRequestsController = async (req, res) => {
-  try {
-    const cedula = req.user.cedula;
-    const requests = await getRequestsBycedula(cedula);
+    try {
+        const cedula = req.user.cedula;
+        const requests = await getRequestsBycedula(cedula);
 
-    return res.status(200).json({
-      ok: true,
-      requests,
-    });
-  } catch (error) {
-    console.error("Error al obtener solicitudes:", error);
+        return res.status(200).json({
+            ok: true,
+            requests,
+        });
+    } catch (error) {
+        console.error("Error al obtener solicitudes:", error);
 
-    return res.status(500).json({
-      ok: false,
-      message: "Error interno del servidor al obtener las solicitudes",
-    });
-  }
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor al obtener las solicitudes",
+        });
+    }
 };
 
 export const getRequestDetailsController = async (req, res) => {
@@ -87,8 +87,9 @@ export const getRequestDetailsController = async (req, res) => {
             });
         }
 
-        //validar que la solicitud pertenece al usuario
-        if (request.user_id !== cedula) {
+        //validar que la solicitud pertenece al usuario o es ventanilla
+        // Role 2 = Ventanilla, Role 7 = Admin
+        if (request.user_id !== cedula && req.user.role !== 2 && req.user.role !== 7) {
             return res.status(403).json({
                 ok: false,
                 message: "No tienes permiso para ver esta solicitud",
@@ -190,7 +191,7 @@ export const getRequestsByStatusController = async (req, res) => {
             ok: true,
             requests
         });
-    }catch (error) {
+    } catch (error) {
         return res.status(500).json({
             ok: false,
             message: "Error interno del servidor",

@@ -272,6 +272,38 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  /**
+   * Validar solicitud (Cumple / No Cumple)
+   * @param {string} requestId
+   * @param {string} status - 'aprobado_vus' | 'devuelto_vus'
+   * @param {string} reasons - Razones si es rechazada
+   */
+  const validateRequest = useCallback(async (requestId, status, reasons) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${baseURL}/api/ventanilla/validate/${requestId}`,
+        { status, reasons },
+        {
+          withCredentials: true,
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al validar la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     // Estados
     loading,
@@ -293,6 +325,7 @@ export function useRequestsAPI() {
     uploadDocument,
     deleteDocument,
     updateDocument,
+    validateRequest,
   };
 }
 
