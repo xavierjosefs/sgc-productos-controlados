@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
+import ClientTopbar from '../../components/ClientTopbar';
 
 export default function SolicitudClaseB5() {
   const navigate = useNavigate();
@@ -52,3 +52,4 @@ export default function SolicitudClaseB5() {
     </div>
   );
 }
+

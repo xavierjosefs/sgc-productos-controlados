@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
-import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
-import useRequestsAPI from '../hooks/useRequestsAPI';
+import ClientTopbar from '../../components/ClientTopbar';
+import { useSolicitudClaseB } from '../../contexts/SolicitudClaseBContext';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 export default function SolicitudClaseB2() {
   const navigate = useNavigate();
@@ -126,7 +126,12 @@ export default function SolicitudClaseB2() {
         throw new Error('No se pudo crear la solicitud');
       }
 
-      navigate('/solicitud-drogas-clase-b/documentos', { 
+      // Determinar a qué pantalla de documentos ir según la condición
+      const rutaDocumentos = contextData.condicion === 'e) Robo o pérdida'
+        ? '/solicitud-drogas-clase-b/documentos-robo-perdida'
+        : '/solicitud-drogas-clase-b/documentos';
+
+      navigate(rutaDocumentos, { 
         state: { requestId, fromForm: true } 
       });
     } catch (error) {
@@ -435,3 +440,4 @@ export default function SolicitudClaseB2() {
     </div>
   );
 }
+

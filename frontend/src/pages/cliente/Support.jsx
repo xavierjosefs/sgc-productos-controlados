@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ClientTopbar from '../components/ClientTopbar';
+import ClientTopbar from '../../components/ClientTopbar';
 
 /**
  * Página de Soporte y Contacto
@@ -112,3 +112,4 @@ export default function Support() {
     </div>
   );
 }
+

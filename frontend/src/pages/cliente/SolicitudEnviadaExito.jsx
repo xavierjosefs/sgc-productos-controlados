@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const SolicitudEnviadaExito = () => {
@@ -21,7 +21,7 @@ const SolicitudEnviadaExito = () => {
             onClick={() => navigate('/mis-solicitudes')}
             className="px-6 py-3 bg-[#0B57A6] text-white rounded-lg font-semibold w-64 hover:bg-[#084c8a]"
           >
-            Ir a “Mis Solicitudes”
+            Ir a ¡Mis Solicitudes!
           </button>
         </div>
       </div>
@@ -30,3 +30,4 @@ const SolicitudEnviadaExito = () => {
 };
 
 export default SolicitudEnviadaExito;
+

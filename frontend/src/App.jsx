@@ -1,14 +1,13 @@
-import RequestDetail from './pages/RequestDetail';
+import RequestDetail from './pages/cliente/RequestDetail';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Home from './pages/Home';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Support from './pages/Support';
-import Requests from './pages/Requests';
-import RequestsFiltered from './pages/RequestsFiltered';
+import Support from './pages/cliente/Support';
+import Requests from './pages/cliente/Requests';
+import RequestsFiltered from './pages/cliente/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedRedirect from './components/RoleBasedRedirect';
 
@@ -16,6 +15,7 @@ import { AuthProvider } from './context/AuthContext';
 
 // Role-specific dashboards
 import ClienteDashboard from './pages/cliente/Dashboard';
+import Home from './pages/cliente/Dashboard'; // Alias for compatibility
 import VentanillaDashboard from './pages/ventanilla/Dashboard';
 import VentanillaRequestDetail from './pages/ventanilla/RequestDetail';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
@@ -25,35 +25,39 @@ import DncdDashboard from './pages/dncd/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 
 // Clase A
-import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';
-import DocumentosSolicitudDrogasClaseA from './pages/DocumentosSolicitudDrogasClaseA';
-import DocumentosSolicitudDrogasClaseARenovacion from './pages/DocumentosSolicitudDrogasClaseARenovacion';
-import SolicitudEnviadaExito from './pages/SolicitudEnviadaExito';
+import SolicitudDrogasClaseAForm from './pages/cliente/SolicitudDrogasClaseAForm';
+import DocumentosSolicitudDrogasClaseA from './pages/cliente/DocumentosSolicitudDrogasClaseA';
+import DocumentosSolicitudDrogasClaseARenovacion from './pages/cliente/DocumentosSolicitudDrogasClaseARenovacion';
+import DocumentosSolicitudDrogasClaseARoboPerdida from './pages/cliente/DocumentosSolicitudDrogasClaseARoboPerdida';
+import SolicitudEnviadaExito from './pages/cliente/SolicitudEnviadaExito';
 import { SolicitudClaseAProvider } from './contexts/SolicitudClaseAContext';
 
 // Clase B
-import SolicitudDrogasClaseBForm from './pages/SolicitudDrogasClaseBForm';
-import SolicitudDrogasClaseBForm2 from './pages/SolicitudDrogasClaseBForm2';
-import DocumentosSolicitudDrogasClaseB from './pages/DocumentosSolicitudDrogasClaseB';
-import SolicitudDrogasClaseBExito from './pages/SolicitudDrogasClaseBExito';
+import SolicitudDrogasClaseBForm from './pages/cliente/SolicitudDrogasClaseBForm';
+import SolicitudDrogasClaseBForm2 from './pages/cliente/SolicitudDrogasClaseBForm2';
+import DocumentosSolicitudDrogasClaseB from './pages/cliente/DocumentosSolicitudDrogasClaseB';
+import DocumentosSolicitudDrogasClaseBRoboPerdida from './pages/cliente/DocumentosSolicitudDrogasClaseBRoboPerdida';
+import SolicitudDrogasClaseBExito from './pages/cliente/SolicitudDrogasClaseBExito';
 import { SolicitudClaseBProvider } from './contexts/SolicitudClaseBContext';
 
 // Clase B Capa C
-import SolicitudClaseBCapaCForm from './pages/SolicitudClaseBCapaCForm';
-import SolicitudClaseBCapaCActividadesForm from './pages/SolicitudClaseBCapaCActividadesForm';
-import DocumentosSolicitudClaseBCapaC from './pages/DocumentosSolicitudClaseBCapaC';
-import SolicitudClaseBCapaCExito from './pages/SolicitudClaseBCapaCExito';
+import SolicitudClaseBCapaCForm from './pages/cliente/SolicitudClaseBCapaCForm';
+import SolicitudClaseBCapaCActividadesForm from './pages/cliente/SolicitudClaseBCapaCActividadesForm';
+import DocumentosSolicitudClaseBCapaC from './pages/cliente/DocumentosSolicitudClaseBCapaC';
+import DocumentosSolicitudClaseBCapaCRoboPerdida from './pages/cliente/DocumentosSolicitudClaseBCapaCRoboPerdida';
+import DocumentosSolicitudClaseBCapaCRenovacion from './pages/cliente/DocumentosSolicitudClaseBCapaCRenovacion';
+import SolicitudClaseBCapaCExito from './pages/cliente/SolicitudClaseBCapaCExito';
 import { SolicitudClaseBCapaCProvider } from './contexts/SolicitudClaseBCapaCContext';
 
 // Materia Prima
-import SolicitudImportacionMateriaPrimaFase01 from './pages/SolicitudImportacionMateriaPrimaFase01';
-import SolicitudImportacionMateriaPrimaFase02 from './pages/SolicitudImportacionMateriaPrimaFase02';
-import SolicitudImportacionMateriaPrimaExito from './pages/SolicitudImportacionMateriaPrimaExito';
+import SolicitudImportacionMateriaPrimaFase01 from './pages/cliente/SolicitudImportacionMateriaPrimaFase01';
+import SolicitudImportacionMateriaPrimaFase02 from './pages/cliente/SolicitudImportacionMateriaPrimaFase02';
+import SolicitudImportacionMateriaPrimaExito from './pages/cliente/SolicitudImportacionMateriaPrimaExito';
 
 // Medicamentos
-import SolicitudImportacionMedicamentosFase01 from './pages/SolicitudImportacionMedicamentosFase01';
-import SolicitudImportacionMedicamentosFase02 from './pages/SolicitudImportacionMedicamentosFase02';
-import SolicitudImportacionMedicamentosExito from './pages/SolicitudImportacionMedicamentosExito';
+import SolicitudImportacionMedicamentosFase01 from './pages/cliente/SolicitudImportacionMedicamentosFase01';
+import SolicitudImportacionMedicamentosFase02 from './pages/cliente/SolicitudImportacionMedicamentosFase02';
+import SolicitudImportacionMedicamentosExito from './pages/cliente/SolicitudImportacionMedicamentosExito';
 
 export default function App() {
   return (
@@ -220,6 +224,15 @@ export default function App() {
                 />
 
                 <Route
+                  path="/solicitud-drogas-clase-a/documentos-robo-perdida"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudDrogasClaseARoboPerdida />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
                   path="/solicitud-drogas-clase-a/exito"
                   element={
                     <ProtectedRoute allowedRoles={['cliente']}>
@@ -257,6 +270,15 @@ export default function App() {
                 />
 
                 <Route
+                  path="/solicitud-drogas-clase-b/documentos-robo-perdida"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudDrogasClaseBRoboPerdida />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
                   path="/solicitud-drogas-clase-b/exito"
                   element={
                     <ProtectedRoute allowedRoles={['cliente']}>
@@ -289,6 +311,24 @@ export default function App() {
                   element={
                     <ProtectedRoute allowedRoles={['cliente']}>
                       <DocumentosSolicitudClaseBCapaC />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-clase-b-capa-c/documentos-robo-perdida"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudClaseBCapaCRoboPerdida />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/solicitud-clase-b-capa-c/documentos-renovacion"
+                  element={
+                    <ProtectedRoute allowedRoles={['cliente']}>
+                      <DocumentosSolicitudClaseBCapaCRenovacion />
                     </ProtectedRoute>
                   }
                 />

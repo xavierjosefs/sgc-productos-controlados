@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import ModalConfirmacionEnvio from "../components/ModalConfirmacionEnvio";
-import useRequestsAPI from "../hooks/useRequestsAPI";
+import ClientTopbar from "../../components/ClientTopbar";
+import ModalConfirmacionEnvio from "../../components/ModalConfirmacionEnvio";
+import useRequestsAPI from "../../hooks/useRequestsAPI";
 
 const DOCUMENTOS_FASE_02 = [
   { key: 'permisoImportacion', label: 'Permiso de Importación Otorgado por el MSP-DNCD' },
@@ -167,3 +167,4 @@ export default function SolicitudImportacionMedicamentosFase02() {
     </div>
   );
 }
+

@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import { useSolicitudClaseBCapaC } from "../contexts/SolicitudClaseBCapaCContext";
-import useRequestsAPI from '../hooks/useRequestsAPI';
+import ClientTopbar from "../../components/ClientTopbar";
+import { useSolicitudClaseBCapaC } from "../../contexts/SolicitudClaseBCapaCContext";
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 export default function SolicitudClaseBCapaCActividadesForm() {
   const navigate = useNavigate();
@@ -70,6 +70,16 @@ export default function SolicitudClaseBCapaCActividadesForm() {
     if (condicionSolicitud === "Otro, especifique" && !otraCondicion.trim()) {
       newErrors.otraCondicion = "Debe especificar la condición";
     }
+    
+    // Validar No. CIDC para opciones b o d
+    if ((condicionSolicitud === "Renovación" || condicionSolicitud === "CIDC reprobado, suspendido") && !especifiqueNoGdc.trim()) {
+      newErrors.especifiqueNoGdc = "Este campo es obligatorio";
+    }
+    
+    // Validar motivo para opciones c, d o e
+    if ((condicionSolicitud === "Solicitud anterior negada" || condicionSolicitud === "CIDC reprobado, suspendido" || condicionSolicitud === "Robo o Pérdida") && !especifiqueElMotivo.trim()) {
+      newErrors.especifiqueElMotivo = "Este campo es obligatorio";
+    }
 
     // Regente Farmacéutico
     if (!nombreRegente.trim()) newErrors.nombreRegente = "Este campo es obligatorio";
@@ -93,6 +103,8 @@ export default function SolicitudClaseBCapaCActividadesForm() {
     actividades,
     otraCondicion,
     condicionSolicitud,
+    especifiqueNoGdc,
+    especifiqueElMotivo,
     nombreRegente,
     direccionRegente,
     cedulaRegente,
@@ -186,7 +198,17 @@ export default function SolicitudClaseBCapaCActividadesForm() {
           throw new Error('No se pudo crear la solicitud');
         }
 
-        navigate("/solicitud-clase-b-capa-c/documentos", { 
+        // Determinar a qué pantalla de documentos ir según la condición
+        let rutaDocumentos;
+        if (condicionSolicitud === 'Robo o Pérdida') {
+          rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-robo-perdida';
+        } else if (condicionSolicitud === 'Renovación') {
+          rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-renovacion';
+        } else {
+          rutaDocumentos = '/solicitud-clase-b-capa-c/documentos';
+        }
+
+        navigate(rutaDocumentos, { 
           state: { requestId, fromForm: true } 
         });
       } catch (error) {
@@ -234,9 +256,9 @@ export default function SolicitudClaseBCapaCActividadesForm() {
               Identificación
             </h2>
 
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">
                   Nombre de la Empresa / Razón Social <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -251,8 +273,23 @@ export default function SolicitudClaseBCapaCActividadesForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección/Cama Postal (Local) <span className="text-red-500">*</span>
+                <label className="block text-sm text-gray-700 mb-2">
+                  RNC <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={rncEmpresa}
+                  onChange={(e) => setRncEmpresa(e.target.value)}
+                  className={`${errors.rncEmpresa ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
+                  placeholder="000000000"
+                  aria-invalid={!!errors.rncEmpresa}
+                />
+                {errors.rncEmpresa && <p className="text-xs text-red-500 mt-2">{errors.rncEmpresa}</p>}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">
+                  Dirección/Correo Postal (P.O.B) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -266,22 +303,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  RNC <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={rncEmpresa}
-                  onChange={(e) => setRncEmpresa(e.target.value)}
-                  className={`${errors.rncEmpresa ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
-                  placeholder="000-00000-0"
-                  aria-invalid={!!errors.rncEmpresa}
-                />
-                {errors.rncEmpresa && <p className="text-xs text-red-500 mt-2">{errors.rncEmpresa}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-2">
                   Teléfono <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -289,14 +311,14 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                   value={telefonoEmpresa}
                   onChange={(e) => setTelefonoEmpresa(e.target.value)}
                   className={`${errors.telefonoEmpresa ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
-                  placeholder="809-000-0000"
+                  placeholder="000-000-0000"
                   aria-invalid={!!errors.telefonoEmpresa}
                 />
                 {errors.telefonoEmpresa && <p className="text-xs text-red-500 mt-2">{errors.telefonoEmpresa}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-2">
                   Correo Electrónico <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -304,7 +326,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                   value={correoEmpresa}
                   onChange={(e) => setCorreoEmpresa(e.target.value)}
                   className={`${errors.correoEmpresa ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
-                  placeholder="ejemplo@correo.com"
+                  placeholder="ejemplo@gmail.com"
                   aria-invalid={!!errors.correoEmpresa}
                 />
                 {errors.correoEmpresa && <p className="text-xs text-red-500 mt-2">{errors.correoEmpresa}</p>}
@@ -464,24 +486,36 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                 <input
                   type="radio"
                   name="condicionSolicitud"
-                  value="Solicitud-cambiar negocio"
-                  checked={condicionSolicitud === "Solicitud-cambiar negocio"}
+                  value="Solicitud anterior negada"
+                  checked={condicionSolicitud === "Solicitud anterior negada"}
                   onChange={(e) => setCondicionSolicitud(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                 />
-                <span className="text-sm text-gray-700">c) Solicitud-cambiar negocio</span>
+                <span className="text-sm text-gray-700">c) Solicitud anterior negada</span>
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="radio"
                   name="condicionSolicitud"
-                  value="QFC revalidado, suspendido"
-                  checked={condicionSolicitud === "QFC revalidado, suspendido"}
+                  value="CIDC reprobado, suspendido"
+                  checked={condicionSolicitud === "CIDC reprobado, suspendido"}
                   onChange={(e) => setCondicionSolicitud(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                 />
-                <span className="text-sm text-gray-700">d) QFC revalidado, suspendido</span>
+                <span className="text-sm text-gray-700">d) CIDC reprobado, suspendido</span>
+              </label>
+
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="condicionSolicitud"
+                  value="Robo o Pérdida"
+                  checked={condicionSolicitud === "Robo o Pérdida"}
+                  onChange={(e) => setCondicionSolicitud(e.target.value)}
+                  className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
+                />
+                <span className="text-sm text-gray-700">e) Robo o Pérdida</span>
               </label>
 
               <div className="space-y-2">
@@ -494,7 +528,7 @@ export default function SolicitudClaseBCapaCActividadesForm() {
                     onChange={(e) => setCondicionSolicitud(e.target.value)}
                     className="w-4 h-4 text-[#4A8BDF] border-gray-300 focus:ring-[#4A8BDF] mt-1"
                   />
-                  <span className="text-sm text-gray-700">e) Otro, especifique</span>
+                  <span className="text-sm text-gray-700">f) Otro, especifique</span>
                 </label>
 
                 {condicionSolicitud === "Otro, especifique" && (
@@ -514,28 +548,32 @@ export default function SolicitudClaseBCapaCActividadesForm() {
 
               <div className="space-y-2">
                 <label className="block text-sm text-gray-700">
-                  Si su respuesta fue b o c, especifique el No. GDC:
+                  Si su respuesta fue b o d, escriba el No. CIDC:
                 </label>
                 <input
                   type="text"
                   value={especifiqueNoGdc}
                   onChange={(e) => setEspecifiqueNoGdc(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.especifiqueNoGdc ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent`}
                   placeholder="Ingrese el número"
+                  aria-invalid={!!errors.especifiqueNoGdc}
                 />
+                {errors.especifiqueNoGdc && <p className="text-xs text-red-500 mt-2">{errors.especifiqueNoGdc}</p>}
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm text-gray-700">
-                  Si su respuesta fue d, especifique el motivo:
+                  Si su respuesta fue c, d o e explique el motivo:
                 </label>
                 <textarea
                   value={especifiqueElMotivo}
                   onChange={(e) => setEspecifiqueElMotivo(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent"
+                  className={`${errors.especifiqueElMotivo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent`}
                   placeholder="Describa el motivo"
+                  aria-invalid={!!errors.especifiqueElMotivo}
                 />
+                {errors.especifiqueElMotivo && <p className="text-xs text-red-500 mt-2">{errors.especifiqueElMotivo}</p>}
               </div>
             </div>
           </div>
@@ -653,3 +691,4 @@ export default function SolicitudClaseBCapaCActividadesForm() {
     </div>
   );
 }
+

@@ -1,8 +1,8 @@
-ï»¿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
-import useRequestsAPI from '../hooks/useRequestsAPI';
-import BadgeEstado from '../components/BadgeEstado';
+import ClientTopbar from '../../components/ClientTopbar';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
+import BadgeEstado from '../../components/BadgeEstado';
 
 const Requests = () => {
   const navigate = useNavigate();
@@ -135,7 +135,7 @@ const Requests = () => {
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha CreaciÃ³n</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creación</th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ const Requests = () => {
               ) : error ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-red-500">{error}</td></tr>
               ) : requests.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aÃºn</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aún</td></tr>
               ) : (
                 requests.map(request => (
                   <tr key={request.id} className="hover:bg-gray-100 transition-colors">
@@ -171,7 +171,7 @@ const Requests = () => {
           ) : error ? (
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : requests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aÃºn</div>
+            <div className="text-center py-12 text-gray-500">No tienes solicitudes registradas aún</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {requests.map(request => (
@@ -210,3 +210,4 @@ const Requests = () => {
 };
 
 export default Requests;
+

@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import ModalConfirmacionEnvio from "../components/ModalConfirmacionEnvio";
-import useRequestsAPI from "../hooks/useRequestsAPI";
+import ClientTopbar from "../../components/ClientTopbar";
+import ModalConfirmacionEnvio from "../../components/ModalConfirmacionEnvio";
+import useRequestsAPI from "../../hooks/useRequestsAPI";
 
 const DOCUMENTOS_GENERALES = [
   { key: 'permisoImportacion', label: 'Permiso de Importación Otorgado por el MSP-DIGEMAPS' },
@@ -237,3 +237,4 @@ export default function SolicitudImportacionMateriaPrimaFase02() {
     </div>
   );
 }
+

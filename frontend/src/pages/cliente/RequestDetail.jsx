@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import useRequestsAPI from '../hooks/useRequestsAPI';
-import BadgeEstado from '../components/BadgeEstado';
-import ModalDocumento from '../components/ModalDocumento';
-import ModalConfirmacionEliminar from '../components/ModalConfirmacionEliminar';
+import ClientTopbar from '../../components/ClientTopbar';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
+import BadgeEstado from '../../components/BadgeEstado';
+import ModalDocumento from '../../components/ModalDocumento';
+import ModalConfirmacionEliminar from '../../components/ModalConfirmacionEliminar';
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -49,7 +50,7 @@ const RequestDetail = () => {
 
   // Subir documento
   const handleUpload = async (requestId, file) => {
-    // Se envía un tipo de documento por defecto si no se especifica otro
+    // Se env�a un tipo de documento por defecto si no se especifica otro
     await uploadDocument(requestId, file, { tipo_documento: 'Documento General' });
     await fetchDetail();
   };
@@ -60,20 +61,20 @@ const RequestDetail = () => {
     await fetchDetail();
   };
 
-  // Abrir modal de confirmación de eliminación
+  // Abrir modal de confirmaci�n de eliminaci�n
   const handleDeleteClick = (document) => {
     setDocumentToDelete(document);
     setDeleteModalOpen(true);
   };
 
-  // Cancelar eliminación
+  // Cancelar eliminaci�n
   const handleDeleteCancel = () => {
     setDeleteModalOpen(false);
     setDocumentToDelete(null);
     setDeleteError('');
   };
 
-  // Confirmar y ejecutar eliminación
+  // Confirmar y ejecutar eliminaci�n
   const handleDeleteConfirm = async () => {
     if (!documentToDelete) return;
 
@@ -100,26 +101,50 @@ const RequestDetail = () => {
   const isPending = request.estado_actual && request.estado_actual.toLowerCase().includes('pendiente');
   const formData = request.form_data || {};
 
-  // Función para navegar a la pantalla de subir documentos correspondiente
+  // Funci�n para navegar a la pantalla de subir documentos correspondiente
   const handleGoToUploadDocuments = () => {
     const serviceName = request.tipo_servicio;
     
-    // Para Clase A, verificar si es renovación
+    // Para Clase A, verificar la condición para determinar la ruta correcta
     if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A') {
-      const esRenovacion = formData.condicion === 'Renovación';
-      const route = esRenovacion 
-        ? '/solicitud-drogas-clase-a/documentos-renovacion'
-        : '/solicitud-drogas-clase-a/documentos';
+      let route = '/solicitud-drogas-clase-a/documentos';
+      
+      if (formData.condicion === 'Renovación') {
+        route = '/solicitud-drogas-clase-a/documentos-renovacion';
+      } else if (formData.condicion === 'Robo o pérdida') {
+        route = '/solicitud-drogas-clase-a/documentos-robo-perdida';
+      }
+      
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+      return;
+    }
+    
+    // Para Clase B, verificar la condición
+    if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados') {
+      const esRoboPerdida = formData.condicion === 'e) Robo o pérdida';
+      const route = esRoboPerdida 
+        ? '/solicitud-drogas-clase-b/documentos-robo-perdida'
+        : '/solicitud-drogas-clase-b/documentos';
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+      return;
+    }
+    
+    // Para Capa C, verificar la condición
+    if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas') {
+      const esRoboPerdida = formData.condicionSolicitud === 'Robo o pérdida';
+      const route = esRoboPerdida 
+        ? '/solicitud-clase-b-capa-c/documentos-robo-perdida'
+        : '/solicitud-clase-b-capa-c/documentos';
       navigate(route, { state: { requestId: request.id, fromDetail: true } });
       return;
     }
     
     // Mapeo de servicios a rutas de documentos (resto de servicios)
     const routeMap = {
-      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b/documentos',
-      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas': '/solicitud-clase-b-capa-c/documentos',
-      'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas': '/solicitud-importacion-materia-prima/documentos',
-      'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada': '/solicitud-importacion-medicamentos/documentos',
+      'Solicitud de Certificado de Inscripci�n de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b/documentos',
+      'Solicitud de Certificado de Inscripci�n de Drogas Controladas Clase B para Hospitales P�blicos y/u otras Instituciones P�blicas': '/solicitud-clase-b-capa-c/documentos',
+      'Solicitud de Permiso de Importaci�n de Materia Prima de Sustancias Controladas': '/solicitud-importacion-materia-prima/documentos',
+      'Solicitud de Permiso de Importaci�n de Medicamentos con Sustancia Controlada': '/solicitud-importacion-medicamentos/documentos',
     };
     
     const route = routeMap[serviceName];
@@ -132,139 +157,175 @@ const RequestDetail = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex items-center mb-6">
-        <button onClick={() => navigate('/')} className="text-[#4A8BDF] mr-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-2xl font-bold text-[#4A8BDF]">
-          {isPending ? 'Completar Solicitud' : 'Detalle de Solicitud'}
-        </h1>
-      </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div className="flex flex-wrap gap-6 items-center mb-4">
-          <div>
-            <span className="text-sm text-gray-500">ID</span>
-            <div className="font-semibold text-lg text-gray-900">{request.id}</div>
+    <div className="min-h-screen bg-gray-50">
+      <ClientTopbar />
+      
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="flex items-center mb-6">
+          <button onClick={() => navigate('/cliente')} className="text-[#4A8BDF] hover:text-[#3875C8] mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-3xl font-bold text-[#4A8BDF]">
+            {isPending ? 'Completar Solicitud' : 'Detalle de Solicitud'}
+          </h1>
+        </div>
+
+        {/* Card de resumen principal */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <span className="text-sm font-medium text-gray-500 block mb-1">ID de Solicitud</span>
+              <div className="font-bold text-xl text-gray-900">#{request.id}</div>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500 block mb-1">Estado</span>
+              <BadgeEstado estado={request.estado_actual} />
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500 block mb-1">Fecha de Creación</span>
+              <div className="text-gray-900 font-medium">{new Date(request.fecha_creacion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500 block mb-1">Última Actualización</span>
+              <div className="text-gray-900 font-medium">
+                {request.fecha_actualizacion ? new Date(request.fecha_actualizacion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+              </div>
+            </div>
           </div>
-          <div>
-            <span className="text-sm text-gray-500">Servicio</span>
-            <div className="text-gray-700">{request.tipo_servicio}</div>
-          </div>
-          <div>
-            <span className="text-sm text-gray-500">Estado</span>
-            <BadgeEstado estado={request.estado_actual} />
-          </div>
-          <div>
-            <span className="text-sm text-gray-500">Fecha</span>
-            <div className="text-gray-700">{new Date(request.fecha_creacion).toLocaleDateString('es-ES')}</div>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <span className="text-sm font-medium text-gray-500 block mb-2">Tipo de Servicio</span>
+            <div className="text-gray-900 font-medium text-lg">{request.tipo_servicio}</div>
           </div>
         </div>
-      </div>
-      {/* Formulario Completo - Dinámico según tipo de solicitud */}
-      <div className="space-y-6">
+        {/* Formulario Completo - Dinámico según tipo de solicitud */}
+        <div className="space-y-6">
         {/* CLASE A - Profesional */}
         {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A' && (
           <>
             {/* Identificación */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-600 mb-1">Nombre Completo del Profesional</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.nombre || '-'}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#4A8BDF] mb-6 pb-3 border-b border-gray-200">Identificación del Profesional</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {formData.nombre && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo del Profesional</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-medium">
+                      {formData.nombre}
+                    </div>
                   </div>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-600 mb-1">Dirección/Correo Postal (P.O.B)</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.direccion || '-'}
+                )}
+                {formData.direccion && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Dirección/Correo Postal (P.O.B)</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.direccion}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Cédula de Identidad y Electoral</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.cedula || '-'}
+                )}
+                {formData.cedula && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cédula de Identidad y Electoral</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-medium">
+                      {formData.cedula}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.exequatur || '-'}
+                )}
+                {formData.exequatur && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Exequátur</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-medium">
+                      {formData.exequatur}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">No. Colegiatura</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.colegiatura || '-'}
+                )}
+                {formData.colegiatura && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">No. Colegiatura</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.colegiatura}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Celular</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.celular || '-'}
+                )}
+                {formData.celular && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Celular</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.celular}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Teléfono(s)</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.telefonos || '-'}
+                )}
+                {formData.telefonos && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Teléfono(s)</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.telefonos}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Correo Electrónico</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.email || '-'}
+                )}
+                {formData.email && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Correo Electrónico</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.email}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Lugar de Trabajo</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.lugarTrabajo || '-'}
+                )}
+                {formData.lugarTrabajo && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Lugar de Trabajo</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.lugarTrabajo}
+                    </div>
                   </div>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-600 mb-1">Dirección del Lugar de Trabajo</label>
-                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                    {formData.direccionTrabajo || '-'}
+                )}
+                {formData.direccionTrabajo && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Dirección del Lugar de Trabajo</label>
+                    <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900">
+                      {formData.direccionTrabajo}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Profesión */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Profesión</h2>
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-600 mb-1">Profesión Seleccionada</label>
-                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
-                      {formData.profesion || '-'}
-                      {formData.profesion === 'Otra' && formData.profesionOtra && ` (${formData.profesionOtra})`}
+            {(formData.profesion || formData.categoriaII || formData.categoriaIII || formData.categoriaIV) && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-[#4A8BDF] mb-6 pb-3 border-b border-gray-200">Información Profesional</h2>
+                <div className="space-y-6">
+                  {formData.profesion && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Profesión Seleccionada</label>
+                      <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-medium">
+                        {formData.profesion}
+                        {formData.profesion === 'Otra' && formData.profesionOtra && ` (${formData.profesionOtra})`}
+                      </div>
                     </div>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-600 mb-1">Categorías de Drogas Controladas</label>
-                    <div className="flex gap-4">
-                      <span className={`px-3 py-1 rounded ${formData.categoriaII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>II</span>
-                      <span className={`px-3 py-1 rounded ${formData.categoriaIII ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>III</span>
-                      <span className={`px-3 py-1 rounded ${formData.categoriaIV ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-400'}`}>IV</span>
+                  )}
+                  {(formData.categoriaII || formData.categoriaIII || formData.categoriaIV) && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">Categorías de Drogas Controladas</label>
+                      <div className="flex gap-4">
+                        <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${formData.categoriaII ? 'bg-[#4A8BDF] text-white' : 'bg-gray-200 text-gray-400'}`}>Categoría II</span>
+                        <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${formData.categoriaIII ? 'bg-[#4A8BDF] text-white' : 'bg-gray-200 text-gray-400'}`}>Categoría III</span>
+                        <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${formData.categoriaIV ? 'bg-[#4A8BDF] text-white' : 'bg-gray-200 text-gray-400'}`}>Categoría IV</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
+
           </>
         )}
 
         {/* CLASE B - Establecimiento Privado */}
-        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados' && (
+        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados' && Object.keys(formData).length > 0 && (
           <>
-            {/* Identificación de la Empresa */}
+            {/* Identificaci�n de la Empresa */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -310,13 +371,13 @@ const RequestDetail = () => {
                   {formData.actividades.exportadora && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Exportadora</span>}
                   {formData.actividades.fabricante && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Fabricante</span>}
                   {formData.actividades.distribuidor && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Distribuidor</span>}
-                  {formData.actividades.laboratorioAnalitico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Laboratorio Analítico</span>}
+                  {formData.actividades.laboratorioAnalitico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Laboratorio Anal�tico</span>}
                   {formData.actividades.farmacia && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Farmacia</span>}
-                  {formData.actividades.clinicaPrivada && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Clínica Privada</span>}
-                  {formData.actividades.clinicaVeterinaria && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Clínica Veterinaria</span>}
-                  {formData.actividades.institucionEnsenanza && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Institución de Enseñanza Superior</span>}
-                  {formData.actividades.hospitalPublico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Hospital Público</span>}
-                  {formData.actividades.investigacion && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Investigación Categoría I</span>}
+                  {formData.actividades.clinicaPrivada && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Cl�nica Privada</span>}
+                  {formData.actividades.clinicaVeterinaria && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Cl�nica Veterinaria</span>}
+                  {formData.actividades.institucionEnsenanza && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Instituci�n de Ense�anza Superior</span>}
+                  {formData.actividades.hospitalPublico && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Hospital P�blico</span>}
+                  {formData.actividades.investigacion && <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">Investigaci�n Categor�a I</span>}
                   {formData.actividades.otra && (
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm">
                       Otra: {formData.actividades.otra}
@@ -326,7 +387,7 @@ const RequestDetail = () => {
               </div>
             )}
 
-            {/* Regente Farmacéutico */}
+            {/* Regente Farmac�utico */}
             {formData.nombreRegente && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Regente Farmacéutico</h2>
@@ -350,7 +411,7 @@ const RequestDetail = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Exequátur</label>
+                    <label className="block text-sm text-gray-600 mb-1">Exequétur</label>
                     <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
                       {formData.exequaturRegente || '-'}
                     </div>
@@ -477,9 +538,9 @@ const RequestDetail = () => {
         )}
 
         {/* CAPA C - Hospital Público */}
-        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas' && (
+        {request.tipo_servicio === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas' && Object.keys(formData).length > 0 && (
           <>
-            {/* Identificación de la Empresa */}
+            {/* Identificaci�n de la Empresa */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Identificación</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -530,7 +591,7 @@ const RequestDetail = () => {
               </div>
             )}
 
-            {/* Regente Farmacéutico */}
+            {/* Regente Farmac�utico */}
             {formData.nombreRegente && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Regente Farmacéutico</h2>
@@ -586,7 +647,7 @@ const RequestDetail = () => {
           </>
         )}
 
-        {/* Condición de Solicitud (común para todos) */}
+        {/* Condici�n de Solicitud (com�n para todos) */}
         {(formData.condicionSolicitud || formData.condicion) && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-[#2B6CB0] mb-4">Condición de Solicitud</h2>
@@ -617,9 +678,10 @@ const RequestDetail = () => {
             </div>
           </div>
         )}
-      </div>
-      {/* Documentos asociados */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        </div>
+
+        {/* Documentos asociados */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Documentos</h2>
         </div>
@@ -669,12 +731,13 @@ const RequestDetail = () => {
         )}
       </div>
 
-      {/* Mostrar error de eliminación si existe */}
-      {deleteError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-red-800">❌ {deleteError}</p>
-        </div>
-      )}
+        {/* Mostrar error de eliminación si existe */}
+        {deleteError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-800">⚠️ {deleteError}</p>
+          </div>
+        )}
+      </div>
 
       {/* Modal subir documento */}
       <ModalDocumento
@@ -695,7 +758,7 @@ const RequestDetail = () => {
         initialDocument={selectedDocument}
       />
 
-      {/* Modal confirmar eliminación */}
+      {/* Modal confirmar eliminaci�n */}
       <ModalConfirmacionEliminar
         open={deleteModalOpen}
         onCancel={handleDeleteCancel}
@@ -708,3 +771,4 @@ const RequestDetail = () => {
 };
 
 export default RequestDetail;
+

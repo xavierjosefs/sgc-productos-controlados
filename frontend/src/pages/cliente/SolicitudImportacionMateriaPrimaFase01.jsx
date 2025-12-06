@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import ModalConfirmacionEnvio from "../components/ModalConfirmacionEnvio";
-import useRequestsAPI from "../hooks/useRequestsAPI";
+import ClientTopbar from "../../components/ClientTopbar";
+import ModalConfirmacionEnvio from "../../components/ModalConfirmacionEnvio";
+import useRequestsAPI from "../../hooks/useRequestsAPI";
 
 const DOCUMENTOS_FASE_01 = [
   { key: 'cartaSolicitud', label: 'Carta de Solicitud o Comunicación del Importador' },
@@ -10,7 +10,7 @@ const DOCUMENTOS_FASE_01 = [
   { key: 'cartaAutorizacion', label: 'Carta de Autorización de Sustancia Emitida por la DNCD' },
 ];
 
-export default function SolicitudImportacionMedicamentosFase01() {
+export default function SolicitudImportacionMateriaPrimaFase01() {
   const navigate = useNavigate();
   const { createRequest, uploadDocument } = useRequestsAPI();
   
@@ -45,7 +45,7 @@ export default function SolicitudImportacionMedicamentosFase01() {
     try {
       // Crear solicitud para Fase 01
       const resp = await createRequest({
-        nombre_servicio: 'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada',
+        nombre_servicio: 'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas',
         formulario: { fase: 1 }
       });
       
@@ -68,7 +68,7 @@ export default function SolicitudImportacionMedicamentosFase01() {
       }
 
       // Navegar a pantalla de éxito
-      navigate('/solicitud-importacion-medicamentos/exito');
+      navigate('/solicitud-importacion-materia-prima/exito');
     } catch (error) {
       console.error('Error durante el envío de fase 1:', error);
       alert(error?.message || 'Error al enviar la fase 1. Por favor, intenta de nuevo.');
@@ -97,7 +97,7 @@ export default function SolicitudImportacionMedicamentosFase01() {
         {/* Título */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#4A8BDF] mb-2">
-            Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada
+            Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas
           </h1>
           <p className="text-xl text-[#85B6EC] font-semibold">FASE 01</p>
         </div>
@@ -150,7 +150,7 @@ export default function SolicitudImportacionMedicamentosFase01() {
               disabled={!todosDocumentosCargados || isSubmitting}
               className="bg-[#0B57A6] hover:bg-[#084c8a] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200"
             >
-              {isSubmitting ? 'Enviando...' : 'Enviar'}
+              {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
             </button>
           </div>
         </form>
@@ -165,3 +165,4 @@ export default function SolicitudImportacionMedicamentosFase01() {
     </div>
   );
 }
+

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
-import { useSolicitudClaseB } from '../contexts/SolicitudClaseBContext';
-import useRequestsAPI from '../hooks/useRequestsAPI';
+import ClientTopbar from '../../components/ClientTopbar';
+import { useSolicitudClaseB } from '../../contexts/SolicitudClaseBContext';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 export default function SolicitudClaseB() {
   const navigate = useNavigate();
@@ -119,10 +119,10 @@ export default function SolicitudClaseB() {
     if (form.condicion === 'b) Renovación' || form.condicion === 'd) CIDC reprobado, suspendido') {
       if (!form.noCIDC?.trim()) out.noCIDC = 'Ingrese el número CIDC';
     }
-    
+
     if (form.condicion === 'c) Solicitud anterior negada' || 
-        form.condicion === 'd) CIDC reprobado, suspendido' || 
-        form.condicion === 'e) Otra, especifique') {
+        form.condicion === 'd) CIDC reprobado, suspendido' ||
+        form.condicion === 'e) Robo o pérdida') {
       if (!form.motivo?.trim()) out.motivo = 'Explique el motivo';
     }
     
@@ -158,7 +158,7 @@ export default function SolicitudClaseB() {
     
     if (tieneActividadesEspeciales) {
       // Si tiene actividades especiales, ir al paso 2 (aún no crear solicitud)
-      navigate('/solicitud-drogas-clase-b/paso-2');
+      navigate('/solicitud-drogas-clase-b/fase-2');
     } else {
       // Si NO tiene actividades especiales, crear la solicitud ahora
       setSubmitting(true);
@@ -175,7 +175,12 @@ export default function SolicitudClaseB() {
           throw new Error('No se pudo crear la solicitud');
         }
 
-        navigate('/solicitud-drogas-clase-b/documentos', { 
+        // Determinar a qué pantalla de documentos ir según la condición
+        const rutaDocumentos = form.condicion === 'e) Robo o pérdida'
+          ? '/solicitud-drogas-clase-b/documentos-robo-perdida'
+          : '/solicitud-drogas-clase-b/documentos';
+
+        navigate(rutaDocumentos, { 
           state: { requestId, fromForm: true } 
         });
       } catch (error) {
@@ -217,19 +222,6 @@ export default function SolicitudClaseB() {
                 {errors.nombreEmpresa && <p className="text-xs text-red-500 mt-2">{errors.nombreEmpresa}</p>}
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm text-gray-700 mb-2">Dirección/Correo Postal (P.O.B) *</label>
-                <input
-                  name="direccion"
-                  placeholder=""
-                  value={form.direccion}
-                  onChange={handleChange}
-                  className={`${errors.direccion ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
-                  aria-invalid={!!errors.direccion}
-                />
-                {errors.direccion && <p className="text-xs text-red-500 mt-2">{errors.direccion}</p>}
-              </div>
-
               <div>
                 <label className="block text-sm text-gray-700 mb-2">RNC *</label>
                 <input
@@ -241,6 +233,19 @@ export default function SolicitudClaseB() {
                   aria-invalid={!!errors.rnc}
                 />
                 {errors.rnc && <p className="text-xs text-red-500 mt-2">{errors.rnc}</p>}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-2">Dirección/Correo Postal (P.O.B) *</label>
+                <input
+                  name="direccion"
+                  placeholder=""
+                  value={form.direccion}
+                  onChange={handleChange}
+                  className={`${errors.direccion ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]`}
+                  aria-invalid={!!errors.direccion}
+                />
+                {errors.direccion && <p className="text-xs text-red-500 mt-2">{errors.direccion}</p>}
               </div>
 
               <div>
@@ -256,7 +261,7 @@ export default function SolicitudClaseB() {
                 {errors.telefono && <p className="text-xs text-red-500 mt-2">{errors.telefono}</p>}
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm text-gray-700 mb-2">Correo Electrónico *</label>
                 <input
                   name="correoElectronico"
@@ -392,16 +397,30 @@ export default function SolicitudClaseB() {
                   type="radio"
                   id="condicion-e"
                   name="condicion"
-                  value="e) Otra, especifique"
-                  checked={form.condicion === "e) Otra, especifique"}
+                  value="e) Robo o pérdida"
+                  checked={form.condicion === "e) Robo o pérdida"}
+                  onChange={(e) => handleCondicionChange(e.target.value)}
+                  className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
+                />
+                <label htmlFor="condicion-e" className="text-sm font-medium text-gray-700">
+                  e) Robo o pérdida
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id="condicion-f"
+                  name="condicion"
+                  value="f) Otra, especifique"
+                  checked={form.condicion === "f) Otra, especifique"}
                   onChange={(e) => handleCondicionChange(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
                 />
                 <div className="flex-1">
-                  <label htmlFor="condicion-e" className="text-sm font-medium text-gray-700">
-                    e) Otra, especifique:
+                  <label htmlFor="condicion-f" className="text-sm font-medium text-gray-700">
+                    f) Otra, especifique:
                   </label>
-                  {form.condicion === "e) Otra, especifique" && (
+                  {form.condicion === "f) Otra, especifique" && (
                     <>
                       <input
                         type="text"
@@ -436,7 +455,7 @@ export default function SolicitudClaseB() {
               )}
               {(form.condicion === "c) Solicitud anterior negada" || 
                 form.condicion === "d) CIDC reprobado, suspendido" ||
-                form.condicion === "e) Otra, especifique") && (
+                form.condicion === "e) Robo o pérdida") && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Explique el motivo: *
@@ -571,3 +590,4 @@ export default function SolicitudClaseB() {
     </div>
   );
 }
+

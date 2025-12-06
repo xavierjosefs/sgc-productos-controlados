@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientTopbar from "../components/ClientTopbar";
-import { useSolicitudClaseBCapaC } from "../contexts/SolicitudClaseBCapaCContext";
-import useRequestsAPI from '../hooks/useRequestsAPI';
+import ClientTopbar from "../../components/ClientTopbar";
+import { useSolicitudClaseBCapaC } from "../../contexts/SolicitudClaseBCapaCContext";
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 export default function SolicitudClaseBCapaCForm() {
   const navigate = useNavigate();
@@ -175,7 +175,18 @@ export default function SolicitudClaseBCapaCForm() {
         throw new Error('No se pudo crear la solicitud');
       }
 
-      navigate("/solicitud-clase-b-capa-c/documentos", { 
+      // Determinar a qué pantalla de documentos ir según la condición
+      const condicionSolicitud = formData.condicionSolicitud;
+      let rutaDocumentos;
+      if (condicionSolicitud === 'Robo o Pérdida') {
+        rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-robo-perdida';
+      } else if (condicionSolicitud === 'Renovación') {
+        rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-renovacion';
+      } else {
+        rutaDocumentos = '/solicitud-clase-b-capa-c/documentos';
+      }
+
+      navigate(rutaDocumentos, { 
         state: { requestId, fromForm: true } 
       });
     } catch (error) {
@@ -485,3 +496,4 @@ export default function SolicitudClaseBCapaCForm() {
     </div>
   );
 }
+

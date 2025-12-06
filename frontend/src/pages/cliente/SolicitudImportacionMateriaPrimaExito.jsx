@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function SolicitudClaseBCapaCExito() {
+export default function SolicitudImportacionMateriaPrimaExito() {
   const navigate = useNavigate();
 
   const handleGoToRequests = () => {
@@ -53,3 +53,4 @@ export default function SolicitudClaseBCapaCExito() {
     </div>
   );
 }
+

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ClientTopbar from '../components/ClientTopbar';
-import BadgeEstado from '../components/BadgeEstado';
-import useRequestsAPI from '../hooks/useRequestsAPI';
-import useServicesAPI from '../hooks/useServicesAPI';
+import ClientTopbar from '../../components/ClientTopbar';
+import BadgeEstado from '../../components/BadgeEstado';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
+import useServicesAPI from '../../hooks/useServicesAPI';
 
 /**
  * Página de solicitudes filtradas por estado
@@ -59,11 +59,25 @@ export default function RequestsFiltered() {
       try {
         const data = await getUserRequests();
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
-        const statusKey = status.replace(/s$/, '').toLowerCase(); // enviadas -> enviada
+        
+        // Filtrar según el estado con lógica más flexible
         const filtered = normalized.filter(r => {
-          const s = (r.estado || r.estado_actual || '').toString().toLowerCase();
-          return s === statusKey || s === status.toLowerCase();
+          const estadoActual = (r.estado || r.estado_actual || '').toString().toLowerCase();
+          
+          switch(status) {
+            case 'enviadas':
+              return estadoActual.includes('enviada');
+            case 'aprobadas':
+              return estadoActual.includes('finalizada') || estadoActual.includes('autorizada') || estadoActual.includes('aprobada');
+            case 'devueltas':
+              return estadoActual.includes('devuelta') || estadoActual.includes('rechazada');
+            case 'pendientes':
+              return estadoActual.includes('pendiente') || estadoActual.includes('revisión') || estadoActual.includes('evaluación');
+            default:
+              return false;
+          }
         });
+        
         setAllRequests(filtered);
         setFilteredRequests(filtered);
       } catch (error) {
@@ -264,3 +278,4 @@ export default function RequestsFiltered() {
     </div>
   );
 }
+

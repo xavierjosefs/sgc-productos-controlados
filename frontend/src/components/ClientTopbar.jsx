@@ -29,7 +29,7 @@ export default function ClientTopbar() {
     };
   }, [tooltipRef]);
 
-  const isHome = location.pathname === '/';
+  const isHome = location.pathname === '/' || location.pathname === '/cliente' || location.pathname.startsWith('/requests');
   const isSupport = location.pathname === '/support';
 
   return (
@@ -43,7 +43,7 @@ export default function ClientTopbar() {
         {/* Centro - Botones de navegación */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/cliente')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${isHome
                 ? 'bg-[#085297] text-white'
                 : 'text-gray-700 hover:text-[#085297]'
