@@ -17,8 +17,15 @@ Estás trabajando en el proyecto **Sistema de Gestión y Control de Productos Co
 sgc-productos-controlados/
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # Componentes reutilizables (Topbar, Badges, Modales)
-│   │   ├── pages/          # Páginas/Vistas de la aplicación
+│   │   ├── components/      # Componentes reutilizables (Topbar, Badges, Modales, Layouts)
+│   │   ├── pages/          # Páginas/Vistas por rol
+│   │   │   ├── cliente/          # Pantallas del rol cliente
+│   │   │   ├── admin/            # Pantallas del rol admin
+│   │   │   ├── ventanilla/       # Pantallas del rol ventanilla
+│   │   │   ├── tecnico-controlados/
+│   │   │   ├── director-controlados/
+│   │   │   ├── direccion/
+│   │   │   └── dncd/
 │   │   ├── contexts/       # Context API para estado global (formularios multi-paso)
 │   │   ├── hooks/          # Custom hooks (useRequestsAPI, useServicesAPI, etc.)
 │   │   ├── App.jsx         # Configuración de rutas
@@ -83,7 +90,7 @@ Eres **GitHub Copilot** usando el modelo **Claude Sonnet 4.5**. Eres un asistent
 **Sistema de autenticación:**
 - Tokens JWT almacenados en `localStorage` con key `token`
 - Información de usuario en `localStorage` con key `user` (JSON stringificado)
-- Roles: `cliente`, `vus`, `upc`, `direccion`, `dncd`
+- Roles: `cliente`, `ventanilla`, `tecnico_controlados`, `director_controlados`, `direccion`, `dncd`, `admin`
 
 **Estructura de usuario en localStorage:**
 ```javascript
@@ -91,7 +98,7 @@ Eres **GitHub Copilot** usando el modelo **Claude Sonnet 4.5**. Eres un asistent
   id: number,
   nombre: string,
   email: string,
-  rol: 'cliente' | 'vus' | 'upc' | 'direccion' | 'dncd'
+  rol: 'cliente' | 'ventanilla' | 'tecnico_controlados' | 'director_controlados' | 'direccion' | 'dncd' | 'admin'
 }
 ```
 
@@ -128,11 +135,23 @@ El sistema maneja 5 tipos de servicios principales:
 4. **Importación Materia Prima**
 5. **Importación Medicamentos**
 
-**⚠️ NOTA CRÍTICA sobre Renovación:**
-- En **Clase A**, si el usuario selecciona `condicion: "Renovación"`, debe ir a una pantalla de documentos diferente
+**⚠️ NOTAS CRÍTICAS sobre Renovación:**
+
+**Clase A:**
+- Si `condicion: "Renovación"`, debe ir a `/solicitud-drogas-clase-a/documentos-renovacion`
 - Pantalla normal: 4 documentos
 - Pantalla renovación: 3 documentos (Cédula, Certificado Anterior, Recibo de Pago)
-- La lógica de navegación está en `SolicitudDrogasClaseAForm.jsx` (handleSubmit verifica `form.condicion === 'Renovación'`)
+- La lógica de navegación está en `SolicitudDrogasClaseAForm.jsx`
+
+**Clase B:**
+- Renovación usa la MISMA pantalla de documentos que primera solicitud (6 documentos)
+- Solo existe pantalla separada para "Robo o Pérdida" (3 documentos)
+
+**Capa C:**
+- Normal: 4 documentos
+- Renovación: 6 documentos (incluye Certificado Anterior) - Ruta: `/solicitud-clase-b-capa-c/documentos-renovacion`
+- Robo o Pérdida: 3 documentos
+- La lógica detecta condición en `SolicitudClaseBCapaCActividadesForm.jsx` y `SolicitudClaseBCapaCForm.jsx`
 
 ---
 
@@ -283,12 +302,16 @@ const handleSubmit = async () => {
 
 ## 🎯 TUS TAREAS ASIGNADAS
 
-### TAREA 1: Pantalla de Documentos para Renovación Capa C
+### ✅ TAREA 1 COMPLETADA: Pantalla de Documentos para Renovación Capa C
 
-**Objetivo:**
-Crear `DocumentosSolicitudClaseBCapaCRenovacion.jsx` para el proceso de renovación de Capa C.
+**Estado:** ✅ Completada en commit a04bcb9
 
-**Requisitos:**
+**Archivos creados:**
+- `DocumentosSolicitudClaseBCapaCRenovacion.jsx` (6 documentos)
+- Ruta registrada: `/solicitud-clase-b-capa-c/documentos-renovacion`
+- Lógica de navegación actualizada en formularios
+
+**Documentos originales que se pedían:**
 1. Seguir el mismo patrón que `DocumentosSolicitudDrogasClaseARenovacion.jsx`
 2. Definir `FIELD_LIST_RENOVACION` con los documentos específicos para Capa C renovación
 3. Implementar:
@@ -316,7 +339,380 @@ Crear `DocumentosSolicitudClaseBCapaCRenovacion.jsx` para el proceso de renovaci
 
 ---
 
-### TAREA 2: Botón de Cerrar Sesión (Logout)
+---
+
+## 🔧 MÓDULO ADMIN (feature/admin-frontend)
+
+**Objetivo:** Panel de administración para gestionar empleados y servicios del sistema.
+
+**Estructura actual:**
+```
+pages/admin/
+├── Dashboard.jsx              # ✅ Resumen general con estadísticas
+├── AdminSolicitudes.jsx       # ✅ Lista de todas las solicitudes con filtros
+├── AdminSolicitudDetalle.jsx  # ✅ Detalle de una solicitud específica
+├── AdminEmpleados.jsx         # ✅ Gestión de empleados (tabla con datos mock)
+└── AdminServicios.jsx         # ✅ Configuración de servicios (cards con datos mock)
+
+components/
+├── AdminLayout.jsx            # ✅ Layout base (AdminTopbar + Outlet)
+└── AdminTopbar.jsx            # ✅ Navegación: Inicio, Solicitudes, Empleados, Servicios
+```
+
+**Rutas protegidas (rol `admin`):**
+- `/admin` → Dashboard
+- `/admin/solicitudes` → Lista de solicitudes
+- `/admin/solicitudes/:id` → Detalle de solicitud
+- `/admin/empleados` → Gestión de empleados
+- `/admin/servicios` → Catálogo de servicios
+
+**Usuario admin de prueba:** jorge26.jls@outlook.com / 123456
+
+---
+
+## 🎯 TAREAS ASIGNADAS
+
+### TAREA 1: Crear Empleado - Pantalla de Creación
+
+**Objetivo:**
+Construir la interfaz completa para crear un nuevo empleado interno, basada en el diseño de Figma.
+Esta pantalla incluirá todos los campos del formulario, validaciones visuales y estados UI, pero todavía NO llamará al backend (solo datos mock).
+
+**Requisitos del diseño (según Figma):**
+
+**Campos del formulario:**
+1. **Cédula de Identidad y Electoral**
+   - Input text con placeholder `000-0000000-0`
+   - Validación de formato (máscara de cédula dominicana)
+
+2. **Nombre Completo**
+   - Input text
+   - Validación: requerido
+
+3. **Correo Electrónico**
+   - Input email con placeholder `ejemplo@gmail.com`
+   - Validación: formato email
+
+4. **Rol**
+   - Select dropdown
+   - Opciones: ventanilla, tecnico_controlados, director_controlados, direccion, dncd, admin
+   - Validación: requerido
+
+5. **Estado**
+   - Radio buttons: Activo / Inactivo
+   - Por defecto: Activo seleccionado
+
+**Botones:**
+- **Cancelar** (izquierda, azul claro): Vuelve a `/admin/empleados` sin guardar
+- **Crear** (derecha, azul oscuro): Por ahora solo muestra un alert "Empleado creado (mock)" y vuelve a `/admin/empleados`
+
+**Estructura del componente:**
+- Título: "Creación de Empleado" (H1, color azul `#4A8BDF`)
+- Card blanco centrado con título "Información"
+- Max-width del card: 620px
+- Botón volver (←) en la esquina superior izquierda
+
+**Validaciones visuales:**
+- Campos vacíos: border rojo cuando se intenta enviar sin completar
+- Email inválido: border rojo + mensaje de error
+- Cédula inválida: border rojo + mensaje de error
+
+**Ruta:** `/admin/empleados/crear`
+
+**Pasos de implementación:**
+1. Crear archivo `AdminEmpleadoCrear.jsx` en `pages/admin/`
+2. Implementar el formulario con todos los campos según diseño
+3. Agregar validaciones locales (sin backend)
+4. Implementar navegación: botón volver y cancelar → `/admin/empleados`
+5. Botón "Crear" → alert mock → navegar a `/admin/empleados`
+6. Registrar ruta en `App.jsx`
+7. Agregar botón "Crear Empleado" en `AdminEmpleados.jsx` que navegue a esta pantalla
+
+---
+
+### TAREA 2: Editar Empleado - Pantalla de Edición
+
+**Objetivo:**
+Crear la interfaz completa donde el Administrador puede editar un empleado interno previamente creado. 
+La pantalla debe mostrar los datos existentes (mock) y permitir modificar **solo el rol y el estado**.
+
+**⚠️ RESTRICCIÓN IMPORTANTE:**
+- **Solo se pueden editar:** Rol y Estado
+- **Campos de solo lectura (disabled):** Cédula, Nombre Completo, Correo Electrónico
+
+**Requisitos del diseño (según Figma):**
+
+**Campos del formulario:**
+1. **Cédula de Identidad y Electoral** - **SOLO LECTURA** (input disabled)
+2. **Nombre Completo** - **SOLO LECTURA** (input disabled)
+3. **Correo Electrónico** - **SOLO LECTURA** (input disabled)
+4. **Rol** - **EDITABLE** (select dropdown)
+5. **Estado** - **EDITABLE** (radio buttons: Activo / Inactivo)
+
+**Botones:**
+- **Cancelar** (izquierda, azul claro): Vuelve a `/admin/empleados` sin guardar cambios
+- **Actualizar** (derecha, azul oscuro): Por ahora solo muestra alert "Empleado actualizado (mock)" y vuelve a `/admin/empleados`
+
+**Estructura del componente:**
+- Título: "Edición de Empleado" (H1, color azul)
+- Card blanco centrado con título "Información"
+- Botón volver (←) en la esquina superior izquierda
+- Campos de solo lectura deben tener estilo visual diferenciado (bg-gray-100)
+
+**Datos mock para cargar:**
+```javascript
+const mockEmpleado = {
+  id: params.id,
+  cedula: '001-1234567-8',
+  nombre: 'Juan Pérez García',
+  email: 'juan.perez@example.com',
+  rol: 'ventanilla',
+  activo: true
+};
+```
+
+**Ruta:** `/admin/empleados/:id/editar`
+
+**Pasos de implementación:**
+1. Crear archivo `AdminEmpleadoEditar.jsx` en `pages/admin/`
+2. Usar `useParams()` para obtener el ID del empleado
+3. Cargar datos mock según el ID
+4. Campos Cédula, Nombre, Email → input disabled con bg-gray-100
+5. Campos Rol y Estado → editables normalmente
+6. Botón "Actualizar" → alert mock → navegar a `/admin/empleados`
+7. Registrar ruta en `App.jsx`
+8. En `AdminEmpleados.jsx`, hacer que el botón "Editar" de cada fila navegue a `/admin/empleados/:id/editar`
+
+---
+
+### TAREA 3: Servicios - Catálogo y Edición (Solo Lectura)
+
+**Objetivo:**
+Crear la pantalla completa de "Catálogo de Servicios" con datos mock, donde el admin puede:
+1. Ver todos los servicios en formato de cards
+2. Buscar servicios por nombre
+3. Filtrar por tipo de formulario
+4. Crear nuevo servicio (formulario completo)
+5. Ver/Editar un servicio existente (modo lectura)
+
+**Parte A: Catálogo de Servicios (`AdminServicios.jsx` - Ya existe pero necesita mejoras)**
+
+**Requisitos del diseño (según Figma):**
+
+**Header:**
+- Título: "Catálogo de Servicios" (H1, azul)
+- Barra de búsqueda: Input con placeholder "Buscar por nombre" + ícono lupa
+- Filtro: Dropdown "Tipo de Formulario" (Clase A, Clase B, Capa C, Sin Formulario)
+- Botón "Filtrar" (azul oscuro)
+- Botón "Crear Servicio" (azul claro) → navega a `/admin/servicios/crear`
+
+**Cards de servicios:**
+- Grid de 3 columnas (responsive)
+- Cada card muestra:
+  - Nombre del servicio (título clickeable)
+  - Precio: RD$ XXX.XX o "Sin Costo"
+  - Tipo de Formulario: Clase A, Clase B, etc.
+  - Botón "Editar" (azul oscuro) → navega a `/admin/servicios/:id/editar`
+
+**Interacción:**
+- Click en el nombre del servicio → navega a `/admin/servicios/:id` (modo lectura)
+- Click en botón "Editar" → navega a `/admin/servicios/:id/editar`
+
+**Datos mock (usar los 5 servicios existentes):**
+- Solicitud Clase A (Precio: 150.00, Tipo: Clase A)
+- Solicitud Clase B Instituciones Públicas (Sin Costo, Tipo: Clase B)
+- Solicitud Clase B Establecimientos Privados (Precio: 500.00, Tipo: Clase B)
+- Importación Materia Prima (Sin Costo, Tipo: Sin Formulario)
+- Importación Medicamentos (Sin Costo, Tipo: Sin Formulario)
+
+**Ruta:** `/admin/servicios` (ya existe)
+
+---
+
+**Parte B: Crear Servicio (`/admin/servicios/crear`)**
+
+**Objetivo:**
+Formulario completo para crear un nuevo servicio desde cero.
+
+**Campos del formulario:**
+
+**Sección 1: Información**
+- **Nombre del Servicio** (input text, requerido)
+- **Tipo de Formulario** (select: Clase A, Clase B, Capa C, Sin Formulario)
+- **Precio** (radio buttons):
+  - RD$ [input numérico]
+  - Sin Costo
+
+**Sección 2: Documentos Requeridos**
+
+**⚠️ IMPORTANTE:** Los documentos varían dependiendo del servicio seleccionado.
+
+**Subsecciones dinámicas:**
+1. **Nueva Solicitud**
+   - Input: "Nombre del Documento"
+   - Radio: Obligatorio / Opcional
+   - Link azul: "Agregar Documento" (añade otro campo)
+
+2. **Renovación**
+   - Link azul: "Agregar Documento"
+   - Misma estructura que Nueva Solicitud
+
+3. **Robo o Pérdida**
+   - Link azul: "Agregar Documento"
+   - Misma estructura que Nueva Solicitud
+
+**Botones:**
+- **Cancelar** (azul claro) → vuelve a `/admin/servicios`
+- **Crear** (azul oscuro) → alert mock + vuelve a `/admin/servicios`
+
+**Estructura:**
+- Título: "Crear un Servicio"
+- Botón volver (←)
+- Card "Información" + Card "Documentos Requeridos"
+
+**Pasos de implementación:**
+1. Crear `AdminServicioCrear.jsx`
+2. Estado local para manejar documentos dinámicos (array)
+3. Función para agregar/eliminar documentos
+4. Validaciones: nombre requerido, precio válido
+5. Botón Crear → alert mock
+6. Registrar ruta en App.jsx
+
+---
+
+**Parte C: Ver/Editar Servicio (Modo Lectura) (`/admin/servicios/:id`)**
+
+**Objetivo:**
+Pantalla que muestra todos los detalles de un servicio existente en **modo solo lectura**.
+
+**⚠️ RESTRICCIÓN:** Todos los campos están deshabilitados (disabled). Esta es solo una vista de detalle.
+
+**Campos mostrados (todos disabled):**
+- Nombre del Servicio
+- Tipo de Formulario
+- Precio (RD$ o Sin Costo)
+- Lista de documentos por cada tipo (Nueva Solicitud, Renovación, Robo o Pérdida)
+  - Cada documento muestra: nombre + si es obligatorio/opcional
+
+**Botones:**
+- **Volver** (←) → regresa a `/admin/servicios`
+- **NO hay botón de "Guardar" o "Actualizar"** (es solo lectura)
+
+**Estructura:**
+- Título: "Solicitud de Certificado de Inscripción de Drogas Controladas" (nombre del servicio)
+- Botón volver (←)
+- Card "Información" (todos los inputs disabled con bg-gray-100)
+- Card "Documentos Requeridos" (todos los inputs disabled)
+
+**Datos mock:**
+Usar el servicio que corresponda al ID del parámetro de ruta.
+
+**Pasos de implementación:**
+1. Crear `AdminServicioDetalle.jsx`
+2. Usar `useParams()` para obtener ID
+3. Cargar datos mock del servicio
+4. Todos los inputs → disabled + bg-gray-100
+5. Solo botón "Volver"
+6. Registrar ruta en App.jsx
+
+---
+
+**Parte D: Editar Servicio (`/admin/servicios/:id/editar`)**
+
+**Objetivo:**
+Pantalla idéntica a "Crear Servicio" pero pre-llenada con los datos existentes del servicio.
+
+**⚠️ IMPORTANTE:** Todos los campos son editables. Los documentos van a variar dependiendo del servicio.
+
+**Diferencias con Crear:**
+- Título: "Editar Servicio" (en lugar de "Crear un Servicio")
+- Datos pre-cargados desde mock
+- Botón: "Actualizar" (en lugar de "Crear")
+
+**Ruta:** `/admin/servicios/:id/editar`
+
+**Pasos de implementación:**
+1. Crear `AdminServicioEditar.jsx` (o reutilizar código de Crear)
+2. Cargar datos mock según ID
+3. Pre-llenar todos los campos
+4. Botón "Actualizar" → alert mock + vuelve a `/admin/servicios`
+5. Registrar ruta en App.jsx
+
+---
+
+## ✅ CHECKLIST DE IMPLEMENTACIÓN
+
+**Archivos a crear:**
+- [ ] `AdminEmpleadoCrear.jsx`
+- [ ] `AdminEmpleadoEditar.jsx`
+- [ ] `AdminServicioCrear.jsx`
+- [ ] `AdminServicioDetalle.jsx`
+- [ ] `AdminServicioEditar.jsx`
+
+**Rutas a registrar en App.jsx:**
+- [ ] `/admin/empleados/crear`
+- [ ] `/admin/empleados/:id/editar`
+- [ ] `/admin/servicios/crear`
+- [ ] `/admin/servicios/:id` (detalle solo lectura)
+- [ ] `/admin/servicios/:id/editar`
+
+**Modificaciones en archivos existentes:**
+- [ ] `AdminEmpleados.jsx`: Agregar botón "Crear Empleado" y hacer que botones "Editar" naveguen
+- [ ] `AdminServicios.jsx`: Mejorar diseño según Figma, agregar búsqueda/filtros, hacer cards clickeables
+
+**Verificaciones finales:**
+- [ ] Todos los campos disabled tienen bg-gray-100
+- [ ] Navegación con botón volver (←) funciona
+- [ ] Botones Cancelar regresan sin guardar
+- [ ] Validaciones visuales (border rojo) funcionan
+- [ ] Datos mock se cargan correctamente
+- [ ] No hay errores de consola
+
+---
+
+## 🎨 GUÍA DE ESTILOS (según diseño de Lis)
+
+**Colores:**
+- Azul primario: `#4A8BDF`
+- Azul oscuro botones: `#085297`
+- Azul claro botones secundarios: `#A8C5E8` o similar
+- Fondo inputs disabled: `bg-gray-100`
+- Border error: `border-red-500`
+
+**Componentes:**
+- Cards: `rounded-xl border border-gray-200 bg-white p-6`
+- Inputs: `border border-gray-300 rounded-lg px-4 py-3`
+- Botones primarios: `bg-[#085297] text-white rounded-lg px-8 py-3`
+- Botones secundarios: `bg-[#A8C5E8] text-gray-700 rounded-lg px-8 py-3`
+- Select: `border border-gray-300 rounded-lg px-4 py-3`
+- Radio buttons: Custom styled con círculo azul
+
+**Layouts:**
+- Max-width cards: 620px (centrado)
+- Spacing entre campos: 4-6 (mb-4 o mb-6)
+- Grid servicios: 3 columnas (grid-cols-1 md:grid-cols-3)
+
+---
+
+## 🚀 FLUJO DE TRABAJO
+
+1. **Recibir este archivo markdown**
+2. **Recibir imágenes de Figma** del usuario
+3. **Implementar cada TAREA en orden**
+4. **Probar navegación y validaciones**
+5. **Commit con mensaje breve**
+6. **Continuar con siguiente tarea**
+
+**Recuerda:**
+- Lee los archivos existentes antes de crear nuevos
+- Usa `AdminLayout` para todas las páginas admin
+- Sigue los patrones de `AdminEmpleados.jsx` y `AdminServicios.jsx`
+- Datos mock por ahora, NO conectar con backend
+- Validaciones solo visuales (sin llamadas a API)
+
+---
+
+### TAREA EXTRA: Botón de Cerrar Sesión (Logout)
 
 **Objetivo:**
 Agregar funcionalidad de logout en el Topbar del cliente para salir de forma segura.
