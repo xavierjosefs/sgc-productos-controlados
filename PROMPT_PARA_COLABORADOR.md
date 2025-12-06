@@ -1044,11 +1044,11 @@ export default function MiComponente() {
 ## 🚀 ¡ESTÁS LISTO PARA TRABAJAR!
 
 Recuerda:
-- Trabaja en tu rama `feature/nombre-tarea`(en este caso admin-frontend)
+- Trabaja en tu rama `feature/nombre-tarea`(en este caso feature/admin-frontend)
 - Lee antes de modificar
 - Implementa, no sugieras
 - Sigue los patrones existentes
-- Haz commits frecuentes
+- Haz commits frecuentes(cuando se te diga)
 - Comunica de forma breve y efectiva
 
 **¡Éxito en tus tareas! 🎉**
