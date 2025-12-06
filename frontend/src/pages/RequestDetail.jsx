@@ -97,27 +97,59 @@ const RequestDetail = () => {
   if (!request) return <div className="py-12 text-center text-gray-500">Solicitud no encontrada</div>;
 
   // Determinar si es editable (solo pendientes)
-  const isPending = request.estado_actual && request.estado_actual.toLowerCase().includes('pendiente');
+  // Usar la misma lógica que Home.jsx y RequestsFiltered.jsx
+  const estadoLower = (request.estado_actual || '').toLowerCase();
+  const isPending = estadoLower.includes('pendiente') || estadoLower.includes('revisión') || estadoLower.includes('evaluación');
   const formData = request.form_data || {};
 
   // Función para navegar a la pantalla de subir documentos correspondiente
   const handleGoToUploadDocuments = () => {
     const serviceName = request.tipo_servicio;
     
-    // Para Clase A, verificar si es renovación
+    // Para Clase A, verificar si es renovación o extraviado
     if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A') {
       const esRenovacion = formData.condicion === 'Renovación';
-      const route = esRenovacion 
-        ? '/solicitud-drogas-clase-a/documentos-renovacion'
-        : '/solicitud-drogas-clase-a/documentos';
+      const esExtraviado = formData.condicion === 'Robo o Perdida';
+      
+      let route = '/solicitud-drogas-clase-a/documentos';
+      if (esRenovacion) {
+        route = '/solicitud-drogas-clase-a/documentos-renovacion';
+      } else if (esExtraviado) {
+        route = '/solicitud-drogas-clase-a/documentos-extraviado';
+      }
+      
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+      return;
+    }
+    
+    // Para Clase B Establecimientos Privados, verificar si es extraviado
+    if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados') {
+      const esExtraviado = formData.condicion === 'e) Robo o Perdida';
+      const route = esExtraviado 
+        ? '/solicitud-drogas-clase-b/documentos-extraviado'
+        : '/solicitud-drogas-clase-b/documentos';
+      navigate(route, { state: { requestId: request.id, fromDetail: true } });
+      return;
+    }
+    
+    // Para Clase B Capa C (Hospitales Públicos), verificar si es renovación o extraviado
+    if (serviceName === 'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas') {
+      const esRenovacion = formData.condicionSolicitud === 'Renovación';
+      const esExtraviado = formData.condicionSolicitud === 'Robo o Perdida';
+      
+      let route = '/solicitud-clase-b-capa-c/documentos';
+      if (esRenovacion) {
+        route = '/solicitud-clase-b-capa-c/documentos-renovacion';
+      } else if (esExtraviado) {
+        route = '/solicitud-clase-b-capa-c/documentos-extraviado';
+      }
+      
       navigate(route, { state: { requestId: request.id, fromDetail: true } });
       return;
     }
     
     // Mapeo de servicios a rutas de documentos (resto de servicios)
     const routeMap = {
-      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b/documentos',
-      'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas': '/solicitud-clase-b-capa-c/documentos',
       'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas': '/solicitud-importacion-materia-prima/documentos',
       'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada': '/solicitud-importacion-medicamentos/documentos',
     };
