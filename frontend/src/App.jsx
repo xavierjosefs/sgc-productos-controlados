@@ -5,12 +5,23 @@ import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Home from './pages/Home';
 import Support from './pages/Support';
 import Requests from './pages/Requests';
 import RequestsFiltered from './pages/RequestsFiltered';
 import ProtectedRoute from './components/ProtectedRoute';
-import ClientLayout from './layouts/ClientLayout';
+import RoleBasedRedirect from './components/RoleBasedRedirect';
+
+import { AuthProvider } from './context/AuthContext';
+
+// Role-specific dashboards
+import ClienteDashboard from './pages/cliente/Dashboard';
+import VentanillaDashboard from './pages/ventanilla/Dashboard';
+import VentanillaRequestDetail from './pages/ventanilla/RequestDetail';
+import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
+import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
+import DireccionDashboard from './pages/direccion/Dashboard';
+import DncdDashboard from './pages/dncd/Dashboard';
+import AdminDashboard from './pages/admin/Dashboard';
 
 // Clase A
 import SolicitudDrogasClaseAForm from './pages/SolicitudDrogasClaseAForm';

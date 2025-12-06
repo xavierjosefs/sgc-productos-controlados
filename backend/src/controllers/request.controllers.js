@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId } from "../models/user.client.js";
+import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId, getRequestsByStatus, getStatuses } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 
 export const createRequestController = async (req, res) => {
@@ -23,7 +23,7 @@ export const createRequestController = async (req, res) => {
         if (!formulario || typeof formulario !== 'object') {
             return res.status(400).json({ message: "Formulario inválido" });
         }
-        
+
         const condicion = formulario.condicion;
 
         // Obtener cedula desde token
@@ -55,22 +55,22 @@ export const createRequestController = async (req, res) => {
 };
 
 export const getRequestsController = async (req, res) => {
-  try {
-    const cedula = req.user.cedula;
-    const requests = await getRequestsBycedula(cedula);
+    try {
+        const cedula = req.user.cedula;
+        const requests = await getRequestsBycedula(cedula);
 
-    return res.status(200).json({
-      ok: true,
-      requests,
-    });
-  } catch (error) {
-    console.error("Error al obtener solicitudes:", error);
+        return res.status(200).json({
+            ok: true,
+            requests,
+        });
+    } catch (error) {
+        console.error("Error al obtener solicitudes:", error);
 
-    return res.status(500).json({
-      ok: false,
-      message: "Error interno del servidor al obtener las solicitudes",
-    });
-  }
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor al obtener las solicitudes",
+        });
+    }
 };
 
 export const getRequestDetailsController = async (req, res) => {
@@ -87,8 +87,9 @@ export const getRequestDetailsController = async (req, res) => {
             });
         }
 
-        //validar que la solicitud pertenece al usuario
-        if (request.user_id !== cedula) {
+        //validar que la solicitud pertenece al usuario o es ventanilla
+        // Role 2 = Ventanilla, Role 7 = Admin
+        if (request.user_id !== cedula && req.user.role !== 2 && req.user.role !== 7) {
             return res.status(403).json({
                 ok: false,
                 message: "No tienes permiso para ver esta solicitud",
@@ -181,3 +182,36 @@ export const getPendingRequestsController = async (req, res) => {
         });
     }
 }
+
+export const getRequestsByStatusController = async (req, res) => {
+    try {
+        const status = req.params.status;
+        const requests = await getRequestsByStatus(status);
+        return res.status(200).json({
+            ok: true,
+            requests
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+export const getRequestsStatusController = async (req, res) => {
+    try {
+        const statuses = await getStatuses();
+        return res.status(200).json({
+            ok: true,
+            statuses: statuses
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
