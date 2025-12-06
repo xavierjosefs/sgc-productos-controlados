@@ -23,6 +23,11 @@ import DirectorControladosDashboard from './pages/director-controlados/Dashboard
 import DireccionDashboard from './pages/direccion/Dashboard';
 import DncdDashboard from './pages/dncd/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
+import AdminLayout from './components/AdminLayout';
+import AdminSolicitudes from './pages/admin/AdminSolicitudes';
+import AdminSolicitudDetalle from './pages/admin/AdminSolicitudDetalle';
+import AdminEmpleados from './pages/admin/AdminEmpleados';
+import AdminServicios from './pages/admin/AdminServicios';
 
 // Clase A
 import SolicitudDrogasClaseAForm from './pages/cliente/SolicitudDrogasClaseAForm';
@@ -149,14 +154,21 @@ export default function App() {
                   }
                 />
 
+                {/* Admin routes with layout */}
                 <Route
                   path="/admin"
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
-                      <AdminDashboard />
+                      <AdminLayout />
                     </ProtectedRoute>
                   }
-                />
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="solicitudes" element={<AdminSolicitudes />} />
+                  <Route path="solicitudes/:id" element={<AdminSolicitudDetalle />} />
+                  <Route path="empleados" element={<AdminEmpleados />} />
+                  <Route path="servicios" element={<AdminServicios />} />
+                </Route>
 
                 {/* Shared protected routes (accessible by multiple roles) */}
                 <Route
