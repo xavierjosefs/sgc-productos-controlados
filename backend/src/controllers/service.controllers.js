@@ -1,4 +1,4 @@
-import { getAllServiceTypes } from "../models/service.client.js";
+import { getAllServiceTypes, updateService } from "../models/service.client.js";
 
 export const getServiceTypesController = async (req, res) => {
     try {
@@ -12,3 +12,27 @@ export const getServiceTypesController = async (req, res) => {
         });
     }
 };
+
+
+export const updateServiceController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body; // contiene los campos a actualizar
+
+    const updated = await updateService(id, data);
+
+    res.json({
+      ok: true,
+      message: "Servicio actualizado correctamente",
+      service: updated
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      error: "Error actualizando el servicio"
+    });
+  }
+};
+
