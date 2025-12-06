@@ -3,28 +3,45 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 // Funcion para crear un nuevo usuario
-export const createUser = async (full_name, cedula, email, password) => {
-    // Nomalizar datos de entrada
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedName = full_name.trim();
+export const createUser = async (full_name, cedula, email, password, role_id) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedName = full_name.trim();
 
-    const search = await pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]); // Se revisa que no exista el email en la BD
-    if (search.rows.length > 0) {
-        throw new Error('El correo ya está registrado');
-    }
+  const search = await pool.query(
+    "SELECT * FROM users WHERE email = $1",
+    [normalizedEmail]
+  );
+  if (search.rows.length > 0) {
+    throw new Error("El correo ya está registrado");
+  }
 
-    const passwordHash = await bcrypt.hash(password, 10) // Hashear la contraseña
-    const result = await pool.query(
-        'INSERT INTO users (cedula, full_name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *',
-        [cedula, normalizedName, normalizedEmail, passwordHash]
-    );
-    return result.rows[0];;
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const result = await pool.query(
+    `INSERT INTO users (cedula, full_name, email, password_hash, role_id)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [cedula, normalizedName, normalizedEmail, passwordHash, role_id]
+  );
+
+  return result.rows[0];
 };
 
 export const findUserByEmail = async (email) => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
-    return result.rows[0];
+  const normalizedEmail = email.trim().toLowerCase();
+  const result = await pool.query(
+    "SELECT * FROM users WHERE email = $1",
+    [normalizedEmail]
+  );
+  return result.rows[0];
+};
+
+export const findUserByCedula = async (cedula) => {
+  const result = await pool.query(
+    "SELECT * FROM users WHERE cedula = $1",
+    [cedula]
+  );
+  return result.rows[0];
 };
 
 // Funcion para hacer login
@@ -57,12 +74,10 @@ export const login = async (email, password) => {
       throw error;
     }
 
-
     delete user.password_hash;
 
     return { user };
   } catch (err) {
-    // Si no tiene statusCode, asumimos 500
     if (!err.statusCode) {
       err.statusCode = 500;
       err.message = "Error interno en el servidor";
@@ -127,10 +142,21 @@ export const getRequestDetailsById = async (id) => {
     JOIN estados_solicitud e
       ON s.estado_id = e.id
     WHERE s.id = $1
-  `,[id]);
+  `, [id]);
 
   return result.rows[0] || null;
 };
+
+export const getRequestsByStatus = async (status) => {
+  const result = await pool.query(`SELECT s.id, s.user_id, s.form_data, s.fecha_creacion, s.tipo_solicitud, s.solicitud_original_id, s.fase, s.solicitud_anterior_id, s.estado_id, ts.nombre_servicio AS tipo_servicio, e.nombre_mostrar AS estado_actual
+    FROM solicitudes s
+    JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e ON s.estado_id = e.id
+    WHERE e.nombre_mostrar = $1
+    ORDER BY s.fecha_creacion DESC`, [status]);
+
+  return result.rows || null;
+}
 
 export const getSentRequestsByUserId = async (cedula) => {
   const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 12`, [cedula]);
@@ -155,3 +181,60 @@ export const getPendingRequestsByUserId = async (cedula) => {
 
   return result.rows || null;
 }
+
+export const getStatuses = async () => {
+  const result = await pool.query(`SELECT nombre_mostrar FROM estados_solicitud`);
+
+  return result.rows || null;
+}
+
+/**
+ * Find user by cedula with role information
+ * Used by getProfile controller
+ */
+export const findUserByCedulaWithRole = async (cedula) => {
+  const result = await pool.query(`
+    SELECT 
+      u.cedula,
+      u.full_name,
+      u.email,
+      u.is_active,
+      u.role_id,
+      r.name as role_name 
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    WHERE u.cedula = $1
+  `, [cedula]);
+  return result.rows[0];
+};
+
+/**
+ * Get requests for Ventanilla role
+ * Returns requests with estado 'ENVIADA' (id: 12)
+ */
+export const getRequestsForVentanilla = async () => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      u.full_name AS nombre_cliente,
+      ts.nombre_servicio AS tipo_servicio,
+      s.fecha_creacion,
+      e.nombre_mostrar AS estado_actual
+    FROM solicitudes s
+    JOIN users u ON s.user_id = u.cedula
+    JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e ON s.estado_id = e.id
+    WHERE s.estado_id = 12
+    ORDER BY s.fecha_creacion DESC
+  `);
+  return result.rows;
+};
+
+export const updateRequestStatus = async (requestId, statusId) => {
+  const result = await pool.query(
+    `UPDATE solicitudes SET estado_id = $1 WHERE id = $2 RETURNING *`,
+    [statusId, requestId]
+  );
+  return result.rows[0];
+};

@@ -3,7 +3,9 @@ import express from "express";
 import authRoutes from "./auth.routes.js";
 import requestRoutes from "./request.routes.js";
 import serviceRoutes from "./service.routes.js";
-import { authMiddleware } from "../middleware/auth.middleware.js";
+import adminRoutes from "./admin.routes.js";
+import ventanillaRoutes from "./ventanilla.routes.js";
+import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware } from "../middleware/auth.middleware.js";
 
 
 const router = express.Router();
@@ -12,6 +14,9 @@ const router = express.Router();
 router.use("/auth", authRoutes);
 router.use("/requests", authMiddleware, requestRoutes);
 router.use("/service-types", authMiddleware, serviceRoutes);
+router.use("/admin", adminOnlyMiddleware, adminRoutes);
+router.use("/ventanilla", ventanillaMiddleware, ventanillaRoutes);
 
 
 export default router;
+

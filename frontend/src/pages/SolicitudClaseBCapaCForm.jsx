@@ -175,18 +175,7 @@ export default function SolicitudClaseBCapaCForm() {
         throw new Error('No se pudo crear la solicitud');
       }
 
-      // Determinar a qué pantalla de documentos ir según la condición
-      const esRenovacion = fullFormData.condicionSolicitud === 'Renovación';
-      const esExtraviado = fullFormData.condicionSolicitud === 'Robo o Perdida';
-      
-      let rutaDocumentos = '/solicitud-clase-b-capa-c/documentos';
-      if (esRenovacion) {
-        rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-renovacion';
-      } else if (esExtraviado) {
-        rutaDocumentos = '/solicitud-clase-b-capa-c/documentos-extraviado';
-      }
-
-      navigate(rutaDocumentos, { 
+      navigate("/solicitud-clase-b-capa-c/documentos", { 
         state: { requestId, fromForm: true } 
       });
     } catch (error) {

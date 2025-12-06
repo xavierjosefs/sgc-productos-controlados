@@ -138,49 +138,49 @@ export function useRequestsAPI() {
    * @param {Object} metadata - Metadatos del documento (tipo, nombre, etc.)
    */
   const uploadDocument = useCallback(async (requestId, file, metadata = {}) => {
-  setLoading(true);
-  setError(null);
-  try {
-    const formData = new FormData();
-    formData.append('archivo', file);
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('archivo', file);
 
-    Object.keys(metadata).forEach(key => {
-      formData.append(key, metadata[key]);
-    });
+      Object.keys(metadata).forEach(key => {
+        formData.append(key, metadata[key]);
+      });
 
-    if (metadata.tipo_documento) {
-      formData.set('tipo_documento', metadata.tipo_documento);
-    } else if (metadata.tipo) {
-      formData.set('tipo_documento', metadata.tipo);
-    }
-
-    const response = await axios.post(
-      `${baseURL}/api/requests/${requestId}/documents`,
-      formData,
-      {
-        withCredentials: true,
-        headers: {
-          ...getAuthHeaders(),  // ✔ sin content-type
-        },
+      if (metadata.tipo_documento) {
+        formData.set('tipo_documento', metadata.tipo_documento);
+      } else if (metadata.tipo) {
+        formData.set('tipo_documento', metadata.tipo);
       }
-    );
 
-    return response.data;
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Error al subir el documento';
-    setError(errorMessage);
+      const response = await axios.post(
+        `${baseURL}/api/requests/${requestId}/documents`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            ...getAuthHeaders(),  // ✔ sin content-type
+          },
+        }
+      );
 
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al subir el documento';
+      setError(errorMessage);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    throw new Error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  }, []);
 
   /**
    * Eliminar un documento
@@ -245,15 +245,75 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  /**
+   * Obtener solicitudes para Ventanilla (estado ENVIADA)
+   * Solo accesible para usuarios con rol ventanilla
+   */
+  const getVentanillaRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/ventanilla/requests`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes de ventanilla';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Validar solicitud (Cumple / No Cumple)
+   * @param {string} requestId
+   * @param {string} status - 'aprobado_vus' | 'devuelto_vus'
+   * @param {string} reasons - Razones si es rechazada
+   */
+  const validateRequest = useCallback(async (requestId, status, reasons) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${baseURL}/api/ventanilla/validate/${requestId}`,
+        { status, reasons },
+        {
+          withCredentials: true,
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al validar la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     // Estados
     loading,
     error,
-    
+
     // Solicitudes
     getUserRequests,
     getRequestDetail,
-    
+    getVentanillaRequests,
+
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes
     // getRequestDocuments - Para ver documentos de una solicitud
@@ -265,6 +325,7 @@ export function useRequestsAPI() {
     uploadDocument,
     deleteDocument,
     updateDocument,
+    validateRequest,
   };
 }
 
