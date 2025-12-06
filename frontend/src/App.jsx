@@ -1,6 +1,7 @@
 import RequestDetail from './pages/RequestDetail';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Home from './pages/Home';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
 import ForgotPassword from './pages/ForgotPassword';
