@@ -112,7 +112,7 @@ export default function SolicitudClaseB() {
     if (!algunaActividadSeleccionada) out.actividades = 'Selecciona al menos una actividad';
     
     if (!form.condicion) out.condicion = 'Selecciona una condición';
-    if (form.condicion === 'f) Otra, especifique' && !form.condicionOtra?.trim()) {
+    if (form.condicion === 'e) Otra, especifique' && !form.condicionOtra?.trim()) {
       out.condicionOtra = 'Especifique la condición';
     }
     
@@ -122,8 +122,7 @@ export default function SolicitudClaseB() {
     
     if (form.condicion === 'c) Solicitud anterior negada' || 
         form.condicion === 'd) CIDC reprobado, suspendido' || 
-        form.condicion === 'e) Robo o Perdida' ||
-        form.condicion === 'f) Otra, especifique') {
+        form.condicion === 'e) Otra, especifique') {
       if (!form.motivo?.trim()) out.motivo = 'Explique el motivo';
     }
     
@@ -176,13 +175,7 @@ export default function SolicitudClaseB() {
           throw new Error('No se pudo crear la solicitud');
         }
 
-        // Determinar a qué pantalla de documentos ir según la condición
-        const esExtraviado = form.condicion === 'e) Robo o Perdida';
-        const rutaDocumentos = esExtraviado 
-          ? '/solicitud-drogas-clase-b/documentos-extraviado'
-          : '/solicitud-drogas-clase-b/documentos';
-
-        navigate(rutaDocumentos, { 
+        navigate('/solicitud-drogas-clase-b/documentos', { 
           state: { requestId, fromForm: true } 
         });
       } catch (error) {
@@ -204,7 +197,7 @@ export default function SolicitudClaseB() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#4A8BDF]">Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#4A8BDF]">Solicitud de Certificado de Inscripción de Drogas Controladas Clase B</h1>
         </div>
         <form className="space-y-8" onSubmit={handleSubmit}>
           {/* Identificación Card */}
@@ -399,30 +392,16 @@ export default function SolicitudClaseB() {
                   type="radio"
                   id="condicion-e"
                   name="condicion"
-                  value="e) Robo o Perdida"
-                  checked={form.condicion === "e) Robo o Perdida"}
-                  onChange={(e) => handleCondicionChange(e.target.value)}
-                  className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
-                />
-                <label htmlFor="condicion-e" className="text-sm font-medium text-gray-700">
-                  e) Robo o Perdida
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  id="condicion-f"
-                  name="condicion"
-                  value="f) Otra, especifique"
-                  checked={form.condicion === "f) Otra, especifique"}
+                  value="e) Otra, especifique"
+                  checked={form.condicion === "e) Otra, especifique"}
                   onChange={(e) => handleCondicionChange(e.target.value)}
                   className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
                 />
                 <div className="flex-1">
-                  <label htmlFor="condicion-f" className="text-sm font-medium text-gray-700">
-                    f) Otra, especifique:
+                  <label htmlFor="condicion-e" className="text-sm font-medium text-gray-700">
+                    e) Otra, especifique:
                   </label>
-                  {form.condicion === "f) Otra, especifique" && (
+                  {form.condicion === "e) Otra, especifique" && (
                     <>
                       <input
                         type="text"
@@ -438,38 +417,41 @@ export default function SolicitudClaseB() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 space-y-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-4 space-y-3 pt-4">
+              {(form.condicion === "b) Renovación" || form.condicion === "d) CIDC reprobado, suspendido") && (
                 <div>
-                  <label className="text-sm text-gray-600 mb-2 block">
-                    Si su respuesta fue <strong>b</strong> o <strong>d</strong>, escriba el No. CIDC:
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Escriba el No. CIDC: *
                   </label>
                   <input
                     type="text"
                     name="noCIDC"
                     value={form.noCIDC}
                     onChange={handleChange}
-                    className={`${errors.noCIDC ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`}
-                    placeholder=""
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                    placeholder="Número CIDC"
                   />
                   {errors.noCIDC && <p className="text-xs text-red-500 mt-1">{errors.noCIDC}</p>}
                 </div>
-                
+              )}
+              {(form.condicion === "c) Solicitud anterior negada" || 
+                form.condicion === "d) CIDC reprobado, suspendido" ||
+                form.condicion === "e) Otra, especifique") && (
                 <div>
-                  <label className="text-sm text-gray-600 mb-2 block">
-                    Si su respuesta fue <strong>c</strong>, <strong>d</strong> o <strong>e</strong> explique el motivo:
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Explique el motivo: *
                   </label>
                   <textarea
                     name="motivo"
                     value={form.motivo}
                     onChange={handleChange}
-                    rows={4}
-                    className={`${errors.motivo ? 'border-red-500' : 'border-gray-300'} w-full px-4 py-3 border rounded-lg`}
-                    placeholder=""
+                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                    rows="3"
+                    placeholder="Motivo de la solicitud"
                   />
                   {errors.motivo && <p className="text-xs text-red-500 mt-1">{errors.motivo}</p>}
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

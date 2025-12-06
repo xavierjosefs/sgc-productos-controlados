@@ -59,25 +59,11 @@ export default function RequestsFiltered() {
       try {
         const data = await getUserRequests();
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
-        
-        // Filtrar según el estado solicitado
+        const statusKey = status.replace(/s$/, '').toLowerCase(); // enviadas -> enviada
         const filtered = normalized.filter(r => {
           const s = (r.estado || r.estado_actual || '').toString().toLowerCase();
-          
-          switch (status) {
-            case 'enviadas':
-              return s.includes('enviada');
-            case 'aprobadas':
-              return s.includes('finalizada') || s.includes('autorizada') || s.includes('aprobada');
-            case 'devueltas':
-              return s.includes('devuelta') || s.includes('rechazada');
-            case 'pendientes':
-              return s.includes('pendiente') || s.includes('revisión') || s.includes('evaluación');
-            default:
-              return false;
-          }
+          return s === statusKey || s === status.toLowerCase();
         });
-        
         setAllRequests(filtered);
         setFilteredRequests(filtered);
       } catch (error) {
