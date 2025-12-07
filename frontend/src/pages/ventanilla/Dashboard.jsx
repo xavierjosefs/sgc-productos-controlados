@@ -47,10 +47,18 @@ export default function VentanillaDashboard() {
         });
     };
 
-    // Calcular contadores
-    const pendientesCount = requests.filter(r => r.estado_actual === 'pendiente' || r.estado_actual === 'Pendiente').length;
-    const aprobadasCount = requests.filter(r => r.estado_actual === 'aprobado' || r.estado_actual === 'Aprobado').length;
-    const devueltasCount = requests.filter(r => r.estado_actual === 'devuelto' || r.estado_actual === 'Devuelto').length;
+    // Calcular contadores - usando el nombre del estado
+    const pendientesCount = requests.filter(r => 
+        r.estado_actual?.toLowerCase() === 'pendiente'
+    ).length;
+    
+    const aprobadasCount = requests.filter(r => 
+        r.estado_actual?.toLowerCase() === 'en evaluación técnica'
+    ).length;
+    
+    const devueltasCount = requests.filter(r => 
+        r.estado_actual?.toLowerCase() === 'devuelta por vus'
+    ).length;
 
     // Filtrar solicitudes
     const handleFilter = () => {
@@ -58,11 +66,17 @@ export default function VentanillaDashboard() {
 
         // Filtro por card clickeada
         if (activeCard === 'pendientes') {
-            filtered = filtered.filter(r => r.estado_actual === 'pendiente' || r.estado_actual === 'Pendiente');
+            filtered = filtered.filter(r => 
+                r.estado_actual?.toLowerCase() === 'pendiente'
+            );
         } else if (activeCard === 'aprobadas') {
-            filtered = filtered.filter(r => r.estado_actual === 'aprobado' || r.estado_actual === 'Aprobado');
+            filtered = filtered.filter(r => 
+                r.estado_actual?.toLowerCase() === 'en evaluación técnica'
+            );
         } else if (activeCard === 'devueltas') {
-            filtered = filtered.filter(r => r.estado_actual === 'devuelto' || r.estado_actual === 'Devuelto');
+            filtered = filtered.filter(r => 
+                r.estado_actual?.toLowerCase() === 'devuelta por vus'
+            );
         }
 
         // Filtro por tipo
@@ -97,6 +111,9 @@ export default function VentanillaDashboard() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-[#4A8BDF]">Gestión de Solicitudes</h1>
+                    <p className="text-gray-600 mt-2">
+                        Revisa y valida las solicitudes enviadas por los usuarios
+                    </p>
                 </div>
 
                 {/* Summary Cards - Clickeables */}
@@ -109,7 +126,7 @@ export default function VentanillaDashboard() {
                         }`}
                     >
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-sm font-medium text-gray-700">Pendientes</span>
+                            <span className="text-sm font-medium text-gray-700">Pendientes de Revisión</span>
                             <svg
                                 className="w-5 h-5 text-[#4A8BDF]"
                                 fill="none"
@@ -120,11 +137,12 @@ export default function VentanillaDashboard() {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
                         </div>
                         <p className="text-5xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
+                        <p className="text-xs text-gray-500 mt-2">Solicitudes en estado Pendiente</p>
                     </div>
 
                     {/* Card Aprobadas */}
@@ -146,11 +164,12 @@ export default function VentanillaDashboard() {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
                         </div>
                         <p className="text-5xl font-bold text-green-600">{aprobadasCount}</p>
+                        <p className="text-xs text-gray-500 mt-2">Validadas por ventanilla</p>
                     </div>
 
                     {/* Card Devueltas */}
@@ -172,11 +191,12 @@ export default function VentanillaDashboard() {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                                 />
                             </svg>
                         </div>
                         <p className="text-5xl font-bold text-orange-600">{devueltasCount}</p>
+                        <p className="text-xs text-gray-500 mt-2">Requieren corrección</p>
                     </div>
                 </div>
 
@@ -220,18 +240,10 @@ export default function VentanillaDashboard() {
                             >
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendiente</option>
-                                <option value="aprobado">Aprobado</option>
-                                <option value="devuelto">Devuelto</option>
-                                <option value="validado">Validado</option>
+                                <option value="devuelta por vus">Devuelta</option>
+                                <option value="en evaluación técnica">Aprobada</option>
                             </select>
                         </div>
-
-                        <button
-                            onClick={handleFilter}
-                            className="px-8 py-3 bg-[#085297] text-white rounded-lg hover:bg-[#064175] transition-colors font-medium"
-                        >
-                            Filtrar
-                        </button>
 
                         {(activeCard !== 'all' || filterTipo || filterEstado) && (
                             <button
@@ -252,11 +264,17 @@ export default function VentanillaDashboard() {
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h2 className="text-lg font-semibold text-gray-800">
-                            {activeCard === 'pendientes' ? 'Solicitudes Pendientes' :
+                            {activeCard === 'pendientes' ? 'Solicitudes Pendientes de Revisión' :
                              activeCard === 'aprobadas' ? 'Solicitudes Aprobadas' :
                              activeCard === 'devueltas' ? 'Solicitudes Devueltas' :
                              'Todas las Solicitudes'}
                         </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {activeCard === 'pendientes' ? 'Solicitudes nuevas y reenviadas que requieren validación' :
+                             activeCard === 'aprobadas' ? 'Solicitudes validadas correctamente por ventanilla' :
+                             activeCard === 'devueltas' ? 'Solicitudes devueltas que requieren corrección del usuario' :
+                             'Vista general de todas las solicitudes'}
+                        </p>
                     </div>
 
                     {loading ? (
@@ -264,7 +282,8 @@ export default function VentanillaDashboard() {
                             Cargando solicitudes...
                         </div>
                     ) : (
-                        <table className="w-full">
+                        <div className="overflow-x-auto">
+                        <table className="w-full min-w-[900px]">
                             <thead>
                                 <tr className="bg-[#4A8BDF]">
                                     <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
@@ -305,7 +324,7 @@ export default function VentanillaDashboard() {
                                                     onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
                                                     className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
                                                 >
-                                                    {request.estado_actual === 'pendiente' || request.estado_actual === 'Pendiente' ? 'Validar' : 'Ver Detalle'}
+                                                    {request.estado_actual?.toLowerCase() === 'pendiente' ? 'Validar' : 'Ver Detalle'}
                                                 </button>
                                             </td>
                                         </tr>
@@ -313,6 +332,7 @@ export default function VentanillaDashboard() {
                                 )}
                             </tbody>
                         </table>
+                        </div>
                     )}
                 </div>
             </div>

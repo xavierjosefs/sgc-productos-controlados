@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useRequestsAPI from '../../hooks/useRequestsAPI';
 import BadgeEstado from '../../components/BadgeEstado';
-import ConfirmationModal from '../../components/ConfirmationModal';
 
 const VentanillaRequestDetail = () => {
     const { id } = useParams();
@@ -16,19 +15,18 @@ const VentanillaRequestDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Estados para validación
-    const [validating, setValidating] = useState(false);
+    // Estados para validación de documentos
+    const [documentValidation, setDocumentValidation] = useState({});
+    const [formDataValidation, setFormDataValidation] = useState({});
     const [comments, setComments] = useState('');
-
-    // Estado del Modal de Confirmación
-    const [modalConfig, setModalConfig] = useState({
-        isOpen: false,
-        title: '',
-        message: '',
-        confirmText: '',
-        confirmColor: 'blue',
-        onConfirm: () => { }
-    });
+    
+    // Estados de modales
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successType, setSuccessType] = useState(''); // 'devuelta' o 'aprobada'
+    
+    const [validating, setValidating] = useState(false);
 
     // Cargar detalle de solicitud
     const fetchDetail = async () => {
@@ -37,6 +35,28 @@ const VentanillaRequestDetail = () => {
         try {
             const data = await getRequestDetail(id);
             setRequest(data);
+            
+            // Inicializar estado de validación para cada documento
+            if (data.documentos && data.documentos.length > 0) {
+                const initialValidation = {};
+                data.documentos.forEach(doc => {
+                    initialValidation[doc.id] = null; // null = no seleccionado, true = cumple, false = no cumple
+                });
+                setDocumentValidation(initialValidation);
+            }
+            
+            // Inicializar estado de validación para cada campo del formulario
+            if (data.form_data) {
+                const initialFormValidation = {};
+                Object.keys(data.form_data).forEach(key => {
+                    // Solo validar campos que no sean de información básica y que tengan valor
+                    if (!['cedula', 'rnc', 'rncEmpresa', 'nombre', 'nombreEmpresa'].includes(key) && 
+                        data.form_data[key] && data.form_data[key] !== '') {
+                        initialFormValidation[key] = null;
+                    }
+                });
+                setFormDataValidation(initialFormValidation);
+            }
         } catch (error) {
             console.error('Error fetching request detail:', error);
             setError(error?.message || 'No se pudo cargar la solicitud');
@@ -51,61 +71,80 @@ const VentanillaRequestDetail = () => {
         // eslint-disable-next-line
     }, [id]);
 
-    // Acción Real de Aprobar
-    const executeApprove = async () => {
-        setValidating(true);
-        try {
-            await validateRequest(id, 'aprobado_vus', comments);
-            // alert('Solicitud validada correctamente'); // Opcional, feedback visual mejorado
-            navigate('/ventanilla');
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            setValidating(false);
-            setModalConfig(prev => ({ ...prev, isOpen: false }));
-        }
+    // Manejar validación de documento
+    const handleDocumentValidation = (docId, value) => {
+        setDocumentValidation(prev => ({
+            ...prev,
+            [docId]: value
+        }));
     };
 
-    // Acción Real de Rechazar
+    // Manejar validación de campo del formulario
+    const handleFormDataValidation = (fieldKey, value) => {
+        setFormDataValidation(prev => ({
+            ...prev,
+            [fieldKey]: value
+        }));
+    };
+
+    // Acción de Devolver
     const executeReject = async () => {
         setValidating(true);
         try {
             await validateRequest(id, 'devuelto_vus', comments);
+            setShowRejectModal(false);
+            setSuccessType('devuelta');
+            setShowSuccessModal(true);
+        } catch (err) {
+            alert(err.message);
+            setValidating(false);
+            setShowRejectModal(false);
+        }
+    };
+
+    // Acción de Aprobar
+    const executeApprove = async () => {
+        setValidating(true);
+        try {
+            await validateRequest(id, 'aprobado_vus', comments);
+            setShowApproveModal(false);
             navigate('/ventanilla');
         } catch (err) {
             alert(err.message);
-        } finally {
             setValidating(false);
-            setModalConfig(prev => ({ ...prev, isOpen: false }));
+            setShowApproveModal(false);
         }
     };
 
-    // Manejar Click en Validar
-    const handleApprove = () => {
-        setModalConfig({
-            isOpen: true,
-            title: 'Confirmar Validación',
-            message: '¿Estás seguro de que deseas validar esta solicitud? Se notificará al usuario y el proceso avanzará a la siguiente etapa.',
-            confirmText: 'Validar Solicitud',
-            confirmColor: 'green',
-            onConfirm: executeApprove
-        });
-    };
+    // Verificar si hay algún documento o campo marcado como "No Cumple"
+    const hasRejectedDocuments = Object.values(documentValidation).some(val => val === false);
+    const hasRejectedFormData = Object.values(formDataValidation).some(val => val === false);
+    const hasAnyRejection = hasRejectedDocuments || hasRejectedFormData;
 
     // Manejar Click en Devolver
-    const handleReject = () => {
-        if (!comments.trim()) {
-            alert("Debes ingresar los comentarios o razones de la devolución.");
+    const handleRejectClick = () => {
+        if (!hasAnyRejection) {
+            alert("Debes marcar al menos un documento o campo del formulario como 'No Cumple' para devolver la solicitud.");
             return;
         }
-        setModalConfig({
-            isOpen: true,
-            title: 'Confirmar Devolución',
-            message: '¿Estás seguro de que deseas devolver esta solicitud? Se enviará un correo al usuario con las observaciones ingresadas.',
-            confirmText: 'Devolver Solicitud',
-            confirmColor: 'red',
-            onConfirm: executeReject
-        });
+        if (!comments.trim()) {
+            alert("Debes ingresar los comentarios explicando por qué no cumple.");
+            return;
+        }
+        setShowRejectModal(true);
+    };
+
+    // Manejar Click en Aprobar
+    const handleApproveClick = () => {
+        // Verificar que todos los documentos y campos estén marcados como "Sí Cumple"
+        const allDocsApproved = Object.values(documentValidation).every(val => val === true);
+        const allFormDataApproved = Object.values(formDataValidation).every(val => val === true);
+        
+        if (!allDocsApproved || !allFormDataApproved) {
+            alert("Todos los documentos y campos del formulario deben estar marcados como 'Sí Cumple' para aprobar la solicitud.");
+            return;
+        }
+        setShowApproveModal(true);
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">Cargando...</div>;
@@ -115,254 +154,358 @@ const VentanillaRequestDetail = () => {
     const formData = request.form_data || {};
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-12 font-sans text-gray-600">
-            <div className="max-w-6xl mx-auto px-6 py-8">
-                {/* Header simple y limpio */}
+        <div className="min-h-screen bg-gray-50 pb-12">
+            <div className="max-w-5xl mx-auto px-6 py-8">
+                {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate('/ventanilla')}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:text-[#4A8BDF] hover:border-[#4A8BDF] transition-all shadow-sm"
-                        title="Volver"
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-600 hover:bg-gray-50"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">Solicitud #{request.id}</h1>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                            <span className="font-medium">{new Date(request.fecha_creacion).toLocaleDateString('es-DO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                            <span className="text-gray-300">•</span>
-                            <span className="text-gray-600">{request.tipo_servicio}</span>
+                    <h1 className="text-3xl font-bold text-[#4A8BDF]">Solicitud #{request.id}</h1>
+                </div>
+
+                {/* Información del Solicitante y Detalles */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    {/* Información del Solicitante */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <h2 className="text-[#085297] font-bold text-lg mb-4">Información del Solicitante</h2>
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-gray-500 text-sm">Cédula de Identidad o Pasaporte</p>
+                                <p className="text-gray-900 font-semibold">{formData.cedula || formData.rnc || formData.rncEmpresa || request.user_id}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm">Nombre Completo del Solicitante</p>
+                                <p className="text-gray-900 font-semibold">{formData.nombre || formData.nombreEmpresa || request.nombre_cliente || 'N/A'}</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="ml-auto">
-                        <BadgeEstado estado={request.estado_actual} />
+
+                    {/* Detalles de la Solicitud */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <h2 className="text-[#085297] font-bold text-lg mb-4">Detalles de la Solicitud</h2>
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-gray-500 text-sm">Tipo</p>
+                                <p className="text-gray-900 font-semibold">{request.tipo_servicio}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm">Condición</p>
+                                <p className="text-gray-900 font-semibold">{formData.condicion || formData.condicionSolicitud || 'Nueva Solicitud'}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm">Estado</p>
+                                <BadgeEstado estado={request.estado_actual} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Columna Principal: Información y Documentos */}
-                    <div className="lg:col-span-2 space-y-6">
-
-                        {/* Tarjeta de Información del Solicitante */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40 flex items-center justify-between">
-                                <h2 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Información del Solicitante</h2>
-                            </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Nombre / Razón Social</label>
-                                        <div className="text-gray-900 font-semibold text-base">{formData.nombre || formData.nombreEmpresa || request.nombre_cliente}</div>
+                {/* Datos del Formulario */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
+                    <h2 className="text-[#085297] font-bold text-lg mb-4">Datos del Formulario</h2>
+                    <div className="space-y-4">
+                        {Object.entries(formData).map(([key, value]) => {
+                            // Excluir campos de información básica
+                            if (['cedula', 'rnc', 'rncEmpresa', 'nombre', 'nombreEmpresa'].includes(key)) {
+                                return null;
+                            }
+                            
+                            // Validar que el campo tenga valor
+                            if (!value || value === '' || value === null || value === undefined) {
+                                return null;
+                            }
+                            
+                            // Formatear el nombre del campo
+                            const fieldName = key
+                                .replace(/([A-Z])/g, ' $1')
+                                .replace(/^./, str => str.toUpperCase());
+                            
+                            // Procesar el valor - si es Actividades, parsear el JSON
+                            let displayValue = value;
+                            if (key === 'actividades' && typeof value === 'string') {
+                                try {
+                                    const actividadesObj = JSON.parse(value);
+                                    const actividadesActivas = Object.entries(actividadesObj)
+                                        .filter(([_, isActive]) => isActive === true)
+                                        .map(([nombre]) => {
+                                            // Formatear nombre de actividad
+                                            return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+                                        });
+                                    displayValue = actividadesActivas.length > 0 
+                                        ? actividadesActivas.join(', ') 
+                                        : 'Ninguna';
+                                } catch (e) {
+                                    displayValue = value;
+                                }
+                            }
+                            
+                            return (
+                                <div key={key} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
+                                    <div className="flex-1">
+                                        <p className="text-sm text-gray-600 font-medium mb-1">{fieldName}</p>
+                                        <p className="text-base text-gray-900 font-semibold">
+                                            {displayValue}
+                                        </p>
                                     </div>
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Identificación</label>
-                                        <div className="text-gray-900 font-medium">{formData.cedula || formData.rnc || formData.rncEmpresa || '-'}</div>
-                                    </div>
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Contacto</label>
-                                        <div className="text-gray-900 font-medium">{formData.celular || formData.telefono || '-'}</div>
-                                        <div className="text-gray-500 text-sm mt-0.5">{formData.email || formData.correoEmpresa || '-'}</div>
-                                    </div>
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Dirección</label>
-                                        <div className="text-gray-900 text-sm leading-relaxed">{formData.direccion || formData.direccionCamaPostal || '-'}</div>
-                                    </div>
-
-                                    {/* Campos específicos */}
-                                    {formData.exequatur && (
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Exequátur</label>
-                                            <div className="text-gray-900 font-medium">{formData.exequatur}</div>
-                                        </div>
-                                    )}
-                                    {formData.colegiatura && (
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Colegiatura</label>
-                                            <div className="text-gray-900 font-medium">{formData.colegiatura}</div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tarjeta de Detalles Específicos (Condicional) */}
-                        {(formData.nombreRegente || formData.condicionSolicitud || formData.condicion) && (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-                                    <h2 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Detalles Adicionales</h2>
-                                </div>
-                                <div className="p-6 grid grid-cols-2 gap-y-6 gap-x-8">
-                                    {formData.nombreRegente && (
-                                        <div className="col-span-2">
-                                            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                                </div>
-                                                Regente Farmacéutico
-                                            </h3>
-                                            <div className="bg-gray-50/50 border border-gray-100 rounded-lg p-4 grid sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <span className="text-xs text-gray-400 uppercase font-medium block mb-1">Nombre</span>
-                                                    <span className="font-medium text-gray-900">{formData.nombreRegente}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-xs text-gray-400 uppercase font-medium block mb-1">Exequátur</span>
-                                                    <span className="font-medium text-gray-900">{formData.exequaturRegente}</span>
-                                                </div>
+                                    <div className="flex items-center gap-3 ml-4">
+                                        <button
+                                            onClick={() => handleFormDataValidation(key, true)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                formDataValidation[key] === true
+                                                    ? 'bg-[#085297] text-white'
+                                                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
+                                            }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                formDataValidation[key] === true ? 'border-white bg-white' : 'border-gray-400'
+                                            }`}>
+                                                {formDataValidation[key] === true && (
+                                                    <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                )}
                                             </div>
-                                        </div>
-                                    )}
-
-                                    {(formData.condicionSolicitud || formData.condicion) && (
-                                        <div className="col-span-2">
-                                            <label className="block text-xs uppercase tracking-wider text-gray-400 font-medium mb-1.5">Condición de la Solicitud</label>
-                                            <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium border border-indigo-100">
-                                                {formData.condicionSolicitud || formData.condicion}
+                                            Sí Cumple
+                                        </button>
+                                        <button
+                                            onClick={() => handleFormDataValidation(key, false)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                formDataValidation[key] === false
+                                                    ? 'bg-[#085297] text-white'
+                                                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
+                                            }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                formDataValidation[key] === false ? 'border-white bg-white' : 'border-gray-400'
+                                            }`}>
+                                                {formDataValidation[key] === false && (
+                                                    <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                )}
                                             </div>
-                                        </div>
-                                    )}
+                                            No Cumple
+                                        </button>
+                                    </div>
                                 </div>
+                            );
+                        })}
+                        
+                        {Object.keys(formData).filter(key => 
+                            !['cedula', 'rnc', 'rncEmpresa', 'nombre', 'nombreEmpresa'].includes(key) &&
+                            formData[key] && formData[key] !== ''
+                        ).length === 0 && (
+                            <div className="text-center py-6 text-gray-500">
+                                No hay datos adicionales del formulario
                             </div>
                         )}
+                    </div>
+                </div>
 
-                        {/* Tarjeta de Documentos */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40 flex items-center justify-between">
-                                <h2 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Documentos Adjuntos</h2>
-                                <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{request.documentos?.length || 0}</span>
-                            </div>
-                            <div className="p-4">
-                                {request.documentos && request.documentos.length > 0 ? (
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {request.documentos.map(doc => (
-                                            <div key={doc.id} className="group flex items-center gap-4 p-3 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200">
-                                                <div className="w-10 h-10 rounded-lg bg-red-50 flex flex-shrink-0 items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                                    </svg>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-900 truncate mb-0.5" title={doc.nombre_archivo || doc.nombre}>
-                                                        {doc.nombre_archivo || doc.nombre || 'Documento'}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 truncate">{doc.tipo_documento || doc.tipo}</p>
-                                                </div>
-                                                <a
-                                                    href={doc.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Ver documento"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                        <p className="text-sm text-gray-500">No hay documentos adjuntos</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                {/* Requisitos */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <h2 className="text-[#085297] font-bold text-lg mb-6">Requisitos</h2>
+                    
+                    {/* Nombre del servicio */}
+                    <div className="mb-6">
+                        <p className="text-gray-700 font-medium mb-2">
+                            Formulario de Solicitud de Inscripción de {request.tipo_servicio}
+                        </p>
                     </div>
 
-                    {/* Columna Lateral: Evaluación */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 sticky top-8 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#4A8BDF]/5 to-transparent">
-                                <h2 className="font-bold text-[#4A8BDF] flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Evaluación
-                                </h2>
-                            </div>
-                            <div className="p-6">
-                                <div className="mb-6">
-                                    <label htmlFor="comments" className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Observaciones / Comentarios
-                                    </label>
-                                    <div className="relative">
-                                        <textarea
-                                            id="comments"
-                                            rows={8}
-                                            className="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#4A8BDF] focus:ring-2 focus:ring-[#4A8BDF]/20 text-sm resize-none transition-all shadow-sm"
-                                            placeholder="Indique los documentos faltantes, correcciones necesarias o notas de aprobación..."
-                                            value={comments}
-                                            onChange={(e) => setComments(e.target.value)}
-                                        />
-                                        <div className="absolute bottom-3 right-3 text-xs text-gray-400 pointer-events-none bg-white/50 px-1 rounded">
-                                            {comments.length}
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                        </svg>
-                                        Requerido para devolver la solicitud
-                                    </p>
-                                </div>
-
-                                <div className="space-y-3 pt-2">
-                                    <button
-                                        onClick={handleApprove}
-                                        disabled={validating}
-                                        className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:shadow-emerald-300 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {!validating ? (
-                                            <>
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                VALIDAR (CUMPLE)
-                                            </>
-                                        ) : (
-                                            <span className="flex items-center gap-2">
-                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Procesando...
-                                            </span>
+                    {/* Lista de documentos */}
+                    {request.documentos && request.documentos.length > 0 ? (
+                        <div className="space-y-4">
+                            {request.documentos.map((doc, index) => (
+                                <div key={doc.id} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <span className="text-gray-700 font-medium">{doc.tipo_documento || doc.nombre || `Documento ${index + 1}`}</span>
+                                        {doc.url && (
+                                            <a
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-[#085297] text-white rounded-lg text-sm font-medium hover:bg-[#064073] transition-colors"
+                                            >
+                                                Ver
+                                            </a>
                                         )}
-                                    </button>
-
-                                    <button
-                                        onClick={handleReject}
-                                        disabled={validating || !comments.trim()}
-                                        className={`w-full py-3.5 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${!comments.trim()
-                                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                                : 'bg-white text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200 hover:text-red-700 hover:shadow-lg hover:shadow-red-50 transform hover:-translate-y-0.5'
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleDocumentValidation(doc.id, true)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                documentValidation[doc.id] === true
+                                                    ? 'bg-[#085297] text-white'
+                                                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
                                             }`}
-                                    >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                                        </svg>
-                                        DEVOLVER (NO CUMPLE)
-                                    </button>
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                documentValidation[doc.id] === true ? 'border-white bg-white' : 'border-gray-400'
+                                            }`}>
+                                                {documentValidation[doc.id] === true && (
+                                                    <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                )}
+                                            </div>
+                                            Sí Cumple
+                                        </button>
+                                        <button
+                                            onClick={() => handleDocumentValidation(doc.id, false)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                documentValidation[doc.id] === false
+                                                    ? 'bg-[#085297] text-white'
+                                                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
+                                            }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                documentValidation[doc.id] === false ? 'border-white bg-white' : 'border-gray-400'
+                                            }`}>
+                                                {documentValidation[doc.id] === false && (
+                                                    <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                )}
+                                            </div>
+                                            No Cumple
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
+                    ) : (
+                        <p className="text-gray-500 text-center py-8">No hay documentos cargados</p>
+                    )}
+
+                    {/* Campo de comentarios - Solo habilitado si hay documentos o campos que no cumplen */}
+                    <div className="mt-6">
+                        <label className="block text-gray-700 font-medium mb-2">
+                            Observaciones
+                            {hasAnyRejection && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <textarea
+                            value={comments}
+                            onChange={(e) => setComments(e.target.value)}
+                            disabled={!hasAnyRejection}
+                            placeholder={hasAnyRejection ? "Explica por qué el/los documento(s) o campo(s) del formulario no cumplen con los requisitos..." : "Selecciona 'No Cumple' en algún documento o campo para habilitar este campo"}
+                            className={`w-full h-32 px-4 py-3 border-2 rounded-xl focus:outline-none resize-none transition-all ${
+                                hasAnyRejection
+                                    ? 'border-gray-300 focus:border-[#4A8BDF] bg-white'
+                                    : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                            }`}
+                        />
+                        {hasAnyRejection && (
+                            <p className="text-xs text-red-500 mt-1">* Campo obligatorio para devolver la solicitud</p>
+                        )}
+                    </div>
+
+                    {/* Botones de acción */}
+                    <div className="flex justify-center gap-4 mt-8">
+                        <button
+                            onClick={() => navigate('/ventanilla')}
+                            className="px-8 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors"
+                        >
+                            Volver
+                        </button>
+                        <button
+                            onClick={handleRejectClick}
+                            disabled={!hasRejectedDocuments || !comments.trim()}
+                            className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
+                                hasRejectedDocuments && comments.trim()
+                                    ? 'bg-[#085297] text-white hover:bg-[#064073]'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            Devolver
+                        </button>
+                        <button
+                            onClick={handleApproveClick}
+                            className="px-8 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors"
+                        >
+                            Aprobar
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <ConfirmationModal
-                isOpen={modalConfig.isOpen}
-                onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
-                onConfirm={modalConfig.onConfirm}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                confirmText={modalConfig.confirmText}
-                confirmColor={modalConfig.confirmColor}
-                loading={validating}
-            />
+            {/* Modal de Confirmación de Devolución */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Devolución</h3>
+                        <p className="text-gray-600 text-center mb-8">
+                            ¿Está seguro de que desea devolver esta solicitud al usuario?
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                disabled={validating}
+                                className="flex-1 px-6 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={executeReject}
+                                disabled={validating}
+                                className="flex-1 px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors disabled:opacity-50"
+                            >
+                                {validating ? 'Procesando...' : 'Devolver'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Confirmación de Aprobación */}
+            {showApproveModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Aprobación</h3>
+                        <p className="text-gray-600 text-center mb-8">
+                            ¿Desea aprobar esta solicitud?<br/>
+                            Una vez aprobada, continuará al siguiente paso del proceso y no podrá ser modificada.
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowApproveModal(false)}
+                                disabled={validating}
+                                className="flex-1 px-6 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={executeApprove}
+                                disabled={validating}
+                                className="flex-1 px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors disabled:opacity-50"
+                            >
+                                {validating ? 'Procesando...' : 'Aprobar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Éxito - Solicitud Devuelta */}
+            {showSuccessModal && successType === 'devuelta' && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-12 max-w-md w-full shadow-2xl text-center">
+                        <div className="w-20 h-20 bg-[#4A8BDF] bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-[#4A8BDF]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-[#4A8BDF] mb-4">Solicitud Devuelta</h2>
+                        <p className="text-gray-600 mb-8">
+                            El usuario ha sido notificado y la solicitud quedó en estado Devuelta.
+                        </p>
+                        <button
+                            onClick={() => navigate('/ventanilla')}
+                            className="w-full px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors"
+                        >
+                            Ir a "Solicitudes"
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
