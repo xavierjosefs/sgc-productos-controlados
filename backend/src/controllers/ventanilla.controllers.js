@@ -46,15 +46,16 @@ export const validateRequestController = async (req, res) => {
         }
 
         // Determinar ID de estado
-        // Estados según la BD (flujo simplificado para Ventanilla):
-        // 1 = Pendiente (solicitud nueva o reenviada después de devolución)
+        // Estados según la BD:
+        // 12 = Enviada (solicitud enviada por cliente)
+        // 2 = En revisión por VUS (ventanilla está revisando)
         // 3 = Devuelta por VUS (no cumple requisitos formales)
         // 4 = En evaluación técnica (aprobada por VUS, pasa a técnicos UPC)
         //
-        // FLUJO CIRCULAR:
-        // Usuario envía → Pendiente(1)
+        // FLUJO:
+        // Usuario envía → Enviada(12)
         // Ventanilla devuelve → Devuelta por VUS(3)
-        // Usuario corrige y reenvía → Pendiente(1) nuevamente
+        // Usuario corrige y reenvía → Enviada(12) nuevamente
         // Ventanilla aprueba → En evaluación técnica(4)
         
         let newStatusId;
