@@ -27,7 +27,13 @@ import AdminLayout from './components/AdminLayout';
 import AdminSolicitudes from './pages/admin/AdminSolicitudes';
 import AdminSolicitudDetalle from './pages/admin/AdminSolicitudDetalle';
 import AdminEmpleados from './pages/admin/AdminEmpleados';
+import AdminEmpleadoCrear from './pages/admin/AdminEmpleadoCrear';
+import AdminEmpleadoEditar from './pages/admin/AdminEmpleadoEditar';
+import AdminEmpleadoDetalle from './pages/admin/AdminEmpleadoDetalle';
 import AdminServicios from './pages/admin/AdminServicios';
+import AdminServicioCrear from './pages/admin/AdminServicioCrear';
+import AdminServicioDetalle from './pages/admin/AdminServicioDetalle';
+import AdminServicioEditar from './pages/admin/AdminServicioEditar';
 
 // Clase A
 import SolicitudDrogasClaseAForm from './pages/cliente/SolicitudDrogasClaseAForm';
@@ -167,7 +173,13 @@ export default function App() {
                   <Route path="solicitudes" element={<AdminSolicitudes />} />
                   <Route path="solicitudes/:id" element={<AdminSolicitudDetalle />} />
                   <Route path="empleados" element={<AdminEmpleados />} />
+                  <Route path="empleados/crear" element={<AdminEmpleadoCrear />} />
+                  <Route path="empleados/:id" element={<AdminEmpleadoDetalle />} />
+                  <Route path="empleados/:id/editar" element={<AdminEmpleadoEditar />} />
                   <Route path="servicios" element={<AdminServicios />} />
+                  <Route path="servicios/crear" element={<AdminServicioCrear />} />
+                  <Route path="servicios/:id" element={<AdminServicioDetalle />} />
+                  <Route path="servicios/:id/editar" element={<AdminServicioEditar />} />
                 </Route>
 
                 {/* Shared protected routes (accessible by multiple roles) */}

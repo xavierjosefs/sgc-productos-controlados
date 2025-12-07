@@ -150,12 +150,15 @@ export default function AdminEmpleados() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          onClick={() => navigate(`/admin/empleados/editar/${empleado.id}`)}
+                          onClick={() => navigate(`/admin/empleados/${empleado.id}/editar`)}
                           className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                         >
                           Editar
                         </button>
-                        <button className="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors">
+                        <button 
+                          onClick={() => navigate(`/admin/empleados/${empleado.id}`)}
+                          className="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
+                        >
                           Ver Detalle
                         </button>
                       </div>
