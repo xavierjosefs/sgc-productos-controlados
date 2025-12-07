@@ -45,27 +45,27 @@ export const validateRequestController = async (req, res) => {
             return res.status(404).json({ ok: false, message: "Solicitud no encontrada" });
         }
 
-        // Determinar ID de estado basado en string (esto podría ser dinámico o constante)
-        // Por ahora manejamos "devuelto_vus" -> ID para devuelto? Necesitamos saber el ID exacto.
-        // Asumiremos que el frontend envía el ID o mappeamos aquí.
-        // El usuario dijo: "Cambiar el estado de la solicitud a 'devuelto_vus'"
-        // Revisando 'getReturnedRequestsByUserId', estados devueltos son 3 o 5.
-        // Asumiremos 3 (DEVUELTO) o 5 (CORRECION). Usaremos 3 por defecto para rechazo general si no hay mapa.
-        // MEJOR: Mappeo explícito.
-
+        // Determinar ID de estado
+        // Estados según la BD (flujo simplificado para Ventanilla):
+        // 1 = Pendiente (solicitud nueva o reenviada después de devolución)
+        // 3 = Devuelta por VUS (no cumple requisitos formales)
+        // 4 = En evaluación técnica (aprobada por VUS, pasa a técnicos UPC)
+        //
+        // FLUJO CIRCULAR:
+        // Usuario envía → Pendiente(1)
+        // Ventanilla devuelve → Devuelta por VUS(3)
+        // Usuario corrige y reenvía → Pendiente(1) nuevamente
+        // Ventanilla aprueba → En evaluación técnica(4)
+        
         let newStatusId;
         if (status === 'devuelto_vus') {
-            // Asignamos un ID que corresponda a "DEVUELTO" o "NO CUMPLE". 
-            // En user.client.js: getSentRequestsByUserId chequea estado_id = 12 (ENVIADA).
-            // Vamos a asumir estado_id = 3 para devuelto por ahora, o verificar DB.
-            // Pero el requerimiento dice "devuelto_vus".
+            // Devuelto por Ventanilla - estado "Devuelta por VUS"
             newStatusId = 3;
         } else if (status === 'aprobado_vus') {
-            // Aprobado por ventanilla, pasa a siguiente fase?
-            // Asumiremos estado de "En Proceso" o similar -> 2?
-            newStatusId = 2; // Placeholder
+            // Aprobado por ventanilla - pasa a "En evaluación técnica" (siguiente etapa)
+            newStatusId = 4;
         } else {
-            newStatusId = status; // Permitir pasar ID directo si se conoce
+            return res.status(400).json({ ok: false, message: "Estado inválido" });
         }
 
         // Actualizar estado

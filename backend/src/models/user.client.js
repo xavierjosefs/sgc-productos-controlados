@@ -225,7 +225,7 @@ export const getRequestsForVentanilla = async () => {
     JOIN users u ON s.user_id = u.cedula
     JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
     JOIN estados_solicitud e ON s.estado_id = e.id
-    WHERE s.estado_id = 12
+    WHERE s.estado_id IN (1, 3, 4)
     ORDER BY s.fecha_creacion DESC
   `);
   return result.rows;
