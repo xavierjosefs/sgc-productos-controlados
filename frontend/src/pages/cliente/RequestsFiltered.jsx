@@ -117,7 +117,7 @@ export default function RequestsFiltered() {
         {/* Encabezado con flecha y título */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/cliente')}
             className="text-[#4A8BDF] hover:text-[#3875C8] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-8 h-8">

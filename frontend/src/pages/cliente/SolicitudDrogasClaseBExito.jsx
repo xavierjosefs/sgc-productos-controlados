@@ -42,7 +42,7 @@ export default function SolicitudClaseB5() {
 
           {/* Botón para ir a Mis Solicitudes */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/cliente')}
             className="bg-[#0B57A6] hover:bg-[#084c8a] text-white font-semibold py-3 px-12 rounded-lg inline-block transition-colors duration-200"
           >
             Ir a "Mis Solicitudes"

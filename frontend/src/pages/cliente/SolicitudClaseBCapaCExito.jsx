@@ -4,7 +4,7 @@ export default function SolicitudClaseBCapaCExito() {
   const navigate = useNavigate();
 
   const handleGoToRequests = () => {
-    navigate("/");
+    navigate("/cliente");
   };
 
   return (

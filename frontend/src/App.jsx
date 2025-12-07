@@ -16,8 +16,9 @@ import { AuthProvider } from './context/AuthContext';
 // Role-specific dashboards
 import ClienteDashboard from './pages/cliente/Dashboard';
 import Home from './pages/cliente/Dashboard'; // Alias for compatibility
-import VentanillaDashboard from './pages/ventanilla/Dashboard';
-import VentanillaRequestDetail from './pages/ventanilla/RequestDetail';
+import VentanillaLayout from './components/VentanillaLayout';
+import VentanillaSolicitudes from './pages/ventanilla/VentanillaSolicitudes';
+import VentanillaSolicitudDetalle from './pages/ventanilla/VentanillaSolicitudDetalle';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
 import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
 import DireccionDashboard from './pages/direccion/Dashboard';
@@ -86,14 +87,10 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-                {/* Root route - redirects based on role */}
+                {/* Root route - always redirect to login */}
                 <Route
                   path="/"
-                  element={
-                    <ProtectedRoute>
-                      <RoleBasedRedirect />
-                    </ProtectedRoute>
-                  }
+                  element={<Navigate to="/login" replace />}
                 />
 
                 {/* Role-specific dashboard routes */}
@@ -110,19 +107,13 @@ export default function App() {
                   path="/ventanilla"
                   element={
                     <ProtectedRoute allowedRoles={['ventanilla']}>
-                      <VentanillaDashboard />
+                      <VentanillaLayout />
                     </ProtectedRoute>
                   }
-                />
-
-                <Route
-                  path="/ventanilla/solicitud/:id"
-                  element={
-                    <ProtectedRoute allowedRoles={['ventanilla']}>
-                      <VentanillaRequestDetail />
-                    </ProtectedRoute>
-                  }
-                />
+                >
+                  <Route index element={<VentanillaSolicitudes />} />
+                  <Route path="solicitud/:id" element={<VentanillaSolicitudDetalle />} />
+                </Route>
 
                 <Route
                   path="/tecnico-controlados"

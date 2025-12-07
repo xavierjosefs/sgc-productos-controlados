@@ -246,6 +246,7 @@ export function useRequestsAPI() {
   }, []);
 
   /**
+  /**
    * Obtener solicitudes para Ventanilla (estado ENVIADA)
    * Solo accesible para usuarios con rol ventanilla
    */
@@ -273,17 +274,46 @@ export function useRequestsAPI() {
   }, []);
 
   /**
+   * Obtener detalle de solicitud con validaciones previas
+   * Específico para ventanilla
+   */
+  const getVentanillaRequestDetail = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/ventanilla/request/${id}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
    * Validar solicitud (Cumple / No Cumple)
    * @param {string} requestId
    * @param {string} status - 'aprobado_vus' | 'devuelto_vus'
    * @param {string} reasons - Razones si es rechazada
+   * @param {Object} documentValidation - Validaciones de documentos
+   * @param {Object} formDataValidation - Validaciones de campos de formulario
    */
-  const validateRequest = useCallback(async (requestId, status, reasons) => {
+  const validateRequest = useCallback(async (requestId, status, reasons, documentValidation, formDataValidation) => {
     setLoading(true);
     setError(null);
     try {
       const response = await axios.post(`${baseURL}/api/ventanilla/validate/${requestId}`,
-        { status, reasons },
+        { status, reasons, documentValidation, formDataValidation },
         {
           withCredentials: true,
           headers: getAuthHeaders(),
@@ -340,6 +370,7 @@ export function useRequestsAPI() {
     getUserRequests,
     getRequestDetail,
     getVentanillaRequests,
+    getVentanillaRequestDetail,
     getTecnicoRequests,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:

@@ -18,7 +18,7 @@ const SolicitudEnviadaExito = () => {
           <p className="text-gray-600 mb-6">La solicitud se envió correctamente. Pronto recibirás novedades sobre su estado.</p>
 
           <button
-            onClick={() => navigate('/mis-solicitudes')}
+            onClick={() => navigate('/cliente')}
             className="px-6 py-3 bg-[#0B57A6] text-white rounded-lg font-semibold w-64 hover:bg-[#084c8a]"
           >
             Ir a ¡Mis Solicitudes!
