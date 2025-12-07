@@ -125,8 +125,20 @@ const VentanillaSolicitudDetalle = () => {
     const hasRejectedFormData = Object.values(formDataValidation).some(val => val === false);
     const hasAnyRejection = hasRejectedDocuments || hasRejectedFormData;
 
+    // Verificar si la solicitud ya fue aprobada (está en evaluación técnica o estados posteriores)
+    const isAlreadyApproved = request?.estado_actual?.toLowerCase() === 'en evaluación técnica' ||
+                               request?.estado_actual?.toLowerCase() === 'aprobada por upc' ||
+                               request?.estado_actual?.toLowerCase() === 'firmada por dirección' ||
+                               request?.estado_actual?.toLowerCase() === 'en revisión dncd' ||
+                               request?.estado_actual?.toLowerCase() === 'autorizada dncd' ||
+                               request?.estado_actual?.toLowerCase() === 'finalizada';
+
     // Manejar Click en Devolver
     const handleRejectClick = () => {
+        if (isAlreadyApproved) {
+            alert("No se puede devolver una solicitud que ya fue aprobada y está en evaluación técnica o en etapas posteriores.");
+            return;
+        }
         if (!hasAnyRejection) {
             alert("Debes marcar al menos un documento o campo del formulario como 'No Cumple' para devolver la solicitud.");
             return;
@@ -414,18 +426,25 @@ const VentanillaSolicitudDetalle = () => {
                         </button>
                         <button
                             onClick={handleRejectClick}
-                            disabled={!hasRejectedDocuments || !comments.trim()}
+                            disabled={isAlreadyApproved || !hasRejectedDocuments || !comments.trim()}
                             className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
-                                hasRejectedDocuments && comments.trim()
+                                !isAlreadyApproved && hasRejectedDocuments && comments.trim()
                                     ? 'bg-[#085297] text-white hover:bg-[#064073]'
                                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
+                            title={isAlreadyApproved ? "No se puede devolver una solicitud ya aprobada" : ""}
                         >
                             Devolver
                         </button>
                         <button
                             onClick={handleApproveClick}
-                            className="px-8 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064073] transition-colors"
+                            disabled={isAlreadyApproved}
+                            className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
+                                !isAlreadyApproved 
+                                    ? 'bg-[#085297] text-white hover:bg-[#064073]'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                            title={isAlreadyApproved ? "Esta solicitud ya fue aprobada" : ""}
                         >
                             Aprobar
                         </button>
