@@ -87,6 +87,13 @@ const VentanillaSolicitudDetalle = () => {
 
     // Manejar validación de documento
     const handleDocumentValidation = (docId, value) => {
+        // Si la solicitud está devuelta, solo permitir cambiar los que NO cumplen
+        // No permitir cambiar los que ya están marcados como "Sí Cumple"
+        const isReturned = request?.estado_actual?.toLowerCase() === 'devuelta por vus';
+        if (isReturned && documentValidation[docId] === true) {
+            return; // No permitir cambiar los que ya cumplen
+        }
+        
         setDocumentValidation(prev => ({
             ...prev,
             [docId]: value
@@ -95,6 +102,13 @@ const VentanillaSolicitudDetalle = () => {
 
     // Manejar validación de campo del formulario
     const handleFormDataValidation = (fieldKey, value) => {
+        // Si la solicitud está devuelta, solo permitir cambiar los que NO cumplen
+        // No permitir cambiar los que ya están marcados como "Sí Cumple"
+        const isReturned = request?.estado_actual?.toLowerCase() === 'devuelta por vus';
+        if (isReturned && formDataValidation[fieldKey] === true) {
+            return; // No permitir cambiar los que ya cumplen
+        }
+        
         setFormDataValidation(prev => ({
             ...prev,
             [fieldKey]: value
@@ -142,6 +156,9 @@ const VentanillaSolicitudDetalle = () => {
                                request?.estado_actual?.toLowerCase() === 'en revisión dncd' ||
                                request?.estado_actual?.toLowerCase() === 'autorizada dncd' ||
                                request?.estado_actual?.toLowerCase() === 'finalizada';
+
+    // Verificar si la solicitud está devuelta por VUS
+    const isReturned = request?.estado_actual?.toLowerCase() === 'devuelta por vus';
 
     // Manejar Click en Devolver
     const handleRejectClick = () => {
@@ -283,12 +300,12 @@ const VentanillaSolicitudDetalle = () => {
                                     </div>
                                     <div className="flex items-center gap-3 ml-4">
                                         <button
-                                            onClick={() => !isAlreadyApproved && handleFormDataValidation(key, true)}
-                                            disabled={isAlreadyApproved}
+                                            onClick={() => !isAlreadyApproved && !(isReturned && formDataValidation[key] === true) && handleFormDataValidation(key, true)}
+                                            disabled={isAlreadyApproved || (isReturned && formDataValidation[key] === true)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
                                                 formDataValidation[key] === true
                                                     ? 'bg-[#085297] text-white'
-                                                    : isAlreadyApproved 
+                                                    : (isAlreadyApproved || (isReturned && formDataValidation[key] === true))
                                                     ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                                                     : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
                                             }`}
@@ -303,12 +320,12 @@ const VentanillaSolicitudDetalle = () => {
                                             Sí Cumple
                                         </button>
                                         <button
-                                            onClick={() => !isAlreadyApproved && handleFormDataValidation(key, false)}
-                                            disabled={isAlreadyApproved}
+                                            onClick={() => !isAlreadyApproved && !(isReturned && formDataValidation[key] === true) && handleFormDataValidation(key, false)}
+                                            disabled={isAlreadyApproved || (isReturned && formDataValidation[key] === true)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
                                                 formDataValidation[key] === false
                                                     ? 'bg-[#085297] text-white'
-                                                    : isAlreadyApproved
+                                                    : (isAlreadyApproved || (isReturned && formDataValidation[key] === true))
                                                     ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                                                     : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
                                             }`}
@@ -369,12 +386,12 @@ const VentanillaSolicitudDetalle = () => {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <button
-                                            onClick={() => !isAlreadyApproved && handleDocumentValidation(doc.id, true)}
-                                            disabled={isAlreadyApproved}
+                                            onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, true)}
+                                            disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
                                                 documentValidation[doc.id] === true
                                                     ? 'bg-[#085297] text-white'
-                                                    : isAlreadyApproved
+                                                    : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
                                                     ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                                                     : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
                                             }`}
@@ -389,12 +406,12 @@ const VentanillaSolicitudDetalle = () => {
                                             Sí Cumple
                                         </button>
                                         <button
-                                            onClick={() => !isAlreadyApproved && handleDocumentValidation(doc.id, false)}
-                                            disabled={isAlreadyApproved}
+                                            onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, false)}
+                                            disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
                                                 documentValidation[doc.id] === false
                                                     ? 'bg-[#085297] text-white'
-                                                    : isAlreadyApproved
+                                                    : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
                                                     ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                                                     : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
                                             }`}
