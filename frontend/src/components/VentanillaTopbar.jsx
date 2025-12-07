@@ -11,24 +11,27 @@ export default function VentanillaTopbar() {
         navigate('/login');
     };
 
+    // Get current path to highlight nav item
+    const path = window.location.pathname;
     return (
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    {/* Logo y Nombre */}
+                    {/* Logo */}
                     <div className="flex items-center gap-3">
                         <Logo className="h-10 w-10" />
-                        <div>
-                            <h1 className="text-xl font-bold text-[#4A8BDF]">SGC Productos Controlados</h1>
-                            <p className="text-xs text-gray-500">Ventanilla Única de Servicios</p>
-                        </div>
                     </div>
 
                     {/* Navegación */}
                     <nav className="hidden md:flex items-center space-x-8">
                         <button
                             onClick={() => navigate('/ventanilla')}
-                            className="text-gray-700 hover:text-[#4A8BDF] font-medium transition-colors"
+                            className={
+                                `font-bold transition-colors px-6 py-2 rounded-xl ` +
+                                (path === '/ventanilla'
+                                    ? 'bg-[#085297] text-white'
+                                    : 'text-[#085297] hover:bg-[#085297] hover:text-white')
+                            }
                         >
                             Solicitudes
                         </button>
@@ -37,7 +40,7 @@ export default function VentanillaTopbar() {
                     {/* Usuario y Logout */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-[#085297] flex items-center justify-center text-white font-semibold">
                                 {user?.full_name?.charAt(0) || 'V'}
                             </div>
                             <div className="hidden sm:block">

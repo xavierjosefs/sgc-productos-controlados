@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BadgeEstado from '../../components/BadgeEstado';
 import { useRequestsAPI } from '../../hooks/useRequestsAPI';
+import useServicesAPI from '../../hooks/useServicesAPI';
 
 /**
  * VentanillaSolicitudes
@@ -10,14 +11,16 @@ import { useRequestsAPI } from '../../hooks/useRequestsAPI';
 export default function VentanillaSolicitudes() {
     const navigate = useNavigate();
     const { getVentanillaRequests, loading, error } = useRequestsAPI();
+    const { getServiceTypes } = useServicesAPI();
     const [requests, setRequests] = useState([]);
+    const [serviceTypes, setServiceTypes] = useState([]);
     const [filterTipo, setFilterTipo] = useState('');
     const [filterEstado, setFilterEstado] = useState('');
     const [appliedFilterTipo, setAppliedFilterTipo] = useState('');
     const [appliedFilterEstado, setAppliedFilterEstado] = useState('');
     const [activeCard, setActiveCard] = useState('all'); // 'all', 'pendientes', 'aprobadas', 'devueltas'
 
-    // Cargar solicitudes al montar el componente
+    // Cargar solicitudes y tipos de servicio al montar el componente
     useEffect(() => {
         const fetchRequests = async () => {
             try {
@@ -31,6 +34,18 @@ export default function VentanillaSolicitudes() {
         };
         fetchRequests();
     }, [getVentanillaRequests]);
+
+    useEffect(() => {
+        const fetchServiceTypes = async () => {
+            try {
+                const types = await getServiceTypes();
+                setServiceTypes(types || []);
+            } catch {
+                setServiceTypes([]);
+            }
+        };
+        fetchServiceTypes();
+    }, [getServiceTypes]);
 
     // Formatear fecha
     const formatDate = (dateString) => {
@@ -136,18 +151,10 @@ export default function VentanillaSolicitudes() {
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Pendientes de Revisión</span>
-                        <svg
-                            className="w-5 h-5 text-[#4A8BDF]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
@@ -163,18 +170,10 @@ export default function VentanillaSolicitudes() {
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Aprobadas</span>
-                        <svg
-                            className="w-5 h-5 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-green-600">{aprobadasCount}</p>
@@ -190,18 +189,10 @@ export default function VentanillaSolicitudes() {
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Devueltas</span>
-                        <svg
-                            className="w-5 h-5 text-orange-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-orange-600">{devueltasCount}</p>
@@ -229,10 +220,9 @@ export default function VentanillaSolicitudes() {
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
                         >
                             <option value="">Todos</option>
-                            <option value="Clase A">Clase A</option>
-                            <option value="Clase B">Clase B</option>
-                            <option value="Capa C">Capa C</option>
-                            <option value="Importación">Importación</option>
+                            {serviceTypes.map((tipo) => (
+                                <option key={tipo.id} value={tipo.nombre_servicio}>{tipo.nombre_servicio}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -294,7 +284,8 @@ export default function VentanillaSolicitudes() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px]">
+                        <div style={{ maxHeight: '400px', overflowY: filteredRequests.length > 5 ? 'auto' : 'visible' }}>
+                            <table className="w-full min-w-[900px]">
                         <thead>
                             <tr className="bg-[#4A8BDF]">
                                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
@@ -356,7 +347,8 @@ export default function VentanillaSolicitudes() {
                                 })
                             )}
                         </tbody>
-                    </table>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>
