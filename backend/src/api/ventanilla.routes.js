@@ -1,6 +1,6 @@
 import express from "express";
 import { getVentanillaRequestsController } from "../controllers/ventanilla.controllers.js";
-import { getTecnicoUPCRequestsController } from "../controllers/tecnico.controller.js";
+import { getTecnicoUPCRequestsController } from "../controllers/tecnico.controllers.js";
 
 const router = express.Router();
 
