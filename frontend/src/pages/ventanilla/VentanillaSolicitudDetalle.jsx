@@ -37,7 +37,9 @@ const VentanillaSolicitudDetalle = () => {
         setLoading(true);
         setError('');
         try {
+            console.log('Cargando detalle de solicitud ID:', id);
             const data = await getVentanillaRequestDetail(id);
+            console.log('Datos recibidos:', data);
             setRequest(data);
             
             // Verificar si la solicitud ya fue aprobada
