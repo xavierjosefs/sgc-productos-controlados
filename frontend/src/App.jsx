@@ -87,14 +87,10 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-                {/* Root route - redirects based on role */}
+                {/* Root route - always redirect to login */}
                 <Route
                   path="/"
-                  element={
-                    <ProtectedRoute>
-                      <RoleBasedRedirect />
-                    </ProtectedRoute>
-                  }
+                  element={<Navigate to="/login" replace />}
                 />
 
                 {/* Role-specific dashboard routes */}
