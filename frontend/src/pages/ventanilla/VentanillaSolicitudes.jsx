@@ -42,15 +42,17 @@ export default function VentanillaSolicitudes() {
         });
     };
 
-    // Calcular contadores - usando el nombre del estado
+    // Calcular contadores - Pendientes son las "Enviadas" por el cliente
     const pendientesCount = requests.filter(r => 
         r.estado_actual?.toLowerCase() === 'enviada'
     ).length;
     
+    // Aprobadas son las que pasaron validación de VUS
     const aprobadasCount = requests.filter(r => 
         r.estado_actual?.toLowerCase() === 'en evaluación técnica'
     ).length;
     
+    // Devueltas por VUS
     const devueltasCount = requests.filter(r => 
         r.estado_actual?.toLowerCase() === 'devuelta por vus'
     ).length;
@@ -61,14 +63,17 @@ export default function VentanillaSolicitudes() {
 
         // Filtro por card clickeada
         if (activeCard === 'pendientes') {
+            // Mostrar solo las "Enviadas" que están esperando revisión
             filtered = filtered.filter(r => 
                 r.estado_actual?.toLowerCase() === 'enviada'
             );
         } else if (activeCard === 'aprobadas') {
+            // Mostrar las que pasaron validación de VUS
             filtered = filtered.filter(r => 
                 r.estado_actual?.toLowerCase() === 'en evaluación técnica'
             );
         } else if (activeCard === 'devueltas') {
+            // Mostrar las devueltas por VUS
             filtered = filtered.filter(r => 
                 r.estado_actual?.toLowerCase() === 'devuelta por vus'
             );
@@ -129,7 +134,7 @@ export default function VentanillaSolicitudes() {
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
-                    <p className="text-xs text-gray-500 mt-2">Solicitudes enviadas por clientes</p>
+                    <p className="text-xs text-gray-500 mt-2">Nuevas solicitudes enviadas</p>
                 </div>
 
                 {/* Card Aprobadas */}
@@ -156,7 +161,7 @@ export default function VentanillaSolicitudes() {
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-green-600">{aprobadasCount}</p>
-                    <p className="text-xs text-gray-500 mt-2">Validadas por ventanilla</p>
+                    <p className="text-xs text-gray-500 mt-2">Pasaron validación de VUS</p>
                 </div>
 
                 {/* Card Devueltas */}
@@ -224,9 +229,10 @@ export default function VentanillaSolicitudes() {
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
                         >
                             <option value="">Todos</option>
-                            <option value="enviada">Pendiente</option>
+                            <option value="enviada">Enviada (Pendiente)</option>
+                            <option value="en revisión por vus">En Revisión</option>
                             <option value="devuelta por vus">Devuelta</option>
-                            <option value="en evaluación técnica">Aprobada</option>
+                            <option value="en evaluación técnica">Aprobada por VUS</option>
                         </select>
                     </div>
 
@@ -249,16 +255,16 @@ export default function VentanillaSolicitudes() {
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-800">
-                        {activeCard === 'pendientes' ? 'Solicitudes Pendientes de Revisión' :
-                         activeCard === 'aprobadas' ? 'Solicitudes Aprobadas' :
-                         activeCard === 'devueltas' ? 'Solicitudes Devueltas' :
+                        {activeCard === 'pendientes' ? 'Solicitudes Enviadas (Pendientes de Revisión)' :
+                         activeCard === 'aprobadas' ? 'Solicitudes Aprobadas por VUS' :
+                         activeCard === 'devueltas' ? 'Solicitudes Devueltas por VUS' :
                          'Todas las Solicitudes'}
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
-                        {activeCard === 'pendientes' ? 'Solicitudes nuevas y reenviadas que requieren validación' :
-                         activeCard === 'aprobadas' ? 'Solicitudes validadas correctamente por ventanilla' :
-                         activeCard === 'devueltas' ? 'Solicitudes devueltas que requieren corrección del usuario' :
-                         'Vista general de todas las solicitudes'}
+                        {activeCard === 'pendientes' ? 'Solicitudes enviadas por clientes que esperan validación de Ventanilla' :
+                         activeCard === 'aprobadas' ? 'Solicitudes que pasaron la validación formal y están en evaluación técnica' :
+                         activeCard === 'devueltas' ? 'Solicitudes devueltas al cliente por no cumplir requisitos formales' :
+                         'Vista general de todas las solicitudes gestionadas por Ventanilla'}
                     </p>
                 </div>
 
