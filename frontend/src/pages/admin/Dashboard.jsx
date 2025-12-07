@@ -1,90 +1,97 @@
-import ClientTopbar from '../../components/ClientTopbar';
-import { useAuth } from '../../context/AuthContext';
-
 /**
- * Dashboard de Administrador
- * Panel completo de administración del sistema
+ * AdminDashboard - Panel principal con estadísticas
  */
+import { useNavigate } from 'react-router-dom';
+
 export default function AdminDashboard() {
-    const { user } = useAuth();
+  const navigate = useNavigate();
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <ClientTopbar />
+  const solicitudesStats = [
+    { label: 'Total Solicitudes', value: 20, color: 'text-[#4A8BDF]', route: '/admin/solicitudes' },
+    { label: 'Pendientes', value: 15, color: 'text-gray-600', route: '/admin/solicitudes' },
+    { label: 'Aprobadas', value: 5, color: 'text-green-600', route: '/admin/solicitudes' },
+    { label: 'Rechazadas', value: 4, color: 'text-orange-600', route: '/admin/solicitudes' },
+    { label: 'Devueltas', value: 10, color: 'text-gray-600', route: '/admin/solicitudes' },
+    { label: 'Total Servicios', value: 5, color: 'text-[#4A8BDF]', route: '/admin/servicios' },
+  ];
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[#4A8BDF]">Panel de Administración</h1>
-                        <p className="text-gray-600 mt-1">Bienvenido, {user?.full_name || 'Administrador'}</p>
-                    </div>
+  const empleadosStats = [
+    { label: 'Total Empleados', value: 15, color: 'text-[#4A8BDF]', route: '/admin/empleados' },
+    { label: 'Activos', value: 10, color: 'text-green-600', route: '/admin/empleados' },
+    { label: 'Inactivos', value: 10, color: 'text-orange-600', route: '/admin/empleados' },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Resumen General</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Card de Solicitudes */}
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8">
+          <div className="grid grid-cols-2 gap-6">
+            {solicitudesStats.map((stat, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(stat.route)}
+                className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg hover:border-[#4A8BDF] transition-all cursor-pointer text-left"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-700 text-sm font-medium">{stat.label}</span>
+                  <svg 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    className="text-[#4A8BDF]"
+                  >
+                    <path 
+                      d="M10 6H6C4.89543 6 4 6.89543 4 8V18C4 19.1046 4.89543 20 6 20H16C17.1046 20 18 19.1046 18 18V14M14 4H20M20 4V10M20 4L10 14" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
-
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <span className="text-sm text-gray-600">Usuarios Totales</span>
-                        <p className="text-4xl font-bold text-[#4A8BDF] mt-2">0</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <span className="text-sm text-gray-600">Solicitudes Activas</span>
-                        <p className="text-4xl font-bold text-[#F59E0B] mt-2">0</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <span className="text-sm text-gray-600">Servicios Configurados</span>
-                        <p className="text-4xl font-bold text-[#10B981] mt-2">0</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <span className="text-sm text-gray-600">Roles del Sistema</span>
-                        <p className="text-4xl font-bold text-[#8B5CF6] mt-2">7</p>
-                    </div>
-                </div>
-
-                {/* Acciones de Administración */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Gestión de Usuarios</h2>
-                        <div className="flex flex-col gap-3">
-                            <button className="px-6 py-3 bg-[#4A8BDF] text-white rounded-lg font-medium hover:bg-[#3875C8] transition-colors text-left">
-                                Ver Todos los Usuarios
-                            </button>
-                            <button className="px-6 py-3 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors text-left">
-                                Crear Nuevo Usuario
-                            </button>
-                            <button className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-left">
-                                Gestionar Roles
-                            </button>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Configuración del Sistema</h2>
-                        <div className="flex flex-col gap-3">
-                            <button className="px-6 py-3 bg-[#6366F1] text-white rounded-lg font-medium hover:bg-[#4F46E5] transition-colors text-left">
-                                Tipos de Servicio
-                            </button>
-                            <button className="px-6 py-3 bg-[#8B5CF6] text-white rounded-lg font-medium hover:bg-[#7C3AED] transition-colors text-left">
-                                Estados de Solicitud
-                            </button>
-                            <button className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-left">
-                                Configuración General
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Actividad Reciente */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800">Actividad Reciente del Sistema</h2>
-                    </div>
-                    <div className="p-6">
-                        <p className="text-gray-500 text-center py-8">
-                            El registro de actividad del sistema se mostrará aquí.
-                        </p>
-                    </div>
-                </div>
-            </div>
+                <p className={`text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+              </button>
+            ))}
+          </div>
         </div>
-    );
+
+        {/* Card de Empleados */}
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8">
+          <div className="flex flex-col gap-6">
+            {empleadosStats.map((stat, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(stat.route)}
+                className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-lg hover:border-[#4A8BDF] transition-all cursor-pointer text-left"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-700 text-sm font-medium">{stat.label}</span>
+                  <svg 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    className="text-[#4A8BDF]"
+                  >
+                    <path 
+                      d="M10 6H6C4.89543 6 4 6.89543 4 8V18C4 19.1046 4.89543 20 6 20H16C17.1046 20 18 19.1046 18 18V14M14 4H20M20 4V10M20 4L10 14" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <p className={`text-5xl font-bold ${stat.color}`}>{stat.value}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
