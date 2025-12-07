@@ -92,8 +92,18 @@ export default function Login() {
           localStorage.setItem('rememberMe', 'true');
         }
 
-        // Redirigir al dashboard - el AuthContext se encargará de cargar el perfil
-        window.location.href = '/';
+        // Redirigir según el rol del usuario
+        const userRole = data.user?.role_name || 'cliente';
+        const roleRoutes = {
+          cliente: '/cliente',
+          ventanilla: '/ventanilla',
+          tecnico_controlados: '/tecnico-controlados',
+          director_controlados: '/director-controlados',
+          direccion: '/direccion',
+          dncd: '/dncd',
+          admin: '/admin',
+        };
+        window.location.href = roleRoutes[userRole] || '/cliente';
       } else {
         throw new Error('No se recibió el token de autenticación');
       }
