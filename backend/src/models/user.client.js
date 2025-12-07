@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import {getDocumentosBySolicitudId} from "./document.client.js"
 
 // Funcion para crear un nuevo usuario
 export const createUser = async (full_name, cedula, email, password, role_id) => {
@@ -237,4 +238,129 @@ export const updateRequestStatus = async (requestId, statusId) => {
     [statusId, requestId]
   );
   return result.rows[0];
+};
+
+export const getRequestsForTecnicoUPC = async () => {
+  const result = await pool.query(`
+    SELECT 
+      s.id,
+      s.user_id,
+      u.full_name AS nombre_cliente,
+      ts.nombre_servicio AS tipo_servicio,
+      s.fecha_creacion,
+      e.nombre_mostrar AS estado_actual
+    FROM solicitudes s
+    JOIN users u ON s.user_id = u.cedula
+    JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+    JOIN estados_solicitud e ON s.estado_id = e.id
+    WHERE s.estado_id = 4
+    ORDER BY s.fecha_creacion DESC
+  `);
+  return result.rows;
+};
+
+export const getTecnicoUPCRequestDetails = async (id) => {
+  const result = await pool.query(
+    `SELECT 
+        s.id,
+        s.user_id,
+        s.form_data,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        s.tipo_servicio_id,
+        ts.nombre_servicio,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula,
+        u.email AS cliente_email
+     FROM solicitudes s
+     JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     WHERE s.id = $1`,
+    [id]);
+
+  if (result.rowCount === 0) {
+    throw new Error("Solicitud no encontrada");
+  }
+
+  const solicitud = result.rows[0];
+
+  // 2) Obtener documentos entregados
+  const documentos = await getDocumentosBySolicitudId(id)
+
+  return {
+    solicitud: {
+      id: solicitud.id,
+      tipo_solicitud: solicitud.tipo_solicitud,
+      fecha_creacion: solicitud.fecha_creacion,
+      servicio: solicitud.nombre_servicio,
+      form_data: solicitud.form_data
+    },
+    cliente: {
+      cedula: solicitud.cliente_cedula,
+      nombre: solicitud.cliente_nombre,
+      email: solicitud.cliente_email
+    },
+    documentos: documentos
+  };
+}
+
+export const validarSolicitudTecnica = async (solicitudId, data) => {
+   const { formulario_cumple, documentos, recomendacion, comentario_general } = data;
+
+  // Validación mínima
+  if (typeof formulario_cumple !== "boolean") {
+    throw new Error("formulario_cumple debe ser boolean.");
+  }
+  if (!Array.isArray(documentos)) {
+    throw new Error("documentos debe ser un arreglo.");
+  }
+  if (!["APROBADO", "NO_APROBADO"].includes(recomendacion)) {
+    throw new Error("recomendacion debe ser APROBADO o NO_APROBADO.");
+  }
+
+  // 1) Guardar validación del formulario y comentario del técnico
+  await pool.query(
+    `UPDATE solicitudes
+     SET validacion_formulario = $1,
+         comentario_tecnico = $2,
+         recomendacion_tecnico = $3
+     WHERE id = $4`,
+    [
+      formulario_cumple,
+      comentario_general || null,
+      recomendacion === "APROBADO",
+      solicitudId
+    ]
+  );
+
+  // 2) Actualizar cada documento
+  for (const doc of documentos) {
+    await pool.query(
+      `UPDATE documentos_solicitud
+       SET estado = $1
+       WHERE id = $2 AND solicitud_id = $3`,
+      [
+        doc.cumple ? "APROBADO" : "RECHAZADO",
+        doc.id,
+        solicitudId
+      ]
+    );
+  }
+
+  // 3) Cambiar estado
+  const ESTADO_APROBADA_UPC = 6; // lista para Dirección
+
+  await pool.query(
+    `UPDATE solicitudes
+     SET estado_id = $1
+     WHERE id = $2`,
+    [ESTADO_APROBADA_UPC, solicitudId]
+  );
+
+  return {
+    solicitud_id: solicitudId,
+    estado_id: ESTADO_APROBADA_UPC,
+    recomendacion,
+    comentario_general
+  };
 };

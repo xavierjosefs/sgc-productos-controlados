@@ -334,6 +334,33 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  const getTecnicoRequests = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await axios.get(`${baseURL}/api/ventanilla/tecnico-upc/requests`, {
+      withCredentials: true,
+      headers: getAuthHeaders(),
+    });
+    return response.data; // {ok, requests}
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || "Error al obtener solicitudes para técnico UPC";
+    setError(errorMessage);
+
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+
+    throw new Error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+
+
   return {
     // Estados
     loading,
@@ -344,6 +371,7 @@ export function useRequestsAPI() {
     getRequestDetail,
     getVentanillaRequests,
     getVentanillaRequestDetail,
+    getTecnicoRequests,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes
