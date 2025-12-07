@@ -1,5 +1,7 @@
 import { getRequestsForVentanilla, updateRequestStatus, getRequestDetailsById, findUserByCedula } from "../models/user.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { getDocumentosBySolicitudId } from "../models/document.client.js";
+import pool from "../config/db.js";
 
 /**
  * Controller to get requests for Ventanilla role
@@ -29,7 +31,7 @@ export const getVentanillaRequestsController = async (req, res) => {
 export const validateRequestController = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, reasons } = req.body;
+        const { status, reasons, documentValidation, formDataValidation } = req.body;
 
         // Validar inputs
         if (!id) {
@@ -46,28 +48,47 @@ export const validateRequestController = async (req, res) => {
         }
 
         // Determinar ID de estado
-        // Estados según la BD:
-        // 12 = Enviada (solicitud enviada por cliente)
-        // 2 = En revisión por VUS (ventanilla está revisando)
-        // 3 = Devuelta por VUS (no cumple requisitos formales)
-        // 4 = En evaluación técnica (aprobada por VUS, pasa a técnicos UPC)
-        //
-        // FLUJO:
-        // Usuario envía → Enviada(12)
-        // Ventanilla devuelve → Devuelta por VUS(3)
-        // Usuario corrige y reenvía → Enviada(12) nuevamente
-        // Ventanilla aprueba → En evaluación técnica(4)
-        
         let newStatusId;
         if (status === 'devuelto_vus') {
-            // Devuelto por Ventanilla - estado "Devuelta por VUS"
-            newStatusId = 3;
+            newStatusId = 3; // Devuelta por VUS
         } else if (status === 'aprobado_vus') {
-            // Aprobado por ventanilla - pasa a "En evaluación técnica" (siguiente etapa)
-            newStatusId = 4;
+            newStatusId = 4; // En evaluación técnica
         } else {
             return res.status(400).json({ ok: false, message: "Estado inválido" });
         }
+
+        // ====== GUARDAR VALIDACIONES ======
+        // Limpiar validaciones anteriores de esta solicitud
+        await pool.query('DELETE FROM validaciones_ventanilla WHERE solicitud_id = $1', [id]);
+
+        // Guardar validaciones de documentos
+        if (documentValidation && typeof documentValidation === 'object') {
+            for (const [docId, cumple] of Object.entries(documentValidation)) {
+                if (cumple !== null) {
+                    await pool.query(
+                        `INSERT INTO validaciones_ventanilla 
+                         (solicitud_id, documento_id, cumple, fecha_validacion) 
+                         VALUES ($1, $2, $3, NOW())`,
+                        [id, docId, cumple]
+                    );
+                }
+            }
+        }
+
+        // Guardar validaciones de campos de formulario
+        if (formDataValidation && typeof formDataValidation === 'object') {
+            for (const [campo, cumple] of Object.entries(formDataValidation)) {
+                if (cumple !== null) {
+                    await pool.query(
+                        `INSERT INTO validaciones_ventanilla 
+                         (solicitud_id, campo_formulario, cumple, fecha_validacion) 
+                         VALUES ($1, $2, $3, NOW())`,
+                        [id, campo, cumple]
+                    );
+                }
+            }
+        }
+        // ====== FIN GUARDAR VALIDACIONES ======
 
         // Actualizar estado
         const updatedRequest = await updateRequestStatus(id, newStatusId);
@@ -102,6 +123,60 @@ export const validateRequestController = async (req, res) => {
 
     } catch (error) {
         console.error("Error al validar solicitud:", error);
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Controller to get request detail with validations
+ */
+export const getRequestDetailController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Obtener detalle básico de la solicitud
+        const request = await getRequestDetailsById(id);
+        if (!request) {
+            return res.status(404).json({ ok: false, message: "Solicitud no encontrada" });
+        }
+
+        // Obtener documentos
+        const documentos = await getDocumentosBySolicitudId(id);
+
+        // Obtener validaciones previas
+        const validacionesResult = await pool.query(
+            `SELECT documento_id, campo_formulario, cumple 
+             FROM validaciones_ventanilla 
+             WHERE solicitud_id = $1`,
+            [id]
+        );
+
+        // Organizar validaciones en objetos separados
+        const documentValidation = {};
+        const formDataValidation = {};
+
+        validacionesResult.rows.forEach(row => {
+            if (row.documento_id) {
+                documentValidation[row.documento_id] = row.cumple;
+            } else if (row.campo_formulario) {
+                formDataValidation[row.campo_formulario] = row.cumple;
+            }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            ...request,
+            documentos,
+            documentValidation,
+            formDataValidation
+        });
+
+    } catch (error) {
+        console.error("Error al obtener detalle de solicitud:", error);
         return res.status(500).json({
             ok: false,
             message: "Error interno del servidor",

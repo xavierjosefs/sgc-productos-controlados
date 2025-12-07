@@ -11,7 +11,7 @@ const VentanillaSolicitudDetalle = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const {
-        getRequestDetail,
+        getVentanillaRequestDetail,
         validateRequest
     } = useRequestsAPI();
 
@@ -37,7 +37,7 @@ const VentanillaSolicitudDetalle = () => {
         setLoading(true);
         setError('');
         try {
-            const data = await getRequestDetail(id);
+            const data = await getVentanillaRequestDetail(id);
             setRequest(data);
             
             // Verificar si la solicitud ya fue aprobada
@@ -47,25 +47,31 @@ const VentanillaSolicitudDetalle = () => {
                                     data.estado_actual?.toLowerCase() === 'en revisión dncd' ||
                                     data.estado_actual?.toLowerCase() === 'autorizada dncd' ||
                                     data.estado_actual?.toLowerCase() === 'finalizada';
-            
-            // Inicializar estado de validación para cada documento
-            if (data.documentos && data.documentos.length > 0) {
+
+            // Si hay validaciones previas del backend, usarlas
+            // Si no, inicializar según el estado
+            if (data.documentValidation && Object.keys(data.documentValidation).length > 0) {
+                // Cargar validaciones previas
+                setDocumentValidation(data.documentValidation);
+            } else if (data.documentos && data.documentos.length > 0) {
+                // Inicializar nuevas validaciones
                 const initialValidation = {};
                 data.documentos.forEach(doc => {
-                    // Si ya está aprobada, marcar todos como true
                     initialValidation[doc.id] = alreadyApproved ? true : null;
                 });
                 setDocumentValidation(initialValidation);
             }
             
-            // Inicializar estado de validación para cada campo del formulario
-            if (data.form_data) {
+            // Cargar validaciones de formulario previas o inicializar
+            if (data.formDataValidation && Object.keys(data.formDataValidation).length > 0) {
+                // Cargar validaciones previas
+                setFormDataValidation(data.formDataValidation);
+            } else if (data.form_data) {
+                // Inicializar nuevas validaciones
                 const initialFormValidation = {};
                 Object.keys(data.form_data).forEach(key => {
-                    // Solo validar campos que no sean de información básica y que tengan valor
                     if (!['cedula', 'rnc', 'rncEmpresa', 'nombre', 'nombreEmpresa'].includes(key) && 
                         data.form_data[key] && data.form_data[key] !== '') {
-                        // Si ya está aprobada, marcar todos como true
                         initialFormValidation[key] = alreadyApproved ? true : null;
                     }
                 });
@@ -119,7 +125,7 @@ const VentanillaSolicitudDetalle = () => {
     const executeReject = async () => {
         setValidating(true);
         try {
-            await validateRequest(id, 'devuelto_vus', comments);
+            await validateRequest(id, 'devuelto_vus', comments, documentValidation, formDataValidation);
             setShowRejectModal(false);
             setSuccessType('devuelta');
             setShowSuccessModal(true);
@@ -134,7 +140,7 @@ const VentanillaSolicitudDetalle = () => {
     const executeApprove = async () => {
         setValidating(true);
         try {
-            await validateRequest(id, 'aprobado_vus', comments);
+            await validateRequest(id, 'aprobado_vus', comments, documentValidation, formDataValidation);
             setShowApproveModal(false);
             navigate('/ventanilla');
         } catch (err) {
