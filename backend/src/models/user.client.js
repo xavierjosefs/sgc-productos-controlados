@@ -364,3 +364,22 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
     comentario_general
   };
 };
+
+export const getRequestsForDirectorUPC = async () => {
+  const result = await pool.query(
+    `SELECT 
+        s.id,
+        s.user_id,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        ts.nombre_servicio AS tipo_servicio,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula
+     FROM solicitudes s
+     JOIN servicios ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     WHERE s.estado_id = 6
+     ORDER BY s.fecha_creacion ASC`);
+     
+  return result.rows;
+};

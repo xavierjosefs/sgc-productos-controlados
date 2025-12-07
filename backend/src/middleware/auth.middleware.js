@@ -79,3 +79,23 @@ export const tecnicoMiddleware = (req, res, next) => {
     res.status(401).json({ error: "Token inválido" });
   }
 }
+
+export const directorupcMiddleware = () => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Token no proporcionado" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    if (decoded.role !== 4) {
+      return res.status(403).json({ error: "Acceso denegado. Solo Directores de controlados." });
+    }
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Token inválido" });
+  }
+}
