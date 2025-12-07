@@ -293,33 +293,47 @@ export default function VentanillaSolicitudes() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredRequests.map((request) => (
-                                    <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                                            #{request.id}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {formatDate(request.fecha_creacion)}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-700">
-                                            {request.nombre_cliente}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-700">
-                                            {request.tipo_servicio}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <BadgeEstado estado={request.estado_actual} />
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button
-                                                onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
-                                                className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
-                                            >
-                                                {request.estado_actual?.toLowerCase() === 'enviada' ? 'Validar' : 'Ver Detalle'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                filteredRequests.map((request) => {
+                                    const isDevuelta = request.estado_actual?.toLowerCase() === 'devuelta por vus';
+                                    const isEnviada = request.estado_actual?.toLowerCase() === 'enviada';
+                                    
+                                    return (
+                                        <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                                #{request.id}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                                {formatDate(request.fecha_creacion)}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">
+                                                {request.nombre_cliente}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">
+                                                {request.tipo_servicio}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <BadgeEstado estado={request.estado_actual} />
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {isDevuelta ? (
+                                                    <span 
+                                                        className="text-gray-400 font-medium text-sm cursor-not-allowed"
+                                                        title="Esta solicitud está en manos del cliente para corrección"
+                                                    >
+                                                        En corrección
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
+                                                        className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
+                                                    >
+                                                        {isEnviada ? 'Validar' : 'Ver Detalle'}
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

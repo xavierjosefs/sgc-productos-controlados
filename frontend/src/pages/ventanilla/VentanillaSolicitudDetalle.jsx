@@ -79,11 +79,14 @@ const VentanillaSolicitudDetalle = () => {
                 });
                 setFormDataValidation(initialFormValidation);
             }
+            
+            console.log('✅ Todo cargado correctamente, cambiando loading a false');
         } catch (error) {
-            console.error('Error fetching request detail:', error);
+            console.error('❌ Error fetching request detail:', error);
             setError(error?.message || 'No se pudo cargar la solicitud');
             setRequest(null);
         } finally {
+            console.log('🏁 Finally block - setting loading to false');
             setLoading(false);
         }
     };

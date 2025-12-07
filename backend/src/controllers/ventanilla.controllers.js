@@ -137,15 +137,18 @@ export const validateRequestController = async (req, res) => {
 export const getRequestDetailController = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('🔍 Ventanilla - Obteniendo detalle de solicitud:', id);
 
         // Obtener detalle básico de la solicitud
         const request = await getRequestDetailsById(id);
+        console.log('📋 Request encontrada:', request ? 'Sí' : 'No');
         if (!request) {
             return res.status(404).json({ ok: false, message: "Solicitud no encontrada" });
         }
 
         // Obtener documentos
         const documentos = await getDocumentosBySolicitudId(id);
+        console.log('📎 Documentos encontrados:', documentos ? documentos.length : 0);
 
         // Obtener validaciones previas
         const validacionesResult = await pool.query(
@@ -154,6 +157,7 @@ export const getRequestDetailController = async (req, res) => {
              WHERE solicitud_id = $1`,
             [id]
         );
+        console.log('✅ Validaciones encontradas:', validacionesResult.rows.length);
 
         // Organizar validaciones en objetos separados
         const documentValidation = {};
@@ -167,6 +171,8 @@ export const getRequestDetailController = async (req, res) => {
             }
         });
 
+        console.log('📤 Enviando respuesta con', Object.keys(documentValidation).length, 'validaciones de documentos y', Object.keys(formDataValidation).length, 'validaciones de campos');
+
         return res.status(200).json({
             ok: true,
             ...request,
@@ -176,7 +182,7 @@ export const getRequestDetailController = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error al obtener detalle de solicitud:", error);
+        console.error("❌ Error al obtener detalle de solicitud:", error);
         return res.status(500).json({
             ok: false,
             message: "Error interno del servidor",
