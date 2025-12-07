@@ -8,95 +8,80 @@ export default function BadgeEstado({ estado }) {
     'pendiente': { 
       bg: 'bg-gray-200', 
       text: 'text-gray-800', 
-      label: 'Pendiente',
-      icon: '⏳'
+      label: 'Pendiente'
     },
     'en revisión por vus': { 
       bg: 'bg-blue-500', 
       text: 'text-white', 
-      label: 'En Revisión',
-      icon: '👀'
+      label: 'En Revisión'
     },
     'devuelta por vus': { 
       bg: 'bg-orange-500', 
       text: 'text-white', 
-      label: 'Devuelta',
-      icon: '↩️'
+      label: 'Devuelta'
     },
     'en evaluación técnica': { 
       bg: 'bg-purple-500', 
       text: 'text-white', 
-      label: 'En Evaluación Técnica',
-      icon: '🔬'
+      label: 'En Evaluación Técnica'
     },
     'devuelta por dirección': { 
       bg: 'bg-red-500', 
       text: 'text-white', 
-      label: 'Devuelta por Dirección',
-      icon: '↩️'
+      label: 'Devuelta por Dirección'
     },
     'aprobada por upc': { 
       bg: 'bg-green-500', 
       text: 'text-white', 
-      label: 'Aprobada por UPC',
-      icon: '✓'
+      label: 'Aprobada por UPC'
     },
     'firmada por dirección': { 
       bg: 'bg-emerald-600', 
       text: 'text-white', 
-      label: 'Firmada',
-      icon: '✍️'
+      label: 'Firmada'
     },
     'en revisión dncd': { 
       bg: 'bg-indigo-500', 
       text: 'text-white', 
-      label: 'En Revisión DNCD',
-      icon: '👁️'
+      label: 'En Revisión DNCD'
     },
     'autorizada dncd': { 
       bg: 'bg-teal-500', 
       text: 'text-white', 
-      label: 'Autorizada DNCD',
-      icon: '✓'
+      label: 'Autorizada DNCD'
     },
     'finalizada': { 
       bg: 'bg-green-600', 
       text: 'text-white', 
-      label: 'Finalizada',
-      icon: '✓'
+      label: 'Finalizada'
     },
     'rechazada': { 
       bg: 'bg-red-600', 
       text: 'text-white', 
-      label: 'Rechazada',
-      icon: '✗'
+      label: 'Rechazada'
     },
     'enviada': { 
       bg: 'bg-blue-500', 
       text: 'text-white', 
-      label: 'Enviada',
-      icon: '📤'
+      label: 'Enviada'
     },
     
     // Alias para compatibilidad
     'borrador': { 
       bg: 'bg-gray-400', 
       text: 'text-white', 
-      label: 'Borrador',
-      icon: '📝'
+      label: 'Borrador'
     },
   };
 
   const config = statusConfig[estado?.toLowerCase()] || { 
     bg: 'bg-gray-300', 
     text: 'text-gray-800', 
-    label: estado || 'Sin estado',
-    icon: '•'
+    label: estado || 'Sin estado'
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${config.bg} ${config.text} shadow-sm`}>
-      <span>{config.icon}</span>
+    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${config.bg} ${config.text} shadow-sm`}>
       <span>{config.label}</span>
     </span>
   );
