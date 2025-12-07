@@ -1,5 +1,6 @@
 import express from "express";
 import { getVentanillaRequestsController } from "../controllers/ventanilla.controllers.js";
+import { getTecnicoUPCRequestsController } from "../controllers/tecnico.controller.js";
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.get("/requests", getVentanillaRequestsController);
+router.get("/tecnico-upc/requests", getTecnicoUPCRequestsController);
 
 /**
  * @swagger

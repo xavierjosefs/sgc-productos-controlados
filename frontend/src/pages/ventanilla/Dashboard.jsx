@@ -12,23 +12,38 @@ import { useRequestsAPI } from '../../hooks/useRequestsAPI';
 export default function VentanillaDashboard() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const { getVentanillaRequests, loading, error } = useRequestsAPI();
+
+    // 👇 Extraer ambas funciones del hook
+    const { getVentanillaRequests, getTecnicoRequests, loading, error } = useRequestsAPI();
+
+    // 👇 Estados correctos
+    const [requestsToTecnico, setRequestsToTecnico] = useState([]);
     const [requests, setRequests] = useState([]);
 
-    // Cargar solicitudes al montar el componente
     useEffect(() => {
         const fetchRequests = async () => {
             try {
+                // Solicitudes ENVIADAS (estado 12)
                 const response = await getVentanillaRequests();
                 if (response.ok) {
                     setRequests(response.requests || []);
                 }
+
+                // Solicitudes enviadas a TECNICO (estado 4)
+                const tecnicoRes = await getTecnicoRequests();
+                if (tecnicoRes.ok) {
+                    setRequestsToTecnico(tecnicoRes.requests || []);
+                }
+
             } catch (err) {
-                console.error('Error al cargar solicitudes:', err);
+                console.error("Error al cargar solicitudes:", err);
             }
         };
+
         fetchRequests();
-    }, [getVentanillaRequests]);
+    }, [getVentanillaRequests, getTecnicoRequests]);
+
+
 
     // Formatear fecha
     const formatDate = (dateString) => {
@@ -78,7 +93,7 @@ export default function VentanillaDashboard() {
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-sm text-gray-600">Enviadas a Técnico</span>
                         </div>
-                        <p className="text-4xl font-bold text-[#10B981]">0</p>
+                        <p className="text-4xl font-bold text-[#10B981]">{requestsToTecnico.length}</p>
                     </div>
                 </div>
 
