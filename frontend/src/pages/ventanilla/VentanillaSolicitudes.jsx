@@ -13,6 +13,8 @@ export default function VentanillaSolicitudes() {
     const [requests, setRequests] = useState([]);
     const [filterTipo, setFilterTipo] = useState('');
     const [filterEstado, setFilterEstado] = useState('');
+    const [appliedFilterTipo, setAppliedFilterTipo] = useState('');
+    const [appliedFilterEstado, setAppliedFilterEstado] = useState('');
     const [activeCard, setActiveCard] = useState('all'); // 'all', 'pendientes', 'aprobadas', 'devueltas'
 
     // Cargar solicitudes al montar el componente
@@ -79,23 +81,38 @@ export default function VentanillaSolicitudes() {
             );
         }
 
-        // Filtro por tipo
-        if (filterTipo) {
-            filtered = filtered.filter(r => r.tipo_servicio && r.tipo_servicio.toLowerCase().includes(filterTipo.toLowerCase()));
+        // Filtro por tipo (solo se aplica después de hacer clic en Filtrar)
+        if (appliedFilterTipo) {
+            filtered = filtered.filter(r => r.tipo_servicio && r.tipo_servicio.toLowerCase().includes(appliedFilterTipo.toLowerCase()));
         }
 
-        // Filtro por estado
-        if (filterEstado) {
-            filtered = filtered.filter(r => r.estado_actual && r.estado_actual.toLowerCase() === filterEstado.toLowerCase());
+        // Filtro por estado (solo se aplica después de hacer clic en Filtrar)
+        if (appliedFilterEstado) {
+            filtered = filtered.filter(r => r.estado_actual && r.estado_actual.toLowerCase() === appliedFilterEstado.toLowerCase());
         }
 
         return filtered;
-    }, [activeCard, filterTipo, filterEstado, requests]);
+    }, [activeCard, appliedFilterTipo, appliedFilterEstado, requests]);
 
     // Manejar click en card
     const handleCardClick = (cardType) => {
         setActiveCard(cardType);
-        setFilterEstado(''); // Limpiar filtro de estado cuando se clickea una card
+        setAppliedFilterEstado(''); // Limpiar filtro aplicado de estado cuando se clickea una card
+    };
+
+    // Manejar click en botón Filtrar
+    const handleFilter = () => {
+        setAppliedFilterTipo(filterTipo);
+        setAppliedFilterEstado(filterEstado);
+    };
+
+    // Manejar click en botón Limpiar
+    const handleClear = () => {
+        setActiveCard('all');
+        setFilterTipo('');
+        setFilterEstado('');
+        setAppliedFilterTipo('');
+        setAppliedFilterEstado('');
     };
 
     return (
@@ -236,13 +253,16 @@ export default function VentanillaSolicitudes() {
                         </select>
                     </div>
 
-                    {(activeCard !== 'all' || filterTipo || filterEstado) && (
+                    <button
+                        onClick={handleFilter}
+                        className="px-8 py-3 bg-[#085297] text-white rounded-lg hover:bg-[#064073] transition-colors font-medium"
+                    >
+                        Filtrar
+                    </button>
+
+                    {(activeCard !== 'all' || appliedFilterTipo || appliedFilterEstado) && (
                         <button
-                            onClick={() => {
-                                setActiveCard('all');
-                                setFilterTipo('');
-                                setFilterEstado('');
-                            }}
+                            onClick={handleClear}
                             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                         >
                             Limpiar
