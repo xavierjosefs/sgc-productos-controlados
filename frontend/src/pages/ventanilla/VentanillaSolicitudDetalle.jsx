@@ -31,8 +31,12 @@ const VentanillaSolicitudDetalle = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showFormDataModal, setShowFormDataModal] = useState(false);
     const [successType, setSuccessType] = useState(''); // 'devuelta' o 'aprobada'
+    const [hasError, setHasError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
     
     const [validating, setValidating] = useState(false);
+    
 
     // Cargar detalle de solicitud
     const fetchDetail = async () => {
@@ -129,7 +133,9 @@ const VentanillaSolicitudDetalle = () => {
             setSuccessType('devuelta');
             setShowSuccessModal(true);
         } catch (err) {
-            alert(err.message);
+            setHasError(true);
+            setErrorMessage(err.message);
+
             setValidating(false);
             setShowRejectModal(false);
         }
@@ -143,7 +149,9 @@ const VentanillaSolicitudDetalle = () => {
             setShowApproveModal(false);
             navigate('/ventanilla');
         } catch (err) {
-            alert(err.message);
+            setHasError(true);
+            setErrorMessage(err.message);
+
             setValidating(false);
             setShowApproveModal(false);
         }
@@ -168,7 +176,8 @@ const VentanillaSolicitudDetalle = () => {
     // Manejar Click en Devolver
     const handleRejectClick = () => {
         if (isAlreadyApproved) {
-            alert("No se puede devolver una solicitud que ya fue aprobada y está en evaluación técnica o en etapas posteriores.");
+            setHasError(true);
+            setErrorMessage("No se puede devolver una solicitud que ya fue aprobada y está en evaluación técnica o en etapas posteriores.");
             return;
         }
         
@@ -180,16 +189,19 @@ const VentanillaSolicitudDetalle = () => {
         
         if (!allFieldsValidated) {
             setShowValidationErrors(true);
-            alert("Debes validar todos los requisitos (Formulario y Documentos) antes de devolver la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes validar todos los requisitos (Formulario y Documentos) antes de devolver la solicitud.");
             return;
         }
         
         if (!hasAnyRejection) {
-            alert("Debes marcar al menos un requisito como 'No Cumple' para devolver la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes marcar al menos un requisito como 'No Cumple' para devolver la solicitud.");
             return;
         }
         if (!comments.trim()) {
-            alert("Debes ingresar los comentarios explicando por qué no cumple.");
+            setHasError(true);
+            setErrorMessage("Debes ingresar los comentarios explicando por qué no cumple.");
             return;
         }
         setShowRejectModal(true);
@@ -205,7 +217,8 @@ const VentanillaSolicitudDetalle = () => {
         
         if (!allFieldsValidated) {
             setShowValidationErrors(true);
-            alert("Debes validar todos los requisitos (Formulario y Documentos) antes de aprobar la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes validar todos los requisitos (Formulario y Documentos) antes de aprobar la solicitud.");
             return;
         }
         
@@ -214,7 +227,8 @@ const VentanillaSolicitudDetalle = () => {
         const formularioApproved = formularioValidation === true;
         
         if (!allDocsApproved || !formularioApproved) {
-            alert("Todos los documentos y el formulario deben estar marcados como 'Sí Cumple' para aprobar la solicitud.");
+            setHasError(true);
+            setErrorMessage("Todos los documentos y el formulario deben estar marcados como 'Sí Cumple' para aprobar la solicitud.");
             return;
         }
         setShowApproveModal(true);
@@ -496,6 +510,12 @@ const VentanillaSolicitudDetalle = () => {
                             Aprobar
                         </button>
                     </div>
+                    {hasError && (
+                        <span className="text-red-600 text-sm font-medium mb-4 inline-block mt-5">
+                            {errorMessage}
+                        </span>
+                    )}
+
                 </div>
             </div>
 
