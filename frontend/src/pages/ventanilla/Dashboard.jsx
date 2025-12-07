@@ -14,6 +14,10 @@ export default function VentanillaDashboard() {
     const navigate = useNavigate();
     const { getVentanillaRequests, loading, error } = useRequestsAPI();
     const [requests, setRequests] = useState([]);
+    const [filteredRequests, setFilteredRequests] = useState([]);
+    const [filterTipo, setFilterTipo] = useState('');
+    const [filterEstado, setFilterEstado] = useState('');
+    const [activeCard, setActiveCard] = useState('all'); // 'all', 'pendientes', 'aprobadas', 'devueltas'
 
     // Cargar solicitudes al montar el componente
     useEffect(() => {
@@ -22,6 +26,7 @@ export default function VentanillaDashboard() {
                 const response = await getVentanillaRequests();
                 if (response.ok) {
                     setRequests(response.requests || []);
+                    setFilteredRequests(response.requests || []);
                 }
             } catch (err) {
                 console.error('Error al cargar solicitudes:', err);
@@ -42,43 +47,136 @@ export default function VentanillaDashboard() {
         });
     };
 
+    // Calcular contadores
+    const pendientesCount = requests.filter(r => r.estado_actual === 'pendiente' || r.estado_actual === 'Pendiente').length;
+    const aprobadasCount = requests.filter(r => r.estado_actual === 'aprobado' || r.estado_actual === 'Aprobado').length;
+    const devueltasCount = requests.filter(r => r.estado_actual === 'devuelto' || r.estado_actual === 'Devuelto').length;
+
+    // Filtrar solicitudes
+    const handleFilter = () => {
+        let filtered = [...requests];
+
+        // Filtro por card clickeada
+        if (activeCard === 'pendientes') {
+            filtered = filtered.filter(r => r.estado_actual === 'pendiente' || r.estado_actual === 'Pendiente');
+        } else if (activeCard === 'aprobadas') {
+            filtered = filtered.filter(r => r.estado_actual === 'aprobado' || r.estado_actual === 'Aprobado');
+        } else if (activeCard === 'devueltas') {
+            filtered = filtered.filter(r => r.estado_actual === 'devuelto' || r.estado_actual === 'Devuelto');
+        }
+
+        // Filtro por tipo
+        if (filterTipo) {
+            filtered = filtered.filter(r => r.tipo_servicio && r.tipo_servicio.toLowerCase().includes(filterTipo.toLowerCase()));
+        }
+
+        // Filtro por estado
+        if (filterEstado) {
+            filtered = filtered.filter(r => r.estado_actual && r.estado_actual.toLowerCase() === filterEstado.toLowerCase());
+        }
+
+        setFilteredRequests(filtered);
+    };
+
+    // Aplicar filtros cuando cambien
+    useEffect(() => {
+        handleFilter();
+    }, [activeCard, filterTipo, filterEstado, requests]);
+
+    // Manejar click en card
+    const handleCardClick = (cardType) => {
+        setActiveCard(cardType);
+        setFilterEstado(''); // Limpiar filtro de estado cuando se clickea una card
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <ClientTopbar />
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[#4A8BDF]">Panel de Ventanilla</h1>
-                        <p className="text-gray-600 mt-1">Bienvenido, {user?.full_name || 'Ventanilla'}</p>
-                    </div>
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-[#4A8BDF]">Gestión de Solicitudes</h1>
                 </div>
 
-                {/* Summary Cards */}
+                {/* Summary Cards - Clickeables */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    {/* Card Pendientes */}
+                    <div
+                        onClick={() => handleCardClick('pendientes')}
+                        className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
+                            activeCard === 'pendientes' ? 'border-[#4A8BDF] shadow-lg' : 'border-gray-200'
+                        }`}
+                    >
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-sm text-gray-600">Solicitudes Recibidas Hoy</span>
+                            <span className="text-sm font-medium text-gray-700">Pendientes</span>
+                            <svg
+                                className="w-5 h-5 text-[#4A8BDF]"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
                         </div>
-                        <p className="text-4xl font-bold text-[#4A8BDF]">
-                            {requests.filter(r => {
-                                const today = new Date().toDateString();
-                                return new Date(r.fecha_creacion).toDateString() === today;
-                            }).length}
-                        </p>
+                        <p className="text-5xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+
+                    {/* Card Aprobadas */}
+                    <div
+                        onClick={() => handleCardClick('aprobadas')}
+                        className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
+                            activeCard === 'aprobadas' ? 'border-green-500 shadow-lg' : 'border-gray-200'
+                        }`}
+                    >
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-sm text-gray-600">Total Solicitudes Enviadas</span>
+                            <span className="text-sm font-medium text-gray-700">Aprobadas</span>
+                            <svg
+                                className="w-5 h-5 text-green-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
                         </div>
-                        <p className="text-4xl font-bold text-[#F59E0B]">{requests.length}</p>
+                        <p className="text-5xl font-bold text-green-600">{aprobadasCount}</p>
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+
+                    {/* Card Devueltas */}
+                    <div
+                        onClick={() => handleCardClick('devueltas')}
+                        className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
+                            activeCard === 'devueltas' ? 'border-orange-500 shadow-lg' : 'border-gray-200'
+                        }`}
+                    >
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-sm text-gray-600">Enviadas a Técnico</span>
+                            <span className="text-sm font-medium text-gray-700">Devueltas</span>
+                            <svg
+                                className="w-5 h-5 text-orange-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
                         </div>
-                        <p className="text-4xl font-bold text-[#10B981]">0</p>
+                        <p className="text-5xl font-bold text-orange-600">{devueltasCount}</p>
                     </div>
                 </div>
 
@@ -91,10 +189,74 @@ export default function VentanillaDashboard() {
                     </div>
                 )}
 
-                {/* Tabla de solicitudes recientes */}
+                {/* Filtros */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+                    <div className="flex gap-4 items-end">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Tipo
+                            </label>
+                            <select
+                                value={filterTipo}
+                                onChange={(e) => setFilterTipo(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                            >
+                                <option value="">Todos</option>
+                                <option value="Clase A">Clase A</option>
+                                <option value="Clase B">Clase B</option>
+                                <option value="Capa C">Capa C</option>
+                                <option value="Importación">Importación</option>
+                            </select>
+                        </div>
+
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Estado
+                            </label>
+                            <select
+                                value={filterEstado}
+                                onChange={(e) => setFilterEstado(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+                            >
+                                <option value="">Todos</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="aprobado">Aprobado</option>
+                                <option value="devuelto">Devuelto</option>
+                                <option value="validado">Validado</option>
+                            </select>
+                        </div>
+
+                        <button
+                            onClick={handleFilter}
+                            className="px-8 py-3 bg-[#085297] text-white rounded-lg hover:bg-[#064175] transition-colors font-medium"
+                        >
+                            Filtrar
+                        </button>
+
+                        {(activeCard !== 'all' || filterTipo || filterEstado) && (
+                            <button
+                                onClick={() => {
+                                    setActiveCard('all');
+                                    setFilterTipo('');
+                                    setFilterEstado('');
+                                }}
+                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                            >
+                                Limpiar
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Tabla de solicitudes */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800">Solicitudes Enviadas</h2>
+                        <h2 className="text-lg font-semibold text-gray-800">
+                            {activeCard === 'pendientes' ? 'Solicitudes Pendientes' :
+                             activeCard === 'aprobadas' ? 'Solicitudes Aprobadas' :
+                             activeCard === 'devueltas' ? 'Solicitudes Devueltas' :
+                             'Todas las Solicitudes'}
+                        </h2>
                     </div>
 
                     {loading ? (
@@ -105,26 +267,29 @@ export default function VentanillaDashboard() {
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-[#4A8BDF]">
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">Solicitante</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">FECHA CREACIÓN</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">SOLICITANTE</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">TIPO DE SERVICIO</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold text-sm">ESTADO</th>
+                                    <th className="px-6 py-4 text-center text-white font-semibold text-sm">ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {requests.length === 0 ? (
+                                {filteredRequests.length === 0 ? (
                                     <tr>
                                         <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                                            No hay solicitudes enviadas
+                                            No hay solicitudes que mostrar
                                         </td>
                                     </tr>
                                 ) : (
-                                    requests.map((request) => (
+                                    filteredRequests.map((request) => (
                                         <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
                                             <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                                                 #{request.id}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                                {formatDate(request.fecha_creacion)}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">
                                                 {request.nombre_cliente}
@@ -132,18 +297,15 @@ export default function VentanillaDashboard() {
                                             <td className="px-6 py-4 text-sm text-gray-700">
                                                 {request.tipo_servicio}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
-                                                {formatDate(request.fecha_creacion)}
-                                            </td>
                                             <td className="px-6 py-4">
                                                 <BadgeEstado estado={request.estado_actual} />
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 text-center">
                                                 <button
                                                     onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
                                                     className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
                                                 >
-                                                    Ver Detalle
+                                                    {request.estado_actual === 'pendiente' || request.estado_actual === 'Pendiente' ? 'Validar' : 'Ver Detalle'}
                                                 </button>
                                             </td>
                                         </tr>
