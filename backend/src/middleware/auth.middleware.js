@@ -80,7 +80,7 @@ export const tecnicoMiddleware = (req, res, next) => {
   }
 }
 
-export const directorupcMiddleware = () => {
+export const directorupcMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {

@@ -6,7 +6,8 @@ import serviceRoutes from "./service.routes.js";
 import adminRoutes from "./admin.routes.js";
 import ventanillaRoutes from "./ventanilla.routes.js";
 import tecnicoRoutes from "./tecnico.routes.js"
-import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware, tecnicoMiddleware } from "../middleware/auth.middleware.js";
+import directorUPCRoutes from "./directorUPC.routes.js"
+import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware, tecnicoMiddleware, directorupcMiddleware } from "../middleware/auth.middleware.js";
 
 
 const router = express.Router();
@@ -17,7 +18,8 @@ router.use("/requests", authMiddleware, requestRoutes);
 router.use("/service-types", authMiddleware, serviceRoutes);
 router.use("/admin", adminOnlyMiddleware, adminRoutes);
 router.use("/ventanilla", ventanillaMiddleware, ventanillaRoutes);
-router.use("/tecnico-upc",tecnicoMiddleware, tecnicoRoutes)
+router.use("/tecnico-upc",tecnicoMiddleware, tecnicoRoutes);
+router.use("/director-upc", directorupcMiddleware, directorUPCRoutes);
 
 
 export default router;
