@@ -1,22 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function AdminEmpleadoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Mock: Simular carga de datos del empleado
-  const mockEmpleados = {
-    1: { id: 1, cedula: '001-1234567-8', nombre: 'Juan Pérez García', email: 'juan.perez@example.com', rol: 'ventanilla', activo: true },
-    2: { id: 2, cedula: '001-9876543-2', nombre: 'María López Hernández', email: 'maria.lopez@example.com', rol: 'tecnico_controlados', activo: true },
-    3: { id: 3, cedula: '001-5555555-5', nombre: 'Carlos Rodríguez Sánchez', email: 'carlos.rodriguez@example.com', rol: 'direccion', activo: false },
-  };
-
-  const mockEmpleado = mockEmpleados[id] || mockEmpleados[1];
-  
-  const [rol, setRol] = useState(mockEmpleado.rol);
-  const [activo, setActivo] = useState(mockEmpleado.activo);
+  const [employee, setEmployee] = useState(null);
+  const [rol, setRol] = useState('');
+  const [activo, setActivo] = useState(true);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const response = await axios.get(`${apiUrl}/api/admin/users/${id}`, {
+                withCredentials: true
+            });
+            const userData = response.data.user;
+            setEmployee(userData);
+            setRol(userData.role); 
+            setActivo(userData.is_active);
+
+        } catch (error) {
+            console.error("Error fetching user:", error);
+            alert("Error cargando usuario");
+            navigate('/admin/empleados');
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchUser();
+  }, [id, navigate]);
 
   const rolesDisponibles = [
     { value: 'ventanilla', label: 'Ventanilla' },
@@ -27,7 +45,7 @@ export default function AdminEmpleadoEditar() {
     { value: 'admin', label: 'Administrador' },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = {};
@@ -40,9 +58,38 @@ export default function AdminEmpleadoEditar() {
       return;
     }
     
-    alert('Empleado actualizado exitosamente (mock)');
-    navigate('/admin/empleados');
+    setIsSubmitting(true);
+    try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        
+        // 1. Update Role
+        if (rol !== employee.role) {
+            await axios.put(`${apiUrl}/api/admin/change-role`, {
+                cedula: id,
+                newRole: rol
+            }, { withCredentials: true });
+        }
+
+        // 2. Update Status
+        if (activo !== employee.is_active) {
+             await axios.put(`${apiUrl}/api/admin/users/${id}/status`, {
+                isActive: activo
+            }, { withCredentials: true });
+        }
+        
+        alert('Empleado actualizado exitosamente');
+        navigate('/admin/empleados');
+
+    } catch (error) {
+        console.error("Error updating user:", error);
+        alert("Error al actualizar el empleado");
+    } finally {
+        setIsSubmitting(false);
+    }
   };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Cargando datos...</div>;
+  if (!employee) return null;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -69,7 +116,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.cedula}
+              value={employee.cedula}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -82,7 +129,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.nombre}
+              value={employee.full_name}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -95,7 +142,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="email"
-              value={mockEmpleado.email}
+              value={employee.email}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -165,9 +212,12 @@ export default function AdminEmpleadoEditar() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium"
+              disabled={isSubmitting}
+              className={`flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Actualizar
+              {isSubmitting ? 'Actualizando...' : 'Actualizar'}
             </button>
           </div>
         </form>
