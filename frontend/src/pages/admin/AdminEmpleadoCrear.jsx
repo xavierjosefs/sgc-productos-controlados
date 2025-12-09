@@ -1,79 +1,58 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { employeeSchema, validateWithSchema } from '../../utils/validation';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleadoCrear() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
   const [cedula, setCedula] = useState('');
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [rol, setRol] = useState('');
-  const [activo, setActivo] = useState(true);
   
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const rolesDisponibles = [
-    { value: 'ventanilla', label: 'Ventanilla' },
-    { value: 'tecnico_controlados', label: 'Técnico Controlados' },
-    { value: 'director_controlados', label: 'Director Controlados' },
-    { value: 'direccion', label: 'Dirección' },
-    { value: 'dncd', label: 'DNCD' },
-    { value: 'admin', label: 'Administrador' },
-  ];
-
-  const validateCedula = (cedula) => {
-    const cedulaRegex = /^\d{3}-\d{7}-\d{1}$/;
-    return cedulaRegex.test(cedula);
-  };
-
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const { data: rolesData, loading: loadingRoles } = useAdminData(api.getRoles);
+  const rolesDisponibles = rolesData?.roles || [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const newErrors = {};
-    if (!cedula || !validateCedula(cedula)) {
-      newErrors.cedula = 'Formato de cédula inválido (000-0000000-0)';
-    }
-    if (!nombre.trim()) {
-      newErrors.nombre = 'El nombre es requerido';
-    }
-    if (!email || !validateEmail(email)) {
-      newErrors.email = 'Formato de email inválido';
-    }
-    if (!rol) {
-      newErrors.rol = 'Debe seleccionar un rol';
-    }
+    // Validacion con zod
+    const validation = validateWithSchema(employeeSchema, {
+      cedula,
+      nombre,
+      email,
+      rol
+    });
     
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!validation.success) {
+      setErrors(validation.errors);
       return;
     }
     
     setIsSubmitting(true);
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        await axios.post(`${apiUrl}/api/admin/create-user`, {
+        await api.createUser({
             cedula,
             full_name: nombre,
             email,
             role: rol
-        }, {
-            withCredentials: true
         });
 
-        alert('Empleado creado exitosamente. Se ha enviado un correo para completar el registro.');
+        toast.success('Empleado creado exitosamente. Se ha enviado un correo para completar el registro.');
         navigate('/admin/empleados');
 
     } catch (error) {
         console.error("Error creando empleado:", error);
         const msg = error.response?.data?.error || "Error al crear el empleado";
-        alert(msg);
+        toast.error(msg);
     } finally {
         setIsSubmitting(false);
     }
@@ -181,11 +160,15 @@ export default function AdminEmpleadoCrear() {
               }`}
             >
               <option value="">Seleccione un rol</option>
-              {rolesDisponibles.map((rolOption) => (
-                <option key={rolOption.value} value={rolOption.value}>
-                  {rolOption.label}
-                </option>
-              ))}
+              {loadingRoles ? (
+                <option disabled>Cargando roles...</option>
+              ) : (
+                rolesDisponibles.map((role) => (
+                  <option key={role.name} value={role.name}>
+                    {role.name}
+                  </option>
+                ))
+              )}
             </select>
             {errors.rol && (
               <p className="text-red-500 text-sm mt-1">{errors.rol}</p>

@@ -1,44 +1,38 @@
 /**
  * AdminServicios - Catálogo de Servicios
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonTable } from '../../components/SkeletonLoaders';
 
 export default function AdminServicios() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFormulario, setTipoFormulario] = useState('');
-  const [servicios, setServicios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [tiposFormulario, setTiposFormulario] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        
-        // Fetch de servicios
-        const servicesResponse = await axios.get(`${apiUrl}/api/admin/get-services`, {
-             withCredentials: true
-        });
-        setServicios(servicesResponse.data.services || []);
-
-        // Fetch de tipos de formulario
-        const formsResponse = await axios.get(`${apiUrl}/api/admin/get-forms`, {
-             withCredentials: true
-        });
-        setTiposFormulario(formsResponse.data.forms || []);
-
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        alert("Error cargando datos");
-      } finally {
-        setLoading(false);
-      }
+  const { data, loading, error } = useAdminData(async () => {
+    const [servicesRes, formsRes] = await Promise.all([
+      api.getServices(),
+      api.getForms()
+    ]);
+    
+    return {
+      services: servicesRes.services || [],
+      forms: formsRes.forms || []
     };
-    fetchData();
-  }, []);
+  });
+
+  const servicios = data?.services || [];
+  const tiposFormulario = data?.forms || [];
+
+  if (error) {
+    toast.error(error);
+  }
 
   const filteredServicios = servicios.filter((servicio) => {
     const nombre = servicio.nombre_servicio || '';
@@ -54,7 +48,18 @@ export default function AdminServicios() {
     return matchesSearch && matchesTipo;
   });
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando servicios...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Catálogo de Servicios</h1>
+        <SkeletonTable 
+          rows={6} 
+          columns={4}
+          headers={['Código', 'Nombre', 'Precio', 'Tipo Formulario']}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">

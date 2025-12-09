@@ -1,63 +1,56 @@
 /**
- * AdminSolicitudes - Gestión de solicitudes con filtros
+ * AdminSolicitudes - Gestion de solicitudes con filtros
  */
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonStatsGrid, SkeletonTable } from '../../components/SkeletonLoaders';
 
 export default function AdminSolicitudes() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
   const [filterTipo, setFilterTipo] = useState('todos');
   const [filterEstado, setFilterEstado] = useState('todos');
   const [sortOrder, setSortOrder] = useState('desc');
-  
-  const [solicitudes, setSolicitudes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ aprobadas: 0, devueltas: 0, pendientes: 0 });
-  
-  const [tiposServicio, setTiposServicio] = useState([]);
-  const [estadosSolicitud, setEstadosSolicitud] = useState([]);
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-        try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            
-            const response = await axios.get(`${apiUrl}/api/admin/get-all-requests`, {
-                 withCredentials: true
-            });
-            const reqs = response.data.requests || [];
-            setSolicitudes(reqs);
-
-            const counts = reqs.reduce((acc, curr) => {
-                const status = (curr.estado || '').toLowerCase();
-                if (status.includes('aprobada')) acc.aprobadas++;
-                else if (status.includes('devuelta')) acc.devueltas++;
-                else if (status.includes('pendiente')) acc.pendientes++;
-                return acc;
-            }, { aprobadas: 0, devueltas: 0, pendientes: 0 });
-
-            setStats(counts);
-
-            const servicesResponse = await axios.get(`${apiUrl}/api/admin/get-services`, {
-                withCredentials: true
-            });
-            setTiposServicio(servicesResponse.data.services || []);
-
-            const statusesResponse = await axios.get(`${apiUrl}/api/admin/get-request-statuses`, {
-                withCredentials: true
-            });
-            setEstadosSolicitud(statusesResponse.data.statuses || []);
-
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            alert("Error cargando datos de solicitudes");
-        } finally {
-            setLoading(false);
-        }
+  // Fetch en paralelo de solicitudes, servicios y estados 
+  const { data, loading, error } = useAdminData(async () => {
+    const [requestsRes, servicesRes, statusesRes] = await Promise.all([
+      api.getAllRequests(),
+      api.getServices(),
+      api.getRequestStatuses()
+    ]);
+    
+    return {
+      requests: requestsRes.requests || [],
+      services: servicesRes.services || [],
+      statuses: statusesRes.statuses || []
     };
-    fetchRequests();
-  }, []);
+  });
+
+  const solicitudes = data?.requests || [];
+  const tiposServicio = data?.services || [];
+  const estadosSolicitud = data?.statuses || [];
+
+  // Estadisticas (conteo de solicitudes por estado... etc)
+  const stats = useMemo(() => {
+    const counts = solicitudes.reduce((acc, curr) => {
+      const status = (curr.estado || '').toLowerCase();
+      if (status.includes('aprobada')) acc.aprobadas++;
+      else if (status.includes('devuelta')) acc.devueltas++;
+      else if (status.includes('pendiente')) acc.pendientes++;
+      return acc;
+    }, { aprobadas: 0, devueltas: 0, pendientes: 0 });
+    return counts;
+  }, [solicitudes]);
+
+  // Manejo de errores
+  if (error) {
+    toast.error(error);
+  }
 
   const statsCards = [
     { label: 'Pendientes', value: stats.pendientes, color: 'text-gray-600' },
@@ -81,6 +74,20 @@ export default function AdminSolicitudes() {
       const dateB = new Date(b.fecha_creacion);
       return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
   });
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-6">Gestión de Solicitudes</h1>
+        <SkeletonStatsGrid cards={3} labels={['Pendientes', 'Aprobadas', 'Devueltas']} />
+        <SkeletonTable 
+          rows={8} 
+          columns={6}
+          headers={['ID', 'Solicitante', 'Servicio', 'Fecha', 'Estado', 'Acciones']}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">

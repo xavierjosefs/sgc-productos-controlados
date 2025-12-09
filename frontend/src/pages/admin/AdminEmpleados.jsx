@@ -1,46 +1,37 @@
 /**
  * AdminEmpleados - Tabla de empleados con filtros
  */
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonStatsGrid, SkeletonTable } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleados() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
-  const [empleados, setEmpleados] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, activos: 0, inactivos: 0 });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const response = await axios.get(`${apiUrl}/api/admin/get-users`, {
-             withCredentials: true
-        });
-        
-        const usersData = response.data.users || [];
-        
-        const validEmployees = usersData.filter(u => (u.role || '').toLowerCase() !== 'cliente');
+  const { data: usersData, loading, error } = useAdminData(api.getUsers);
 
-        setEmpleados(validEmployees);
-        
-        const total = validEmployees.length;
-        const activos = validEmployees.filter(u => u.is_active).length;
-        const inactivos = total - activos;
-        setStats({ total, activos, inactivos });
-        
-      } catch (error) {
-        console.error("Error cargando empleados:", error);
-        alert("Error cargando empleados");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
+  const empleados = useMemo(() => {
+    if (!usersData?.users) return [];
+    return usersData.users.filter(u => (u.role || '').toLowerCase() !== 'cliente');
+  }, [usersData]);
+
+  const stats = useMemo(() => {
+    const total = empleados.length;
+    const activos = empleados.filter(u => u.is_active).length;
+    const inactivos = total - activos;
+    return { total, activos, inactivos };
+  }, [empleados]);
+
+  if (error) {
+    toast.error(error);
+  }
 
   const statsCards = [
     { label: 'Total Empleados', value: stats.total, color: 'text-[#4A8BDF]' },
@@ -65,7 +56,19 @@ export default function AdminEmpleados() {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando empleados...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Gestión de Empleados</h1>
+        <SkeletonStatsGrid cards={3} labels={['Total Empleados', 'Activos', 'Inactivos']} />
+        <SkeletonTable 
+          rows={5} 
+          columns={5}
+          headers={['Cédula', 'Nombre', 'Email', 'Rol', 'Estado']}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">

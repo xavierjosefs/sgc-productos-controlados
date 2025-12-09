@@ -1,38 +1,25 @@
 /**
- * AdminDashboard - Panel principal con estadísticas
+ * AdminDashboard - Panel principal con estadisticas
  */
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonDashboard } from '../../components/SkeletonLoaders';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const api = useAdminAPI();
+  
+  const { data: stats, loading, error } = useAdminData(api.getStats);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const response = await axios.get(`${apiUrl}/api/admin/stats`, {
-             withCredentials: true
-        });
-        console.log("Stats received from:", `${apiUrl}/api/admin/stats`);
-        console.log("Stats data:", response.data);
-        setStats(response.data);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        alert("Error cargando estadísticas");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  // Manejo de errores
+  if (error) {
+    toast.error(error);
+  }
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando estadísticas...</div>;
-  if (!stats) return <div className="p-8 text-center text-red-500">No se pudieron cargar los datos.</div>;
+  if (loading) return <SkeletonDashboard />;
+  if (!stats || error) return <div className="p-8 text-center text-red-500">No se pudieron cargar los datos.</div>;
 
   // Debug por si algo sale mal
   if (!stats.solicitudes || !stats.empleados || !stats.servicios) {

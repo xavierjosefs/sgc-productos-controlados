@@ -199,3 +199,50 @@ export const getServiceByCodeController = async (req, res) => {
     res.status(500).json({ error: "Error obteniendo servicio" });
   }
 };
+
+// Endpoint para obtener todos los roles
+export const getRolesController = async (req, res) => {
+  try {
+    const { getRoles } = await import("../models/admin.client.js");
+    const roles = await getRoles();
+    res.json({ roles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo roles" });
+  }
+};
+
+// Endpoint para actualizar usuario (rol y/o estado)
+export const updateUserController = async (req, res) => {
+  try {
+    const { cedula } = req.params;
+    const { role, isActive } = req.body;
+
+    const updates = {};
+    if (role !== undefined) updates.role = role;
+    if (isActive !== undefined) updates.isActive = isActive;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No se proporcionaron campos para actualizar" });
+    }
+
+    const { updateUser } = await import("../models/admin.client.js");
+    const updatedUser = await updateUser(cedula, updates);
+
+    res.json({
+      message: "Usuario actualizado exitosamente",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "Usuario no encontrado") {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message === "Rol no válido") {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Error actualizando usuario" });
+  }
+};

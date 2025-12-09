@@ -278,3 +278,89 @@ export const setUserStatus = async (cedula, isActive) => {
     throw error;
   }
 };
+
+// Obtener todos los roles
+export const getRoles = async () => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name FROM roles ORDER BY name`
+    );
+    return result.rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Actualizar usuario/empleados
+export const updateUser = async (cedula, updates) => {
+  try {
+    const user = await findUserByCedula(cedula);
+    if (!user) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    const updateFields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (updates.role !== undefined) {
+      const roleResult = await pool.query(
+        `SELECT id FROM roles WHERE name = $1`,
+        [updates.role]
+      );
+
+      if (roleResult.rowCount === 0) {
+        throw new Error("Rol no válido");
+      }
+
+      updateFields.push(`role_id = $${paramIndex}`);
+      values.push(roleResult.rows[0].id);
+      paramIndex++;
+    }
+
+    if (updates.isActive !== undefined) {
+      updateFields.push(`is_active = $${paramIndex}`);
+      values.push(updates.isActive);
+      paramIndex++;
+    }
+
+    // Si no hay actualizaciones, devolver el usuario actual
+    if (updateFields.length === 0) {
+      return await getAdminUserByCedula(cedula);
+    }
+
+    // Agregar cedula a values
+    values.push(cedula);
+
+    // Ejecutar actualizacion
+    const query = `
+      UPDATE users 
+      SET ${updateFields.join(', ')}
+      WHERE cedula = $${paramIndex}
+      RETURNING cedula, full_name, email, is_active, role_id
+    `;
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    // Obtener nombre del rol
+    const updatedUser = result.rows[0];
+    const roleResult = await pool.query(
+      `SELECT name FROM roles WHERE id = $1`,
+      [updatedUser.role_id]
+    );
+
+    return {
+      cedula: updatedUser.cedula,
+      full_name: updatedUser.full_name,
+      email: updatedUser.email,
+      is_active: updatedUser.is_active,
+      role: roleResult.rows[0]?.name || null
+    };
+  } catch (error) {
+    throw error;
+  }
+};

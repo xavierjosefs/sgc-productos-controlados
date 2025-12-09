@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { serviceSchema, validateWithSchema } from '../../utils/validation';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminServicioCrear() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
   const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
@@ -16,28 +21,12 @@ export default function AdminServicioCrear() {
   ]);
   const [docsRenovacion, setDocsRenovacion] = useState([]);
   const [docsRoboPerdida, setDocsRoboPerdida] = useState([]);
-  
-  const [tiposFormulario, setTiposFormulario] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchFormTypes = async () => {
-        try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await axios.get(`${apiUrl}/api/admin/get-forms`, {
-                 withCredentials: true
-            });
-            setTiposFormulario(response.data.forms || []);
-        } catch (error) {
-            console.error("Error fetching form types:", error);
-            alert("Error cargando tipos de formulario");
-        } finally {
-            setLoading(false);
-        }
-    };
-    fetchFormTypes();
-  }, []);
+  const [errors, setErrors] = useState({});
+
+  // Fetch form types
+  const { data: formsData, loading } = useAdminData(api.getForms);
+  const tiposFormulario = formsData?.forms || [];
 
   const agregarDocumento = (tipo) => {
     const nuevoDoc = { nombre: '', obligatorio: true };
@@ -99,34 +88,29 @@ export default function AdminServicioCrear() {
     }
 
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const documentos_requeridos = {
+        const documentosRequeridos = {
             nueva: docsNuevaSolicitud.filter(d => d.nombre.trim()),
             renovacion: docsRenovacion.filter(d => d.nombre.trim()),
             robo: docsRoboPerdida.filter(d => d.nombre.trim())
         };
 
-        const payload = {
+        await api.createService({
             codigo_servicio: codigo,
             nombre_servicio: nombre,
             precio: precioTipo === 'conPrecio' ? parseFloat(precio) : 0,
-            documentos_requeridos,
+            documentos_requeridos: documentosRequeridos,
             formulario: tipoFormulario
-        };
-
-        await axios.post(`${apiUrl}/api/admin/create-service`, payload, {
-            withCredentials: true
         });
         
-        alert('Servicio creado exitosamente');
+        toast.success('Servicio creado exitosamente');
         navigate('/admin/servicios');
 
     } catch (error) {
         console.error("Error creating service:", error);
         if (error.response && error.response.data && error.response.data.error) {
-             alert(`Error: ${error.response.data.error}`);
+             toast.error(`Error: ${error.response.data.error}`);
         } else {
-             alert("Error creando el servicio");
+             toast.error("Error creando el servicio");
         }
     }
   };

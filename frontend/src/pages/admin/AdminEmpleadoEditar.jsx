@@ -1,49 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog.jsx';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleadoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   
-  const [employee, setEmployee] = useState(null);
   const [rol, setRol] = useState('');
   const [activo, setActivo] = useState(true);
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: userData, loading, error } = useAdminData(() => api.getUserByCedula(id), [id]);
+  const employee = userData?.user;
+
+  const { data: rolesData, loading: loadingRoles } = useAdminData(api.getRoles);
+  const rolesDisponibles = rolesData?.roles || [];
+
   useEffect(() => {
-    const fetchUser = async () => {
-        try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await axios.get(`${apiUrl}/api/admin/users/${id}`, {
-                withCredentials: true
-            });
-            const userData = response.data.user;
-            setEmployee(userData);
-            setRol(userData.role); 
-            setActivo(userData.is_active);
+    if (employee) {
+      setRol(employee.role);
+      setActivo(employee.is_active);
+    }
+  }, [employee]);
 
-        } catch (error) {
-            console.error("Error fetching user:", error);
-            alert("Error cargando usuario");
-            navigate('/admin/empleados');
-        } finally {
-            setLoading(false);
-        }
-    };
-    fetchUser();
-  }, [id, navigate]);
-
-  const rolesDisponibles = [
-    { value: 'ventanilla', label: 'Ventanilla' },
-    { value: 'tecnico_controlados', label: 'Técnico Controlados' },
-    { value: 'director_controlados', label: 'Director Controlados' },
-    { value: 'direccion', label: 'Dirección' },
-    { value: 'dncd', label: 'DNCD' },
-    { value: 'admin', label: 'Administrador' },
-  ];
+  if (error) {
+    toast.error(error);
+    navigate('/admin/empleados');
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,42 +48,50 @@ export default function AdminEmpleadoEditar() {
       setErrors(newErrors);
       return;
     }
+
+    if (employee && activo !== employee.is_active && !activo) {
+      const confirmed = await confirm({
+        title: '¿Desactivar usuario?',
+        message: 'El usuario no podrá acceder al sistema. ¿Estás seguro?',
+        confirmText: 'Desactivar',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
+
+      if (!confirmed) {
+        return;
+      }
+    }
     
     setIsSubmitting(true);
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        
-        // 1. Update Role
-        if (rol !== employee.role) {
-            await axios.put(`${apiUrl}/api/admin/change-role`, {
-                cedula: id,
-                newRole: rol
-            }, { withCredentials: true });
-        }
+        const updates = {};
+        if (rol !== employee.role) updates.role = rol;
+        if (activo !== employee.is_active) updates.isActive = activo;
 
-        // 2. Update Status
-        if (activo !== employee.is_active) {
-             await axios.put(`${apiUrl}/api/admin/users/${id}/status`, {
-                isActive: activo
-            }, { withCredentials: true });
+        if (Object.keys(updates).length > 0) {
+          await api.updateUser(id, updates);
         }
         
-        alert('Empleado actualizado exitosamente');
+        toast.success('Empleado actualizado exitosamente');
         navigate('/admin/empleados');
 
     } catch (error) {
         console.error("Error updating user:", error);
-        alert("Error al actualizar el empleado");
+        const msg = error.response?.data?.error || "Error al actualizar el empleado";
+        toast.error(msg);
     } finally {
         setIsSubmitting(false);
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando datos...</div>;
+  if (loading) return <SkeletonForm fields={5} />;
   if (!employee) return null;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <>
+      <ConfirmDialog />
+      <div className="max-w-4xl mx-auto">
       <button 
         onClick={() => navigate('/admin/empleados')}
         className="flex items-center text-[#4A8BDF] mb-6 hover:text-[#3875C8] transition-colors"
@@ -161,11 +160,15 @@ export default function AdminEmpleadoEditar() {
               }`}
             >
               <option value="">Seleccione un rol</option>
-              {rolesDisponibles.map((rolOption) => (
-                <option key={rolOption.value} value={rolOption.value}>
-                  {rolOption.label}
-                </option>
-              ))}
+              {loadingRoles ? (
+                <option disabled>Cargando roles...</option>
+              ) : (
+                rolesDisponibles.map((role) => (
+                  <option key={role.name} value={role.name}>
+                    {role.name}
+                  </option>
+                ))
+              )}
             </select>
             {errors.rol && (
               <p className="text-red-500 text-sm mt-1">{errors.rol}</p>
@@ -223,5 +226,6 @@ export default function AdminEmpleadoEditar() {
         </form>
       </div>
     </div>
+    </>
   );
 }

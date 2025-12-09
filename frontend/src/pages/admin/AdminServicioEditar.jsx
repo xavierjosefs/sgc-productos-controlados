@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAdminAPI } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminServicioEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
   const [service, setService] = useState(null);
   
@@ -25,13 +29,14 @@ export default function AdminServicioEditar() {
   useEffect(() => {
     const fetchData = async () => {
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const [formsRes, serviceRes] = await Promise.all([
+              api.getForms(),
+              api.getServiceByCode(id)
+            ]);
             
-            const formsResponse = await axios.get(`${apiUrl}/api/admin/get-forms`, { withCredentials: true });
-            setTiposFormulario(formsResponse.data.forms || []);
-
-            const serviceResponse = await axios.get(`${apiUrl}/api/admin/services/${id}`, { withCredentials: true });
-            const s = serviceResponse.data.service;
+            setTiposFormulario(formsRes.forms || []);
+            
+            const s = serviceRes.service;
             
             setService(s);
             setNombre(s.nombre_servicio);
@@ -40,13 +45,21 @@ export default function AdminServicioEditar() {
             setPrecio(s.precio > 0 ? s.precio.toString() : '');
             
             const docs = s.documentos_requeridos || {};
-            setDocsNuevaSolicitud(docs.nueva || []);
-            setDocsRenovacion(docs.renovacion || []);
-            setDocsRoboPerdida(docs.robo || []);
+            const mapDocs = (docArray) => {
+              if (!docArray) return [];
+              return docArray.map(doc => ({
+                nombre: doc.codigo || doc.nombre || '',
+                obligatorio: doc.obligatorio || false
+              }));
+            };
+            
+            setDocsNuevaSolicitud(mapDocs(docs.nueva));
+            setDocsRenovacion(mapDocs(docs.renovacion));
+            setDocsRoboPerdida(mapDocs(docs.robo || docs.perdida));
 
         } catch (error) {
             console.error("Error fetching service:", error);
-            alert("Error cargando servicio");
+            toast.error("Error cargando servicio");
             navigate('/admin/servicios');
         } finally {
             setLoading(false);
@@ -114,8 +127,6 @@ export default function AdminServicioEditar() {
     
     setIsSubmitting(true);
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        
         const documentos_requeridos = {
             nueva: docsNuevaSolicitud.filter(d => d.nombre.trim()),
             renovacion: docsRenovacion.filter(d => d.nombre.trim()),
@@ -133,15 +144,14 @@ export default function AdminServicioEditar() {
             payload.formulario_id = selectedForm.id;
         }
              
-        await axios.put(`${apiUrl}/api/admin/services/${service.id}`, payload, { withCredentials: true });
+        await api.updateService(service.id, payload);
 
-        
-        alert('Servicio actualizado exitosamente');
+        toast.success('Servicio actualizado exitosamente');
         navigate('/admin/servicios');
 
     } catch (error) {
         console.error("Error updating service:", error);
-         alert("Error al actualizar el servicio");
+         toast.error("Error al actualizar el servicio");
     } finally {
         setIsSubmitting(false);
     }
