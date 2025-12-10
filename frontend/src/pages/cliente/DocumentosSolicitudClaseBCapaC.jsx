@@ -75,7 +75,7 @@ const DocumentosSolicitudClaseBCapaC = () => {
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/cliente');
   };
 
   const [confirmOpen, setConfirmOpen] = useState(false);

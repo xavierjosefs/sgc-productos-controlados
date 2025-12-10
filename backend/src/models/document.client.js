@@ -27,8 +27,10 @@ export const getDocumentosBySolicitudId = async (solicitud_id) => {
 }
 
 export const sendRequestBySoliciutudId = async (solicitud_id) => {
+    // Cuando el usuario envía/reenvía la solicitud, cambia a estado Enviada (ID: 12)
+    // para que Ventanilla pueda revisarla
     const result = await pool.query(`UPDATE solicitudes
-    SET estado_id = (SELECT id FROM estados_solicitud WHERE nombre_mostrar = 'Enviada')
+    SET estado_id = 12
     WHERE id = $1`, [solicitud_id]);
 
     return result.rowCount > 0;

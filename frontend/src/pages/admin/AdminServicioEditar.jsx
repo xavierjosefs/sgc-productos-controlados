@@ -1,50 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAdminAPI } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminServicioEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
-  // Mock: Cargar datos del servicio
-  const mockServicios = {
-    1: {
-      id: 1,
-      nombre: 'Solicitud de Certificado de Inscripción de Drogas Controladas',
-      precio: 150.00,
-      tipoFormulario: 'Clase A',
-      documentosNuevaSolicitud: [
-        { nombre: 'Cédula de Identidad y Electoral', obligatorio: true },
-        { nombre: 'Título Universitario de Especialidad', obligatorio: true },
-        { nombre: 'Exequátur', obligatorio: true },
-        { nombre: 'Recibo de Depósito de Pago', obligatorio: true },
-      ],
-      documentosRenovacion: [
-        { nombre: 'Cédula de Identidad y Electoral', obligatorio: true },
-        { nombre: 'Certificado Anterior', obligatorio: true },
-        { nombre: 'Recibo de Depósito de Pago', obligatorio: true },
-      ],
-      documentosRoboPerdida: [
-        { nombre: 'Cédula de Identidad y Electoral', obligatorio: true },
-        { nombre: 'Certificación de Robo o Pérdida emitida por la DNCD', obligatorio: true },
-        { nombre: 'Recibo de Depósito de Pago', obligatorio: true },
-      ],
-    },
-  };
-
-  const mockServicio = mockServicios[id] || mockServicios[1];
+  const [service, setService] = useState(null);
   
-  const [nombre, setNombre] = useState(mockServicio.nombre);
-  const [tipoFormulario, setTipoFormulario] = useState(mockServicio.tipoFormulario);
-  const [precioTipo, setPrecioTipo] = useState(mockServicio.precio ? 'conPrecio' : 'sinCosto');
-  const [precio, setPrecio] = useState(mockServicio.precio ? mockServicio.precio.toString() : '');
+  const [nombre, setNombre] = useState('');
+  const [tipoFormulario, setTipoFormulario] = useState('');
+  const [precioTipo, setPrecioTipo] = useState('conPrecio');
+  const [precio, setPrecio] = useState('');
   
-  const [docsNuevaSolicitud, setDocsNuevaSolicitud] = useState(mockServicio.documentosNuevaSolicitud || []);
-  const [docsRenovacion, setDocsRenovacion] = useState(mockServicio.documentosRenovacion || []);
-  const [docsRoboPerdida, setDocsRoboPerdida] = useState(mockServicio.documentosRoboPerdida || []);
+  const [docsNuevaSolicitud, setDocsNuevaSolicitud] = useState([]);
+  const [docsRenovacion, setDocsRenovacion] = useState([]);
+  const [docsRoboPerdida, setDocsRoboPerdida] = useState([]);
   
+  const [tiposFormulario, setTiposFormulario] = useState([]);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const tiposFormulario = ['Clase A', 'Clase B', 'Capa C', 'Sin Formulario'];
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const [formsRes, serviceRes] = await Promise.all([
+              api.getForms(),
+              api.getServiceByCode(id)
+            ]);
+            
+            setTiposFormulario(formsRes.forms || []);
+            
+            const s = serviceRes.service;
+            
+            setService(s);
+            setNombre(s.nombre_servicio);
+            setTipoFormulario(s.formulario_nombre);
+            setPrecioTipo(s.precio > 0 ? 'conPrecio' : 'sinCosto');
+            setPrecio(s.precio > 0 ? s.precio.toString() : '');
+            
+            const docs = s.documentos_requeridos || {};
+            const mapDocs = (docArray) => {
+              if (!docArray) return [];
+              return docArray.map(doc => ({
+                nombre: doc.codigo || doc.nombre || '',
+                obligatorio: doc.obligatorio || false
+              }));
+            };
+            
+            setDocsNuevaSolicitud(mapDocs(docs.nueva));
+            setDocsRenovacion(mapDocs(docs.renovacion));
+            setDocsRoboPerdida(mapDocs(docs.robo || docs.perdida));
+
+        } catch (error) {
+            console.error("Error fetching service:", error);
+            toast.error("Error cargando servicio");
+            navigate('/admin/servicios');
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchData();
+  }, [id, navigate]);
+
 
   const agregarDocumento = (tipo) => {
     const nuevoDoc = { nombre: '', obligatorio: true };
@@ -83,7 +106,7 @@ export default function AdminServicioEditar() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = {};
@@ -102,9 +125,40 @@ export default function AdminServicioEditar() {
       return;
     }
     
-    alert('Servicio actualizado exitosamente (mock)');
-    navigate('/admin/servicios');
+    setIsSubmitting(true);
+    try {
+        const documentos_requeridos = {
+            nueva: docsNuevaSolicitud.filter(d => d.nombre.trim()),
+            renovacion: docsRenovacion.filter(d => d.nombre.trim()),
+            robo: docsRoboPerdida.filter(d => d.nombre.trim())
+        };
+
+        const payload = {
+            nombre_servicio: nombre,
+            precio: precioTipo === 'conPrecio' ? parseFloat(precio) : 0,
+            documentos_requeridos,
+        };
+        
+        const selectedForm = tiposFormulario.find(f => f.nombre === tipoFormulario);
+        if (selectedForm) {
+            payload.formulario_id = selectedForm.id;
+        }
+             
+        await api.updateService(service.id, payload);
+
+        toast.success('Servicio actualizado exitosamente');
+        navigate('/admin/servicios');
+
+    } catch (error) {
+        console.error("Error updating service:", error);
+         toast.error("Error al actualizar el servicio");
+    } finally {
+        setIsSubmitting(false);
+    }
   };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Cargando servicio...</div>;
+  if (!service) return null;
 
   const renderDocumentos = (tipo, documentos, titulo) => (
     <div className="mb-6">
@@ -185,6 +239,20 @@ export default function AdminServicioEditar() {
           <h2 className="text-lg font-bold text-[#085297] mb-6">Información</h2>
           
           <div className="space-y-4">
+            
+            {/* Show Code (Read only) */}
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código del Servicio
+              </label>
+              <input
+                type="text"
+                value={service.codigo_servicio}
+                disabled
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+
             {/* Nombre del Servicio */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -217,7 +285,7 @@ export default function AdminServicioEditar() {
               >
                 <option value="">Seleccione un tipo</option>
                 {tiposFormulario.map((tipo) => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
+                  <option key={tipo.id} value={tipo.nombre}>{tipo.nombre}</option>
                 ))}
               </select>
               {errors.tipoFormulario && (
@@ -287,9 +355,12 @@ export default function AdminServicioEditar() {
           </button>
           <button
             type="submit"
-            className="flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium"
+            disabled={isSubmitting}
+            className={`flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Actualizar
+            {isSubmitting ? 'Actualizando...' : 'Actualizar'}
           </button>
         </div>
       </form>

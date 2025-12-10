@@ -57,7 +57,25 @@ router.get("/tecnico-upc/requests", getTecnicoUPCRequestsController);
  *       200:
  *         description: Request updated
  */
-import { validateRequestController } from "../controllers/ventanilla.controllers.js";
+import { validateRequestController, getRequestDetailController } from "../controllers/ventanilla.controllers.js";
 router.post("/validate/:id", validateRequestController);
+
+/**
+ * @swagger
+ * /ventanilla/request/{id}:
+ *   get:
+ *     summary: Get request detail with validations
+ *     tags: [Ventanilla]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Request detail with validations
+ */
+router.get("/request/:id", getRequestDetailController);
 
 export default router;
