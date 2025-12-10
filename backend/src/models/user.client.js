@@ -253,7 +253,7 @@ export const getRequestsForTecnicoUPC = async () => {
     JOIN users u ON s.user_id = u.cedula
     JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
     JOIN estados_solicitud e ON s.estado_id = e.id
-    WHERE s.estado_id = 4
+    WHERE s.estado_id = (4,16)
     ORDER BY s.fecha_creacion DESC
   `);
   return result.rows;
@@ -372,6 +372,7 @@ export const getRequestsForDirectorUPC = async () => {
         s.user_id,
         s.fecha_creacion,
         s.tipo_solicitud,
+        s.estado_id,
         ts.nombre_servicio AS tipo_servicio,
         u.full_name AS cliente_nombre,
         u.cedula AS cliente_cedula
@@ -432,3 +433,34 @@ export const getDirectorUPCRequestDetails = async (id) => {
     documentos: documentos
   };
 }
+
+export const directorUPCDecision = async (id, data) => {
+  const { decision, comentario } = data;
+
+  // decision: "APROBAR" | "RECHAZAR"
+  if (!["APROBAR", "RECHAZAR"].includes(decision)) {
+    throw new Error("La decisión debe ser APROBAR o RECHAZAR.");
+  }
+
+
+  const nuevoEstadoId =
+    decision === "APROBAR"
+      ? 15 //aprobada
+      : 16; //rechazada
+
+  await pool.query(
+    `UPDATE solicitudes
+     SET estado_id = $1,
+         comentario_director_upc = $2,
+         decision_director_upc   = $3
+     WHERE id = $4`,
+    [nuevoEstadoId, comentario || null, decision, id]
+  );
+
+  return {
+    solicitud_id: id,
+    estado_id: nuevoEstadoId,
+    decision,
+    comentario: comentario || null
+  };
+};

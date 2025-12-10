@@ -1,4 +1,4 @@
-import {getRequestsForDirectorUPC, getDirectorUPCRequestDetails} from "../models/user.client.js";
+import {getRequestsForDirectorUPC, getDirectorUPCRequestDetails, directorUPCDecision} from "../models/user.client.js";
 
 export const getDirectorRequestsController = async (req, res) => {
   try {
@@ -36,6 +36,28 @@ export const getDirectorUPCRequestDetailsController = async (req, res) => {
     console.error(error);
 
     res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+};
+
+export const directorUPCDecisionController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision, comentario } = req.body;
+
+    const resultado = await directorUPCDecision(id, { decision, comentario });
+
+    res.json({
+      ok: true,
+      message: "Decisión del Director UPC registrada correctamente.",
+      resultado
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
       ok: false,
       error: error.message
     });
