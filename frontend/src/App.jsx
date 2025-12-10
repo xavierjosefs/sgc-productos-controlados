@@ -21,6 +21,7 @@ import VentanillaLayout from './components/VentanillaLayout';
 import VentanillaSolicitudes from './pages/ventanilla/VentanillaSolicitudes';
 import VentanillaSolicitudDetalle from './pages/ventanilla/VentanillaSolicitudDetalle';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
+import DetalleSolicitudTecnico from './pages/tecnico-controlados/DetalleSolicitudTecnico';
 import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
 import DireccionLayout from './components/DireccionLayout';
 import DireccionSolicitudes from './pages/direccion/DireccionSolicitudes';
@@ -124,6 +125,15 @@ export default function App() {
                   element={
                     <ProtectedRoute allowedRoles={['tecnico_controlados']}>
                       <TecnicoControladosDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/tecnico-controlados/solicitud/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={['tecnico_controlados']}>
+                      <DetalleSolicitudTecnico />
                     </ProtectedRoute>
                   }
                 />

@@ -181,14 +181,12 @@ export default function AdminEmpleados() {
                         >
                           Editar
                         </button>
-                        {/* 
                         <button 
                           onClick={() => navigate(`/admin/empleados/${empleado.cedula}`)}
                           className="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                         >
                           Ver Detalle
                         </button>
-                        */}
                       </div>
                     </td>
                   </tr>

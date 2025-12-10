@@ -122,7 +122,10 @@ export default function TecnicoControladosDashboard() {
 
                 {/* Estadísticas */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow">
+                    <div 
+                        className="bg-white rounded-xl border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                        onClick={() => navigate('/tecnico-controlados/solicitudes?estado=pendientes')}
+                    >
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-sm text-gray-600">Pendientes</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
@@ -131,7 +134,10 @@ export default function TecnicoControladosDashboard() {
                         </div>
                         <p className="text-4xl font-bold text-[#4A8BDF]">{countByStatus.pendientes}</p>
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow">
+                    <div 
+                        className="bg-white rounded-xl border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                        onClick={() => navigate('/tecnico-controlados/solicitudes?estado=devueltas')}
+                    >
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-sm text-gray-600">Devueltas</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
