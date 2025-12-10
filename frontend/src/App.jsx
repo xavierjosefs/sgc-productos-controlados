@@ -1,5 +1,6 @@
 import RequestDetail from './pages/cliente/RequestDetail';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
@@ -76,6 +77,7 @@ import SolicitudImportacionMedicamentosExito from './pages/cliente/SolicitudImpo
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster />
       <AuthProvider>
         <SolicitudClaseAProvider>
           <SolicitudClaseBProvider>

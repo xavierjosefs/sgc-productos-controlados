@@ -1,24 +1,51 @@
 /**
- * AdminDashboard - Panel principal con estadísticas
+ * AdminDashboard - Panel principal con estadisticas
  */
 import { useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonDashboard } from '../../components/SkeletonLoaders';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
+  const { data: stats, loading, error } = useAdminData(api.getStats);
+
+  // Manejo de errores
+  if (error) {
+    toast.error(error);
+  }
+
+  if (loading) return <SkeletonDashboard />;
+  if (!stats || error) return <div className="p-8 text-center text-red-500">No se pudieron cargar los datos.</div>;
+
+  // Debug por si algo sale mal
+  if (!stats.solicitudes || !stats.empleados || !stats.servicios) {
+      return (
+          <div className="p-8 text-center">
+              <p className="text-red-500 font-bold mb-4">Error: Datos con formato incorrecto recibidos</p>
+              <pre className="text-left bg-gray-100 p-4 rounded overflow-auto text-xs">
+                  {typeof stats === 'object' ? JSON.stringify(stats, null, 2) : String(stats)}
+              </pre>
+          </div>
+      );
+  }
 
   const solicitudesStats = [
-    { label: 'Total Solicitudes', value: 20, color: 'text-[#4A8BDF]', route: '/admin/solicitudes' },
-    { label: 'Pendientes', value: 15, color: 'text-gray-600', route: '/admin/solicitudes' },
-    { label: 'Aprobadas', value: 5, color: 'text-green-600', route: '/admin/solicitudes' },
-    { label: 'Rechazadas', value: 4, color: 'text-orange-600', route: '/admin/solicitudes' },
-    { label: 'Devueltas', value: 10, color: 'text-gray-600', route: '/admin/solicitudes' },
-    { label: 'Total Servicios', value: 5, color: 'text-[#4A8BDF]', route: '/admin/servicios' },
+    { label: 'Total Solicitudes', value: stats.solicitudes.total, color: 'text-[#4A8BDF]', route: '/admin/solicitudes' },
+    { label: 'Pendientes', value: stats.solicitudes.pendientes, color: 'text-gray-600', route: '/admin/solicitudes' },
+    { label: 'Aprobadas', value: stats.solicitudes.aprobadas, color: 'text-green-600', route: '/admin/solicitudes' },
+    { label: 'Rechazadas', value: stats.solicitudes.rechazadas, color: 'text-orange-600', route: '/admin/solicitudes' },
+    { label: 'Devueltas', value: stats.solicitudes.devueltas, color: 'text-gray-600', route: '/admin/solicitudes' },
+    { label: 'Total Servicios', value: stats.servicios.total, color: 'text-[#4A8BDF]', route: '/admin/servicios' },
   ];
 
   const empleadosStats = [
-    { label: 'Total Empleados', value: 15, color: 'text-[#4A8BDF]', route: '/admin/empleados' },
-    { label: 'Activos', value: 10, color: 'text-green-600', route: '/admin/empleados' },
-    { label: 'Inactivos', value: 10, color: 'text-orange-600', route: '/admin/empleados' },
+    { label: 'Total Empleados', value: stats.empleados.total, color: 'text-[#4A8BDF]', route: '/admin/empleados' },
+    { label: 'Activos', value: stats.empleados.activos, color: 'text-green-600', route: '/admin/empleados' },
+    { label: 'Inactivos', value: stats.empleados.inactivos, color: 'text-orange-600', route: '/admin/empleados' },
   ];
 
   return (

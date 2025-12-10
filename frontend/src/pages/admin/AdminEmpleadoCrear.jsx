@@ -1,59 +1,61 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { employeeSchema, validateWithSchema } from '../../utils/validation';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleadoCrear() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
   const [cedula, setCedula] = useState('');
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [rol, setRol] = useState('');
-  const [activo, setActivo] = useState(true);
+  
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const rolesDisponibles = [
-    { value: 'ventanilla', label: 'Ventanilla' },
-    { value: 'tecnico_controlados', label: 'Técnico Controlados' },
-    { value: 'director_controlados', label: 'Director Controlados' },
-    { value: 'direccion', label: 'Dirección' },
-    { value: 'dncd', label: 'DNCD' },
-    { value: 'admin', label: 'Administrador' },
-  ];
+  const { data: rolesData, loading: loadingRoles } = useAdminData(api.getRoles);
+  const rolesDisponibles = rolesData?.roles || [];
 
-  const validateCedula = (cedula) => {
-    const cedulaRegex = /^\d{3}-\d{7}-\d{1}$/;
-    return cedulaRegex.test(cedula);
-  };
-
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const newErrors = {};
-    if (!cedula || !validateCedula(cedula)) {
-      newErrors.cedula = 'Formato de cédula inválido (000-0000000-0)';
-    }
-    if (!nombre.trim()) {
-      newErrors.nombre = 'El nombre es requerido';
-    }
-    if (!email || !validateEmail(email)) {
-      newErrors.email = 'Formato de email inválido';
-    }
-    if (!rol) {
-      newErrors.rol = 'Debe seleccionar un rol';
-    }
+    // Validacion con zod
+    const validation = validateWithSchema(employeeSchema, {
+      cedula,
+      nombre,
+      email,
+      rol
+    });
     
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!validation.success) {
+      setErrors(validation.errors);
       return;
     }
     
-    alert('Empleado creado exitosamente (mock)');
-    navigate('/admin/empleados');
+    setIsSubmitting(true);
+    try {
+        await api.createUser({
+            cedula,
+            full_name: nombre,
+            email,
+            role: rol
+        });
+
+        toast.success('Empleado creado exitosamente. Se ha enviado un correo para completar el registro.');
+        navigate('/admin/empleados');
+
+    } catch (error) {
+        console.error("Error creando empleado:", error);
+        const msg = error.response?.data?.error || "Error al crear el empleado";
+        toast.error(msg);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleCedulaChange = (e) => {
@@ -158,45 +160,24 @@ export default function AdminEmpleadoCrear() {
               }`}
             >
               <option value="">Seleccione un rol</option>
-              {rolesDisponibles.map((rolOption) => (
-                <option key={rolOption.value} value={rolOption.value}>
-                  {rolOption.label}
-                </option>
-              ))}
+              {loadingRoles ? (
+                <option disabled>Cargando roles...</option>
+              ) : (
+                rolesDisponibles.map((role) => (
+                  <option key={role.name} value={role.name}>
+                    {role.name}
+                  </option>
+                ))
+              )}
             </select>
             {errors.rol && (
               <p className="text-red-500 text-sm mt-1">{errors.rol}</p>
             )}
           </div>
 
-          {/* Estado */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estado
-            </label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="activo"
-                  checked={activo === true}
-                  onChange={() => setActivo(true)}
-                  className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
-                />
-                <span className="text-gray-700">Activo</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="activo"
-                  checked={activo === false}
-                  onChange={() => setActivo(false)}
-                  className="w-4 h-4 text-[#4A8BDF] focus:ring-[#4A8BDF]"
-                />
-                <span className="text-gray-700">Inactivo</span>
-              </label>
-            </div>
-          </div>
+           <div className="text-sm text-gray-500 italic">
+               Nota: El usuario se creará en estado pendiente y deberá activar su cuenta vía correo.
+           </div>
 
           {/* Botones */}
           <div className="flex gap-4 mt-6 pt-4">
@@ -209,9 +190,12 @@ export default function AdminEmpleadoCrear() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium"
+              disabled={isSubmitting}
+              className={`flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Crear
+              {isSubmitting ? 'Creando...' : 'Crear'}
             </button>
           </div>
         </form>

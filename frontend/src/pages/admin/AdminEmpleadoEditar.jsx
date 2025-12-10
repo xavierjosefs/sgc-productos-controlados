@@ -1,33 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog.jsx';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleadoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   
-  // Mock: Simular carga de datos del empleado
-  const mockEmpleados = {
-    1: { id: 1, cedula: '001-1234567-8', nombre: 'Juan Pérez García', email: 'juan.perez@example.com', rol: 'ventanilla', activo: true },
-    2: { id: 2, cedula: '001-9876543-2', nombre: 'María López Hernández', email: 'maria.lopez@example.com', rol: 'tecnico_controlados', activo: true },
-    3: { id: 3, cedula: '001-5555555-5', nombre: 'Carlos Rodríguez Sánchez', email: 'carlos.rodriguez@example.com', rol: 'direccion', activo: false },
-  };
-
-  const mockEmpleado = mockEmpleados[id] || mockEmpleados[1];
-  
-  const [rol, setRol] = useState(mockEmpleado.rol);
-  const [activo, setActivo] = useState(mockEmpleado.activo);
+  const [rol, setRol] = useState('');
+  const [activo, setActivo] = useState(true);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const rolesDisponibles = [
-    { value: 'ventanilla', label: 'Ventanilla' },
-    { value: 'tecnico_controlados', label: 'Técnico Controlados' },
-    { value: 'director_controlados', label: 'Director Controlados' },
-    { value: 'direccion', label: 'Dirección' },
-    { value: 'dncd', label: 'DNCD' },
-    { value: 'admin', label: 'Administrador' },
-  ];
+  const { data: userData, loading, error } = useAdminData(() => api.getUserByCedula(id), [id]);
+  const employee = userData?.user;
 
-  const handleSubmit = (e) => {
+  const { data: rolesData, loading: loadingRoles } = useAdminData(api.getRoles);
+  const rolesDisponibles = rolesData?.roles || [];
+
+  useEffect(() => {
+    if (employee) {
+      setRol(employee.role);
+      setActivo(employee.is_active);
+    }
+  }, [employee]);
+
+  if (error) {
+    toast.error(error);
+    navigate('/admin/empleados');
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = {};
@@ -39,13 +48,50 @@ export default function AdminEmpleadoEditar() {
       setErrors(newErrors);
       return;
     }
+
+    if (employee && activo !== employee.is_active && !activo) {
+      const confirmed = await confirm({
+        title: '¿Desactivar usuario?',
+        message: 'El usuario no podrá acceder al sistema. ¿Estás seguro?',
+        confirmText: 'Desactivar',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
+
+      if (!confirmed) {
+        return;
+      }
+    }
     
-    alert('Empleado actualizado exitosamente (mock)');
-    navigate('/admin/empleados');
+    setIsSubmitting(true);
+    try {
+        const updates = {};
+        if (rol !== employee.role) updates.role = rol;
+        if (activo !== employee.is_active) updates.isActive = activo;
+
+        if (Object.keys(updates).length > 0) {
+          await api.updateUser(id, updates);
+        }
+        
+        toast.success('Empleado actualizado exitosamente');
+        navigate('/admin/empleados');
+
+    } catch (error) {
+        console.error("Error updating user:", error);
+        const msg = error.response?.data?.error || "Error al actualizar el empleado";
+        toast.error(msg);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
+  if (loading) return <SkeletonForm fields={5} />;
+  if (!employee) return null;
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <>
+      <ConfirmDialog />
+      <div className="max-w-4xl mx-auto">
       <button 
         onClick={() => navigate('/admin/empleados')}
         className="flex items-center text-[#4A8BDF] mb-6 hover:text-[#3875C8] transition-colors"
@@ -69,7 +115,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.cedula}
+              value={employee.cedula}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -82,7 +128,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.nombre}
+              value={employee.full_name}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -95,7 +141,7 @@ export default function AdminEmpleadoEditar() {
             </label>
             <input
               type="email"
-              value={mockEmpleado.email}
+              value={employee.email}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
@@ -114,11 +160,15 @@ export default function AdminEmpleadoEditar() {
               }`}
             >
               <option value="">Seleccione un rol</option>
-              {rolesDisponibles.map((rolOption) => (
-                <option key={rolOption.value} value={rolOption.value}>
-                  {rolOption.label}
-                </option>
-              ))}
+              {loadingRoles ? (
+                <option disabled>Cargando roles...</option>
+              ) : (
+                rolesDisponibles.map((role) => (
+                  <option key={role.name} value={role.name}>
+                    {role.name}
+                  </option>
+                ))
+              )}
             </select>
             {errors.rol && (
               <p className="text-red-500 text-sm mt-1">{errors.rol}</p>
@@ -165,13 +215,17 @@ export default function AdminEmpleadoEditar() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium"
+              disabled={isSubmitting}
+              className={`flex-1 bg-[#085297] text-white rounded-lg px-8 py-3 hover:bg-[#064175] transition-colors font-medium ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Actualizar
+              {isSubmitting ? 'Actualizando...' : 'Actualizar'}
             </button>
           </div>
         </form>
       </div>
     </div>
+    </>
   );
 }
