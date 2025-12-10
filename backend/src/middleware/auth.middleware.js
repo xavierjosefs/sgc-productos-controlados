@@ -80,7 +80,7 @@ export const tecnicoMiddleware = (req, res, next) => {
   }
 }
 
-export const direccionMiddleware = (req, res, next) => {
+export const directorupcMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -90,8 +90,8 @@ export const direccionMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    if (decoded.role !== 5) {
-      return res.status(403).json({ error: "Acceso denegado. Solo personal de Dirección." });
+    if (decoded.role !== 4) {
+      return res.status(403).json({ error: "Acceso denegado. Solo Directores de controlados." });
     }
     req.user = decoded;
     next();
@@ -99,4 +99,3 @@ export const direccionMiddleware = (req, res, next) => {
     res.status(401).json({ error: "Token inválido" });
   }
 }
-
