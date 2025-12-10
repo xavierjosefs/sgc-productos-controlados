@@ -29,7 +29,7 @@ export default function TecnicoTopbar() {
                 `font-bold transition-colors px-6 py-2 rounded-xl ` +
                 (path === '/tecnico-controlados'
                   ? 'bg-[#085297] text-white'
-                  : 'text-[#085297] hover:bg-[#085297] hover:text-white')
+                  : 'text-[#4A8BDF] hover:bg-[#4A8BDF] hover:text-white')
               }
             >
               Solicitudes
@@ -39,7 +39,7 @@ export default function TecnicoTopbar() {
           {/* Usuario y Logout */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#085297] flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-semibold">
                 {user?.full_name?.charAt(0) || 'T'}
               </div>
               <div className="hidden sm:block">

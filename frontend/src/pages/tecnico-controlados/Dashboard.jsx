@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TecnicoTopbar from '../../components/TecnicoTopbar';
-import { useAuth } from '../../context/AuthContext';
 import useTecnicoAPI from '../../hooks/useTecnicoAPI';
-import useServicesAPI from '../../hooks/useServicesAPI';
 import BadgeEstado from '../../components/BadgeEstado';
 
 /**
@@ -12,19 +10,16 @@ import BadgeEstado from '../../components/BadgeEstado';
  */
 
 export default function TecnicoControladosDashboard() {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const { getRequests } = useTecnicoAPI();
-    const { getServiceTypes } = useServicesAPI();
+    
     const [allRequests, setAllRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [loadingRequests, setLoadingRequests] = useState(false);
     const [errorRequests, setErrorRequests] = useState('');
     const [filterTipo, setFilterTipo] = useState('');
     const [filterEstado, setFilterEstado] = useState('');
-    const [serviceTypes, setServiceTypes] = useState([]);
-    const [loadingServices, setLoadingServices] = useState(false);
-
+    
     // Cargar solicitudes
     useEffect(() => {
         const loadRequests = async () => {
@@ -45,22 +40,6 @@ export default function TecnicoControladosDashboard() {
         };
         loadRequests();
     }, [getRequests]);
-
-    // Cargar tipos de servicio
-    useEffect(() => {
-        const loadServiceTypes = async () => {
-            setLoadingServices(true);
-            try {
-                const types = await getServiceTypes();
-                setServiceTypes(Array.isArray(types) ? types : (types.data || []));
-            } catch (err) {
-                setServiceTypes([]);
-            } finally {
-                setLoadingServices(false);
-            }
-        };
-        loadServiceTypes();
-    }, [getServiceTypes]);
 
     // Aplicar filtros automáticamente cuando cambian
     useEffect(() => {
@@ -88,8 +67,6 @@ export default function TecnicoControladosDashboard() {
 
     // Verificar si una solicitud puede ser validada (editable)
     const puedeValidar = (estado) => {
-        // Solo puede validar (editar) si está en evaluación técnica inicial
-        // Si está devuelta, solo puede VER (modo lectura)
         return estado === 'En evaluación técnica';
     };
 
@@ -117,7 +94,8 @@ export default function TecnicoControladosDashboard() {
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-[#085297]">Gestión de Solicitudes</h1>
+                    {/* CAMBIO: Color del título actualizado */}
+                    <h1 className="text-3xl font-bold text-[#4A8BDF]">Gestión de Solicitudes</h1>
                 </div>
 
                 {/* Estadísticas */}
@@ -129,6 +107,7 @@ export default function TecnicoControladosDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                             </svg>
                         </div>
+                        {/* CAMBIO: Usando clase Tailwind en lugar de style inline */}
                         <p className="text-4xl font-bold text-[#4A8BDF]">{countByStatus.pendientes}</p>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow">
@@ -148,10 +127,11 @@ export default function TecnicoControladosDashboard() {
                         <h2 className="text-lg font-semibold text-gray-700">Filtros</h2>
                         <div className="flex flex-wrap gap-4">
                             <div className="relative w-48">
+                                {/* CAMBIO: focus:ring actualizado */}
                                 <select 
                                     value={filterTipo}
                                     onChange={(e) => setFilterTipo(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#085297] appearance-none pr-10 bg-white"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 bg-white"
                                     title={filterTipo || "Todos los tipos"}
                                 >
                                     <option value="">Todos los tipos</option>
@@ -165,10 +145,11 @@ export default function TecnicoControladosDashboard() {
                             </div>
 
                             <div className="relative w-56">
+                                {/* CAMBIO: focus:ring actualizado */}
                                 <select 
                                     value={filterEstado}
                                     onChange={(e) => setFilterEstado(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#085297] appearance-none pr-10 bg-white"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 bg-white"
                                 >
                                     <option value="">Todos los estados</option>
                                     {estadosUnicos.map(estado => (
@@ -201,7 +182,8 @@ export default function TecnicoControladosDashboard() {
                         <div className="max-h-[600px] overflow-y-auto">
                             <table className="w-full">
                                 <thead className="sticky top-0 z-10">
-                                    <tr className="bg-[#085297]">
+                                    {/* CAMBIO: Fondo del header de tabla actualizado */}
+                                    <tr className="bg-[#4A8BDF]">
                                         <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
                                         <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha</th>
                                         <th className="px-6 py-4 text-left text-white font-semibold text-sm">Solicitante</th>
@@ -215,7 +197,8 @@ export default function TecnicoControladosDashboard() {
                                         <tr>
                                             <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                                 <div className="flex justify-center items-center gap-2">
-                                                    <svg className="animate-spin h-5 w-5 text-[#085297]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    {/* CAMBIO: Spinner color actualizado */}
+                                                    <svg className="animate-spin h-5 w-5 text-[#4A8BDF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
@@ -263,9 +246,10 @@ export default function TecnicoControladosDashboard() {
                                                 <td className="px-6 py-4 text-sm">
                                                     <div className="flex gap-3">
                                                         <button
+                                                            /* CAMBIO: Texto del botón actualizado */
                                                             className={`font-medium hover:underline transition-colors ${
                                                                 puedeValidar(request.estado_actual)
-                                                                    ? 'text-[#085297] hover:text-[#064175]'
+                                                                    ? 'text-[#4A8BDF] hover:text-[#064175]'
                                                                     : 'text-gray-600 hover:text-gray-800'
                                                             }`}
                                                             onClick={() => navigate(`/tecnico-controlados/solicitud/${request.id}`)}
@@ -288,7 +272,8 @@ export default function TecnicoControladosDashboard() {
                     {loadingRequests ? (
                         <div className="text-center py-12 text-gray-500">
                             <div className="flex justify-center items-center gap-2">
-                                <svg className="animate-spin h-5 w-5 text-[#085297]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                {/* CAMBIO: Spinner color actualizado */}
+                                <svg className="animate-spin h-5 w-5 text-[#4A8BDF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -307,7 +292,8 @@ export default function TecnicoControladosDashboard() {
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-start">
                                         <span className="text-xs font-medium text-gray-500">ID</span>
-                                        <span className="font-bold text-sm text-gray-900">#{request.id}</span>
+                                        {/* CAMBIO: Usando clase Tailwind en lugar de style inline */}
+                                        <span className="font-bold text-sm text-[#4A8BDF]">#{request.id}</span>
                                     </div>
                                     <div className="flex justify-between items-start">
                                         <span className="text-xs font-medium text-gray-500">Solicitante</span>
@@ -332,9 +318,10 @@ export default function TecnicoControladosDashboard() {
                                     </div>
                                     <div className="pt-2 border-t border-gray-100">
                                         <button 
+                                            /* CAMBIO: Fondo del botón actualizado */
                                             className={`w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                                                 puedeValidar(request.estado_actual)
-                                                    ? 'bg-[#085297] text-white hover:bg-[#064175]'
+                                                    ? 'bg-[#4A8BDF] text-white hover:bg-[#064175]'
                                                     : 'bg-gray-500 text-white hover:bg-gray-600'
                                             }`}
                                             onClick={() => navigate(`/tecnico-controlados/solicitud/${request.id}`)}

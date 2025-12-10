@@ -25,54 +25,50 @@ const DetalleSolicitudTecnico = () => {
 
   // Función para formatear nombres de campos
   const formatearNombreCampo = (texto) => {
-    // Primero separar por camelCase: nombreEmpresa -> nombre Empresa
     let result = texto.replace(/([a-z])([A-Z])/g, '$1 $2');
-    
-    // Separar por números: rnc2 -> rnc 2
     result = result.replace(/([a-zA-Z])(\d)/g, '$1 $2');
-    
-    // Reemplazar guiones bajos y guiones por espacios
     result = result.replace(/[_-]/g, ' ');
-    
-    // Capitalizar primera letra de cada palabra
     result = result.split(' ').map(palabra => {
       if (palabra.length === 0) return palabra;
       return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase();
     }).join(' ');
-    
     return result;
   };
 
+  // CORRECCIÓN: Un solo useEffect para cargar todo y evitar el error de loop infinito
   useEffect(() => {
     async function fetchDetalle() {
       setLoading(true);
       try {
         const res = await getRequestDetail(id);
-        setDetalle(res.detalle);
-        // Inicializar documentos sin selección previa
+        const data = res.detalle;
+        
+        setDetalle(data);
+        
+        // Inicializar documentos
         setDocumentosEstado(
-          (res.detalle.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
+          (data.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
         );
-      } catch {
+
+        // Inicializar validaciones del formulario AQUÍ mismo
+        if (data.solicitud?.form_data) {
+          setFormValidaciones(
+            Object.entries(data.solicitud.form_data).map(([key]) => ({ 
+              key, 
+              cumple: null 
+            }))
+          );
+        }
+      } catch (error) {
+        console.error(error);
         toast.error('No se pudo cargar la solicitud');
         navigate(-1);
       }
       setLoading(false);
     }
     fetchDetalle();
-  }, [id, getRequestDetail, navigate]);
-
-  // Inicializar validaciones del formulario
-  useEffect(() => {
-    if (detalle?.solicitud?.form_data) {
-      setFormValidaciones(
-        Object.entries(detalle.solicitud.form_data).map(([key]) => ({ 
-          key, 
-          cumple: null // Iniciar sin selección
-        }))
-      );
-    }
-  }, [detalle?.solicitud?.form_data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleDocumentoChange = (docId, cumple) => {
     setDocumentosEstado(prev => 
@@ -86,20 +82,17 @@ const DetalleSolicitudTecnico = () => {
     );
   };
 
-  // Validar que todos los campos estén seleccionados
   const todosSeleccionados = 
     formValidaciones.length > 0 &&
     formValidaciones.every(f => f.cumple !== null) &&
     documentosEstado.length > 0 &&
     documentosEstado.every(d => d.cumple !== null);
 
-  // Determinar si todos cumplen
   const todosCumplen =
     todosSeleccionados &&
     formValidaciones.every(f => f.cumple === true) &&
     documentosEstado.every(d => d.cumple === true);
 
-  // Determinar si alguno no cumple
   const algunNoCumple =
     todosSeleccionados &&
     (formValidaciones.some(f => f.cumple === false) ||
@@ -145,7 +138,6 @@ const DetalleSolicitudTecnico = () => {
     setShowRechazoModal(false);
   };
 
-  // Pantalla de confirmación después de procesar
   if (procesado) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
@@ -181,15 +173,13 @@ const DetalleSolicitudTecnico = () => {
   }
 
   const { solicitud, cliente, documentos } = detalle;
-
-  // Determinar si está en modo solo lectura (solo cuando está devuelta)
   const modoSoloLectura = solicitud.estado && solicitud.estado.toLowerCase().includes('devuelta');
 
   return (
     <div className="min-h-screen bg-gray-50">
       <TecnicoTopbar />
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Header con botón atrás */}
+        
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate('/tecnico-controlados')}
@@ -200,7 +190,7 @@ const DetalleSolicitudTecnico = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
           </button>
-          <h1 className="text-3xl font-bold text-[#085297]">
+          <h1 className="text-3xl font-bold text-[#4A8BDF]">
             Solicitud #{solicitud.id}
           </h1>
           {modoSoloLectura && (
@@ -210,107 +200,142 @@ const DetalleSolicitudTecnico = () => {
           )}
         </div>
 
-        {/* Información del Solicitante y Detalles */}
+        {/* Información del Solicitante y Detalles (Sin cambios) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-            <h2 className="font-semibold text-[#085297] mb-4">
-              Información del Solicitante
-            </h2>
+            <h2 className="font-semibold text-[#4A8BDF] mb-4">Información del Solicitante</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-gray-700">
-              <div>
-                <div className="font-medium text-gray-500">Cédula de Identidad y Electoral</div>
-                <div className="font-bold text-lg">{cliente.cedula}</div>
-              </div>
-              <div>
-                <div className="font-medium text-gray-500">Nombre del Profesional</div>
-                <div className="font-bold text-lg">{cliente.nombre}</div>
-              </div>
-              <div>
-                <div className="font-medium text-gray-500">Contacto</div>
-                <div className="font-bold text-lg">{cliente.contacto || '-'}</div>
-              </div>
-              <div>
-                <div className="font-medium text-gray-500">Dirección</div>
-                <div className="font-bold text-lg">{cliente.direccion || '-'}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="font-medium text-gray-500">Email</div>
-                <div className="font-bold text-lg">{cliente.email}</div>
-              </div>
+              <div><div className="font-medium text-gray-500">Cédula de Identidad y Electoral</div><div className="font-bold text-lg">{cliente.cedula}</div></div>
+              <div><div className="font-medium text-gray-500">Nombre del Profesional</div><div className="font-bold text-lg">{cliente.nombre}</div></div>
+              <div><div className="font-medium text-gray-500">Contacto</div><div className="font-bold text-lg">{cliente.contacto || '-'}</div></div>
+              <div><div className="font-medium text-gray-500">Dirección</div><div className="font-bold text-lg">{cliente.direccion || '-'}</div></div>
+              <div className="col-span-2"><div className="font-medium text-gray-500">Email</div><div className="font-bold text-lg">{cliente.email}</div></div>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-            <h2 className="font-semibold text-[#085297] mb-4">
-              Detalles de la Solicitud
-            </h2>
+            <h2 className="font-semibold text-[#4A8BDF] mb-4">Detalles de la Solicitud</h2>
             <div className="flex flex-col gap-3 text-gray-700">
-              <div>
-                <span className="font-medium text-gray-500">Tipo:</span>{' '}
-                <span className="font-bold text-lg">{solicitud.tipo_solicitud}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-500">Servicio:</span>{' '}
-                <span className="font-bold text-lg">{solicitud.servicio}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-500">Fecha:</span>{' '}
-                <span className="font-bold text-lg">
-                  {new Date(solicitud.fecha_creacion).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-500">Estado:</span>
-                <BadgeEstado estado={solicitud.estado} />
-              </div>
+              <div><span className="font-medium text-gray-500">Tipo:</span> <span className="font-bold text-lg">{solicitud.tipo_solicitud}</span></div>
+              <div><span className="font-medium text-gray-500">Servicio:</span> <span className="font-bold text-lg">{solicitud.servicio}</span></div>
+              <div><span className="font-medium text-gray-500">Fecha:</span> <span className="font-bold text-lg">{new Date(solicitud.fecha_creacion).toLocaleDateString()}</span></div>
+              <div className="flex items-center gap-2"><span className="font-medium text-gray-500">Estado:</span> <BadgeEstado estado={solicitud.estado} /></div>
             </div>
           </div>
         </div>
 
-        {/* Formulario de Validación */}
+        {/* Sección de Validación */}
         <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-200 mb-8">
-          {/* Formulario de la Solicitud */}
+          
+          {/* NUEVO: Subtítulo para el Formulario */}
           <div className="mb-8">
-            <label className="font-semibold block mb-3 text-[#085297] text-lg">
-              Formulario de la Solicitud
-            </label>
+            <div className="border-b border-gray-200 pb-2 mb-4">
+               <h3 className="text-xl font-bold text-[#4A8BDF]">Datos del Formulario</h3>
+               <p className="text-sm text-gray-500">Información capturada digitalmente en la solicitud.</p>
+            </div>
+
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
               {solicitud.form_data && typeof solicitud.form_data === 'object' ? (
                 <table className="w-full text-left">
                   <tbody>
                     {Object.entries(solicitud.form_data).map(([key, value], idx) => (
-                      <tr key={key} className="border-b border-gray-200 last:border-0">
-                        <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">
-                          {formatearNombreCampo(key)}
-                        </td>
-                        <td className="py-3 text-gray-800 w-1/2">{String(value)}</td>
-                        <td className="py-3 w-1/4">
-                          {!modoSoloLectura ? (
-                            <div className="flex gap-8">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`campo-cumple-${idx}`}
-                                  checked={formValidaciones[idx]?.cumple === true}
-                                  onChange={() => handleFormChange(idx, true)}
-                                  className="accent-[#085297] w-5 h-5"
-                                />
-                                <span className="text-base">Sí Cumple</span>
-                              </label>
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`campo-cumple-${idx}`}
-                                  checked={formValidaciones[idx]?.cumple === false}
-                                  onChange={() => handleFormChange(idx, false)}
-                                  className="accent-[#085297] w-5 h-5"
-                                />
-                                <span className="text-base">No Cumple</span>
-                              </label>
-                            </div>
-                          ) : null}
-                        </td>
-                      </tr>
+                      typeof value === 'object' && value !== null && !Array.isArray(value) ? (
+                        Object.entries(value).map(([subKey, subValue], ) => {
+                          const validIdx = `${key}-${subKey}`;
+                          // Buscar el estado de validación para este subcampo
+                          let validacion = formValidaciones.find(f => f.key === validIdx);
+                          if (!validacion) {
+                            validacion = { key: validIdx, cumple: null };
+                            // Solo para visualización, no modificar el estado aquí
+                          }
+                          return (
+                            <tr key={validIdx} className="border-b border-gray-200 last:border-0">
+                              <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">
+                                {formatearNombreCampo(subKey)}
+                              </td>
+                              <td className="py-3 text-gray-800 w-1/2">{subValue === true ? 'Sí' : subValue === false ? 'No' : String(subValue)}</td>
+                              <td className="py-3 w-1/4">
+                                {!modoSoloLectura ? (
+                                  <div className="flex gap-8">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={`campo-cumple-${validIdx}`}
+                                        checked={validacion.cumple === true}
+                                        onChange={() => {
+                                          setFormValidaciones(prev => {
+                                            // Si existe, actualiza; si no, agrega
+                                            const exists = prev.find(f => f.key === validIdx);
+                                            if (exists) {
+                                              return prev.map(f => f.key === validIdx ? { ...f, cumple: true } : f);
+                                            } else {
+                                              return [...prev, { key: validIdx, cumple: true }];
+                                            }
+                                          });
+                                        }}
+                                        className="accent-[#085297] w-5 h-5"
+                                      />
+                                      <span className="text-base">Sí Cumple</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={`campo-cumple-${validIdx}`}
+                                        checked={validacion.cumple === false}
+                                        onChange={() => {
+                                          setFormValidaciones(prev => {
+                                            const exists = prev.find(f => f.key === validIdx);
+                                            if (exists) {
+                                              return prev.map(f => f.key === validIdx ? { ...f, cumple: false } : f);
+                                            } else {
+                                              return [...prev, { key: validIdx, cumple: false }];
+                                            }
+                                          });
+                                        }}
+                                        className="accent-[#085297] w-5 h-5"
+                                      />
+                                      <span className="text-base">No Cumple</span>
+                                    </label>
+                                  </div>
+                                ) : null}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr key={key} className="border-b border-gray-200 last:border-0">
+                          <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">
+                            {formatearNombreCampo(key)}
+                          </td>
+                          <td className="py-3 text-gray-800 w-1/2">{String(value)}</td>
+                          <td className="py-3 w-1/4">
+                            {!modoSoloLectura ? (
+                              <div className="flex gap-8">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`campo-cumple-${idx}`}
+                                    checked={formValidaciones[idx]?.cumple === true}
+                                    onChange={() => handleFormChange(idx, true)}
+                                    className="accent-[#085297] w-5 h-5"
+                                  />
+                                  <span className="text-base">Sí Cumple</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`campo-cumple-${idx}`}
+                                    checked={formValidaciones[idx]?.cumple === false}
+                                    onChange={() => handleFormChange(idx, false)}
+                                    className="accent-[#085297] w-5 h-5"
+                                  />
+                                  <span className="text-base">No Cumple</span>
+                                </label>
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      )
                     ))}
                   </tbody>
                 </table>
@@ -318,54 +343,67 @@ const DetalleSolicitudTecnico = () => {
                 <div className="text-gray-500">No hay datos de formulario.</div>
               )}
             </div>
+          </div>
 
-            {/* Requisitos/Documentos */}
-            <label className="font-semibold block mb-3 text-[#085297] text-lg">
-              Requisitos
-            </label>
-            <div className="space-y-4">
-              {documentos.map(doc => (
-                <div key={doc.id} className="flex items-center gap-6 py-2">
-                  <input
-                    type="text"
-                    value={doc.nombre_archivo || doc.tipo_documento}
-                    readOnly
-                    className="border border-gray-300 rounded-lg px-5 py-3 font-medium text-gray-700 min-w-[400px] bg-gray-50 focus:outline-none"
-                  />
-                  <a
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-[#085297] text-white rounded-lg px-7 py-3 font-semibold shadow hover:bg-[#0a63b7] transition whitespace-nowrap"
-                  >
-                    Ver
-                  </a>
-                  {!modoSoloLectura && (
-                    <div className="flex gap-8 ml-4">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`doc-cumple-${doc.id}`}
-                          checked={documentosEstado.find(d => d.id === doc.id)?.cumple === true}
-                          onChange={() => handleDocumentoChange(doc.id, true)}
-                          className="accent-[#085297] w-5 h-5"
-                        />
-                        <span className="text-base">Sí Cumple</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`doc-cumple-${doc.id}`}
-                          checked={documentosEstado.find(d => d.id === doc.id)?.cumple === false}
-                          onChange={() => handleDocumentoChange(doc.id, false)}
-                          className="accent-[#085297] w-5 h-5"
-                        />
-                        <span className="text-base">No Cumple</span>
-                      </label>
+          {/* NUEVO: Subtítulo para Documentos */}
+          <div className="mb-8">
+            <div className="border-b border-gray-200 pb-2 mb-6 mt-10">
+              <h3 className="text-xl font-bold" style={{ color: '#4A8BDF' }}>Documentación Requerida</h3>
+              <p className="text-sm text-gray-500">
+                Archivos adjuntos correspondientes a la solicitud #{solicitud.id}.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="space-y-8">
+                {documentos.map((doc, idx) => (
+                  <div key={doc.id} className="mb-2">
+                    <div className="font-semibold mb-2" style={{ color: '#4A8BDF' }}>
+                      {formatearNombreCampo(doc.nombre_descriptivo || doc.tipo_documento || `Documento ${idx + 1}`)}
                     </div>
-                  )}
-                </div>
-              ))}
+                    <div className="flex items-center gap-6">
+                      <input
+                        type="text"
+                        value={doc.nombre_archivo || ''}
+                        readOnly
+                        className="border border-gray-300 rounded-lg px-5 py-3 font-medium text-gray-700 min-w-[300px] bg-gray-50 focus:outline-none"
+                      />
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#4A8BDF] text-white rounded-lg px-7 py-3 font-semibold shadow hover:bg-[#0a63b7] transition whitespace-nowrap"
+                      >
+                        Ver
+                      </a>
+                      {!modoSoloLectura && (
+                        <div className="flex gap-8 ml-4">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`doc-cumple-${doc.id}`}
+                              checked={documentosEstado.find(d => d.id === doc.id)?.cumple === true}
+                              onChange={() => handleDocumentoChange(doc.id, true)}
+                              className="accent-[#4A8BDF] w-5 h-5"
+                            />
+                            <span className="text-base">Sí Cumple</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`doc-cumple-${doc.id}`}
+                              checked={documentosEstado.find(d => d.id === doc.id)?.cumple === false}
+                              onChange={() => handleDocumentoChange(doc.id, false)}
+                              className="accent-[#4A8BDF] w-5 h-5"
+                            />
+                            <span className="text-base">No Cumple</span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -418,7 +456,6 @@ const DetalleSolicitudTecnico = () => {
         </div>
       </div>
 
-      {/* Modal de Confirmación - Aprobar */}
       <Modal
         isOpen={showAprobarModal}
         title="Confirmar Aprobación Técnica"
@@ -435,7 +472,6 @@ const DetalleSolicitudTecnico = () => {
         loading={enviando}
       />
 
-      {/* Modal de Confirmación - Rechazar */}
       <Modal
         isOpen={showRechazoModal}
         title="Confirmar Rechazo Técnico"
