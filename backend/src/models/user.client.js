@@ -364,3 +364,103 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
     comentario_general
   };
 };
+
+export const getRequestsForDirectorUPC = async () => {
+  const result = await pool.query(
+    `SELECT 
+        s.id,
+        s.user_id,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        s.estado_id,
+        ts.nombre_servicio AS tipo_servicio,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula
+     FROM solicitudes s
+     JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     WHERE s.estado_id = 6
+     ORDER BY s.fecha_creacion ASC`);
+     
+  return result.rows;
+};
+
+export const getDirectorUPCRequestDetails = async (id) => {
+  const result = await pool.query(
+    `SELECT 
+        s.id,
+        s.user_id,
+        s.form_data,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        s.tipo_servicio_id,
+        s.validacion_formulario,
+        s.comentario_tecnico,
+        ts.nombre_servicio,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula,
+        u.email AS cliente_email
+     FROM solicitudes s
+     JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     WHERE s.id = $1`,
+    [id]);
+
+  if (result.rowCount === 0) {
+    throw new Error("Solicitud no encontrada");
+  }
+
+  const solicitud = result.rows[0];
+
+  // 2) Obtener documentos entregados
+  const documentos = await getDocumentosBySolicitudId(id)
+
+  return {
+    solicitud: {
+      id: solicitud.id,
+      tipo_solicitud: solicitud.tipo_solicitud,
+      fecha_creacion: solicitud.fecha_creacion,
+      servicio: solicitud.nombre_servicio,
+      form_data: solicitud.form_data,
+      form_for_tech: solicitud.validacion_formulario,
+      tech_comment: solicitud.comentario_tecnico
+    },
+    cliente: {
+      cedula: solicitud.cliente_cedula,
+      nombre: solicitud.cliente_nombre,
+      email: solicitud.cliente_email
+    },
+    documentos: documentos
+  };
+}
+
+export const directorUPCDecision = async (id, data) => {
+  const { decision, comentario } = data;
+
+  // decision: "APROBAR" | "RECHAZAR"
+  if (!["APROBAR", "RECHAZAR"].includes(decision)) {
+    throw new Error("La decisión debe ser APROBAR o RECHAZAR.");
+  }
+
+
+  const nuevoEstadoId =
+    decision === "APROBAR"
+      ? 15 //aprobada
+      : 16; //rechazada
+
+  await pool.query(
+    `UPDATE solicitudes
+     SET estado_id = $1,
+         comentario_director_upc = $2,
+         decision_director_upc   = $3
+     WHERE id = $4`,
+    [nuevoEstadoId, comentario || null, decision, id]
+  );
+
+  return {
+    solicitud_id: id,
+    estado_id: nuevoEstadoId,
+    decision,
+    comentario: comentario || null
+  };
+};
