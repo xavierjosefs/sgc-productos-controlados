@@ -242,7 +242,7 @@ export const updateRequestStatus = async (requestId, statusId) => {
 
 export const getRequestsForTecnicoUPC = async () => {
   const result = await pool.query(`
-    SELECT 
+     SELECT 
       s.id,
       s.user_id,
       u.full_name AS nombre_cliente,
@@ -253,7 +253,7 @@ export const getRequestsForTecnicoUPC = async () => {
     JOIN users u ON s.user_id = u.cedula
     JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
     JOIN estados_solicitud e ON s.estado_id = e.id
-    WHERE s.estado_id = (4,16)
+    WHERE s.estado_id IN (4, 16)
     ORDER BY s.fecha_creacion DESC
   `);
   return result.rows;
