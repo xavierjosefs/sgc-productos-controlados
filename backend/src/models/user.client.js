@@ -375,7 +375,10 @@ export const getRequestsForDirectorUPC = async () => {
         s.estado_id,
         ts.nombre_servicio AS tipo_servicio,
         u.full_name AS cliente_nombre,
-        u.cedula AS cliente_cedula
+        u.cedula AS cliente_cedula,
+        s.validacion_formulario,
+        s.comentario_tecnico,
+        s.recomendacion_tecnico
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
