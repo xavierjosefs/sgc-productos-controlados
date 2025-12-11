@@ -182,6 +182,8 @@ const DetalleSolicitudTecnico = () => {
   }
 
   const { solicitud, cliente, documentos } = detalle;
+  // Mostrar comentario del director si la solicitud fue devuelta por director UPC (estado_id 16)
+  const mostrarComentarioDirector = solicitud.estado_id === 16 && solicitud.comentario_director_upc;
   const modoSoloLectura = solicitud.estado && solicitud.estado.toLowerCase().includes('devuelta');
 
   return (
@@ -235,7 +237,13 @@ const DetalleSolicitudTecnico = () => {
 
         {/* Sección de Validación */}
         <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-200 mb-8">
-          
+          {/* Comentario del director UPC si fue devuelta */}
+          {mostrarComentarioDirector && (
+            <div className="mb-8 p-4 border-l-4 border-yellow-500 bg-yellow-50">
+              <div className="font-semibold text-yellow-700 mb-2">Comentario del Director UPC:</div>
+              <div className="text-gray-800 whitespace-pre-line">{solicitud.comentario_director_upc}</div>
+            </div>
+          )}
           {/* NUEVO: Subtítulo para el Formulario */}
           <div className="mb-8">
             <div className="border-b border-gray-200 pb-2 mb-4">

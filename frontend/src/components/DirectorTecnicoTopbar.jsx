@@ -12,39 +12,49 @@ function DirectorTecnicoTopbar() {
     };
 
     return (
-        <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-6 py-4">
-                <div className="flex items-center justify-between">
-                    <Logo />
-                    
-                    <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-20">
+                    {/* Logo */}
+                    <div className="flex items-center gap-3">
+                        <Logo className="h-10 w-10" />
+                    </div>
+
+                    {/* Navegación */}
+                    <nav className="flex items-center gap-2">
                         <button
                             onClick={() => navigate('/director-tecnico')}
-                            className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors"
+                            className={
+                                `font-bold transition-colors px-6 py-2 rounded-xl ` +
+                                (window.location.pathname === '/director-tecnico'
+                                    ? 'bg-[#085297] text-white'
+                                    : 'text-[#4A8BDF] hover:bg-[#4A8BDF]/90 hover:text-white')
+                            }
                         >
                             Solicitudes
                         </button>
-                        
+                    </nav>
+
+                    {/* Usuario y Logout */}
+                    <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#4A8BDF] rounded-full flex items-center justify-center">
-                                <span className="text-white font-semibold text-sm">
-                                    {user?.email?.substring(0, 2).toUpperCase() || 'DT'}
-                                </span>
+                            <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-semibold">
+                                {user?.full_name?.charAt(0) || 'D'}
                             </div>
-                            <div className="text-left">
-                                <p className="text-sm font-medium text-gray-900">{user?.nombre || 'Director de Técnico'}</p>
+                            <div className="hidden sm:block">
+                                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Director Técnico'}</p>
                                 <p className="text-xs text-gray-500">Director de Técnico</p>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="Cerrar sesión"
-                            >
-                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                            </button>
                         </div>
+                        <button
+                            onClick={handleLogout}
+                            className="text-gray-600 hover:text-red-600 transition-colors"
+                            title="Cerrar sesión"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>

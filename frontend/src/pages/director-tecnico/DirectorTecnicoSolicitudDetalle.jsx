@@ -1,4 +1,15 @@
 import { useState, useEffect } from 'react';
+// Función para formatear nombres de campos (igual que en técnico)
+function formatearNombreCampo(texto) {
+        let result = texto.replace(/([a-z])([A-Z])/g, '$1 $2');
+        result = result.replace(/([a-zA-Z])([0-9])/g, '$1 $2');
+        result = result.replace(/[_-]/g, ' ');
+        result = result.split(' ').map(palabra => {
+            if (palabra.length === 0) return palabra;
+            return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase();
+        }).join(' ');
+        return result;
+}
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -23,7 +34,7 @@ function DirectorTecnicoSolicitudDetalle() {
     const fetchDetail = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:8000/api/directorUPC/requests/${id}`, {
+            const response = await axios.get(`http://localhost:8000/api/director-upc/requests/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRequest(response.data.detalle);
@@ -53,7 +64,7 @@ function DirectorTecnicoSolicitudDetalle() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:8000/api/directorUPC/requests/${id}/decision`,
+                `http://localhost:8000/api/director-upc/requests/${id}/decision`,
                 {
                     decision: 'RECHAZAR',
                     comentario: comments
@@ -75,7 +86,7 @@ function DirectorTecnicoSolicitudDetalle() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:8000/api/directorUPC/requests/${id}/decision`,
+                `http://localhost:8000/api/director-upc/requests/${id}/decision`,
                 {
                     decision: 'APROBAR',
                     comentario: comments || ''
@@ -112,8 +123,36 @@ function DirectorTecnicoSolicitudDetalle() {
     }
 
     const tecnicoValidation = request.validaciones_tecnico || {};
-    const formularioEstado = tecnicoValidation.formulario_estado;
-    const documentosValidados = tecnicoValidation.documentos_validados || {};
+    // Usar los datos planos del request si no hay arrays especiales
+    const formData = request.form_data || {};
+    const documentos = request.documentos || [];
+    // Estado de validación del formulario (booleano o null)
+    const formularioCumple = tecnicoValidation.formulario_estado;
+    // Validaciones por campo (si existen)
+    const camposValidaciones = tecnicoValidation.campos_formulario || {};
+
+    // Estado visual: mostrar solo "Aprobada" o "Rechazada" según recomendacion_tecnico si existe
+    let estadoVisual = '';
+    let estadoColor = '';
+    const recomendacion = tecnicoValidation.recomendacion;
+    if (typeof recomendacion !== 'undefined' && recomendacion !== null) {
+        if (recomendacion === true || recomendacion === 1 || recomendacion === 'true' || recomendacion === 'APROBADO') {
+            estadoVisual = 'Aprobada';
+            estadoColor = 'bg-green-100 text-green-800';
+        } else {
+            estadoVisual = 'Rechazada';
+            estadoColor = 'bg-orange-100 text-orange-800';
+        }
+    } else if (request.estado_actual?.toLowerCase().includes('rechazada')) {
+        estadoVisual = 'Rechazada';
+        estadoColor = 'bg-orange-100 text-orange-800';
+    } else if (request.estado_actual?.toLowerCase().includes('aprobada')) {
+        estadoVisual = 'Aprobada';
+        estadoColor = 'bg-green-100 text-green-800';
+    } else {
+        estadoVisual = request.estado_actual || '-';
+        estadoColor = 'bg-blue-100 text-blue-800';
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -170,14 +209,8 @@ function DirectorTecnicoSolicitudDetalle() {
                         <div>
                             <p className="text-xs text-gray-500 mb-1">Estado</p>
                             <p className="text-sm">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    request.estado_actual?.toLowerCase().includes('rechazada')
-                                        ? 'bg-orange-100 text-orange-800'
-                                        : request.estado_actual?.toLowerCase().includes('aprobada')
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                    {request.estado_actual}
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${estadoColor}`}>
+                                    {estadoVisual}
                                 </span>
                             </p>
                         </div>
@@ -185,150 +218,115 @@ function DirectorTecnicoSolicitudDetalle() {
                 </div>
             </div>
 
-            {/* Evaluación del Técnico */}
+            {/* Evaluación del Técnico (solo lectura, igual a técnico) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Evaluación del Técnico</h2>
-
-                <div className="space-y-6">
-                    {/* Formulario de Solicitud de Inscripción */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Formulario de Solicitud de Inscripción de Drogas Controladas Clase A</p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Formulario de Solicitud"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors">
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-2 ml-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    formularioEstado === true
-                                        ? 'bg-green-100 text-green-700'
-                                        : formularioEstado === false
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                    {formularioEstado === true ? 'Sí Cumple' : formularioEstado === false ? 'No Cumple' : 'Sin validar'}
-                                </span>
-                            </div>
-                        </div>
+                {/* Formulario validado por el técnico */}
+                <div className="mb-8">
+                    <div className="border-b border-gray-200 pb-2 mb-4">
+                        <h3 className="text-base font-bold text-[#4A8BDF]">Datos del Formulario</h3>
                     </div>
-
-                    {/* Cálculo de Cantidad y Pacientes */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Cálculo de Cantidad y Pacientes</p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Cedulario"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors">
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-2 ml-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    documentosValidados['Cedulario'] === true
-                                        ? 'bg-green-100 text-green-700'
-                                        : documentosValidados['Cedulario'] === false
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                    {documentosValidados['Cedulario'] === true ? 'Sí Cumple' : documentosValidados['Cedulario'] === false ? 'No Cumple' : 'Sin validar'}
-                                </span>
-                            </div>
-                        </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                        {formData && typeof formData === 'object' && Object.keys(formData).length > 0 ? (
+                            <table className="w-full text-left">
+                                <tbody>
+                                    {Object.entries(formData).map(([key, value]) => (
+                                        typeof value === 'object' && value !== null && !Array.isArray(value) ? (
+                                            Object.entries(value).map(([subKey, subValue]) => {
+                                                const campoKey = `${key}-${subKey}`;
+                                                const validacion = camposValidaciones[campoKey];
+                                                let estado = 'Sin validar', color = 'bg-gray-100 text-gray-500';
+                                                if (validacion === true || validacion === 'APROBADO') { estado = 'Sí Cumple'; color = 'bg-green-100 text-green-700'; }
+                                                else if (validacion === false || validacion === 'RECHAZADO') { estado = 'No Cumple'; color = 'bg-orange-100 text-orange-700'; }
+                                                return (
+                                                    <tr key={campoKey} className="border-b border-gray-200 last:border-0">
+                                                        <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">{formatearNombreCampo(subKey)}</td>
+                                                        <td className="py-3 text-gray-800 w-1/2">{String(subValue)}</td>
+                                                        <td className="py-3 w-1/4">
+                                                            <span className={`px-4 py-2 rounded-lg text-sm font-medium ${color}`}>{estado}</span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            (() => {
+                                                const campoKey = key;
+                                                const validacion = camposValidaciones[campoKey];
+                                                let estado = 'Sin validar', color = 'bg-gray-100 text-gray-500';
+                                                if (validacion === true || validacion === 'APROBADO') { estado = 'Sí Cumple'; color = 'bg-green-100 text-green-700'; }
+                                                else if (validacion === false || validacion === 'RECHAZADO') { estado = 'No Cumple'; color = 'bg-orange-100 text-orange-700'; }
+                                                return (
+                                                    <tr key={campoKey} className="border-b border-gray-200 last:border-0">
+                                                        <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">{formatearNombreCampo(key)}</td>
+                                                        <td className="py-3 text-gray-800 w-1/2">{String(value)}</td>
+                                                        <td className="py-3 w-1/4">
+                                                            <span className={`px-4 py-2 rounded-lg text-sm font-medium ${color}`}>{estado}</span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })()
+                                        )
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="text-gray-500">No hay datos de formulario validados por el técnico.</div>
+                        )}
                     </div>
+                </div>
 
-                    {/* Hoja Solicitante y/o Especialidad */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Hoja Solicitante y/o Especialidad</p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Exequatur"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors">
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-2 ml-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    documentosValidados['Exequatur'] === true
-                                        ? 'bg-green-100 text-green-700'
-                                        : documentosValidados['Exequatur'] === false
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                    {documentosValidados['Exequatur'] === true ? 'Sí Cumple' : documentosValidados['Exequatur'] === false ? 'No Cumple' : 'Sin validar'}
-                                </span>
-                            </div>
-                        </div>
+                {/* Documentos validados por el técnico */}
+                <div className="mb-8">
+                    <div className="border-b border-gray-200 pb-2 mb-4">
+                        <h3 className="text-base font-bold text-[#4A8BDF]">Documentación Requerida</h3>
                     </div>
-
-                    {/* Fotocopia */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Fotocopia</p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Paseprint.pdf"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors">
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-2 ml-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    documentosValidados['Paseprint'] === true
-                                        ? 'bg-green-100 text-green-700'
-                                        : documentosValidados['Paseprint'] === false
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                    {documentosValidados['Paseprint'] === true ? 'Sí Cumple' : documentosValidados['Paseprint'] === false ? 'No Cumple' : 'Sin validar'}
-                                </span>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                        {Array.isArray(documentos) && documentos.length > 0 ? (
+                            <div className="space-y-6">
+                                {documentos.map((doc, idx) => (
+                                    <div key={idx} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 border-b pb-3 last:border-b-0">
+                                        <div className="flex-1 font-semibold mb-2" style={{ color: '#4A8BDF' }}>{formatearNombreCampo(doc.nombre_descriptivo || doc.tipo_documento || doc.nombre || `Documento ${idx+1}`)}</div>
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                value={doc.nombre_archivo || doc.nombre || ''}
+                                                readOnly
+                                                className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {doc.url && (
+                                                <a
+                                                    href={doc.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors"
+                                                >
+                                                    Ver
+                                                </a>
+                                            )}
+                                            <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                                                doc.estado === 'APROBADO' ? 'bg-green-100 text-green-700' :
+                                                doc.estado === 'RECHAZADO' ? 'bg-orange-100 text-orange-700' :
+                                                'bg-gray-100 text-gray-500'}`}
+                                            >
+                                                {doc.estado === 'APROBADO' ? 'Sí Cumple' : doc.estado === 'RECHAZADO' ? 'No Cumple' : 'Sin validar'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="text-gray-500">No hay documentos validados por el técnico.</div>
+                        )}
                     </div>
+                </div>
 
-                    {/* Recibida Especial del Pago */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Recibida Especial del Pago</p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Pagopadf"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button className="px-6 py-2.5 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors">
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-2 ml-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    documentosValidados['Pagopadf'] === false
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                    No Cumple
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Comentario del Técnico */}
-                    <div>
-                        <p className="text-gray-700 font-medium text-sm mb-3">Comentario del Técnico</p>
-                        <div className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm min-h-[100px]">
-                            {tecnicoValidation.comentarios || 'El recibo de pago tiene más de 3 meses realizado.'}
-                        </div>
+                {/* Comentario del Técnico */}
+                <div>
+                    <p className="text-gray-700 font-medium text-sm mb-3">Comentario del Técnico</p>
+                    <div className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm min-h-[100px]">
+                        {tecnicoValidation.comentarios || 'Sin comentario.'}
                     </div>
                 </div>
             </div>

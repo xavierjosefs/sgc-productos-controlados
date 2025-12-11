@@ -18,7 +18,7 @@ function DirectorTecnicoSolicitudes() {
     const fetchRequests = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:8000/api/directorUPC/requests', {
+            const response = await axios.get('http://localhost:8000/api/director-upc/requests', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRequests(response.data.requests);
@@ -134,7 +134,7 @@ function DirectorTecnicoSolicitudes() {
                                 <th className="px-6 py-3 text-left text-sm font-semibold text-white">SOLICITANTE</th>
                                 <th className="px-6 py-3 text-left text-sm font-semibold text-white">TIPO DE SERVICIO</th>
                                 <th className="px-6 py-3 text-left text-sm font-semibold text-white">ESTADO</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white"></th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -146,9 +146,10 @@ function DirectorTecnicoSolicitudes() {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-900">{request.cliente_nombre || '-'}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900">{request.tipo_servicio || '-'}</td>
+                                    {/* columna de recomendación técnico eliminada, solo queda estado */}
                                     <td className="px-6 py-4 text-sm">
-                                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {request.estado_actual || 'En evaluación'}
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${request.recomendacion_tecnico ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                                            {request.recomendacion_tecnico ? 'Aprobado' : 'Rechazado'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm">

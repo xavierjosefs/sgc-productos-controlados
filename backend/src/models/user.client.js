@@ -272,7 +272,9 @@ export const getTecnicoUPCRequestDetails = async (id) => {
         ts.nombre_servicio,
         u.full_name AS cliente_nombre,
         u.cedula AS cliente_cedula,
-        u.email AS cliente_email
+        u.email AS cliente_email,
+        s.comentario_director_upc,
+        s.estado_id
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
@@ -294,7 +296,9 @@ export const getTecnicoUPCRequestDetails = async (id) => {
       tipo_solicitud: solicitud.tipo_solicitud,
       fecha_creacion: solicitud.fecha_creacion,
       servicio: solicitud.nombre_servicio,
-      form_data: solicitud.form_data
+      form_data: solicitud.form_data,
+      comentario_director_upc: solicitud.comentario_director_upc,
+      estado_id: solicitud.estado_id
     },
     cliente: {
       cedula: solicitud.cliente_cedula,
@@ -472,11 +476,11 @@ export const directorUPCDecision = async (id, data) => {
   }
 
   // Si aprueba: va a Dirección (estado 7)
-  // Si rechaza: devuelve al técnico (estado 5)
+  // Si rechaza: devuelve al técnico (estado 16)
   const nuevoEstadoId =
     decision === "APROBAR"
       ? 7  // Aprobada por Director Técnico - va a Dirección
-      : 5; // Devuelta por Director Técnico - regresa al técnico
+      : 16; // Devuelta por Director Técnico - regresa al técnico
 
   await pool.query(
     `UPDATE solicitudes
