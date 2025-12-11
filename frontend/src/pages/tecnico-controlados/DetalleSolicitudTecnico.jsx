@@ -35,40 +35,48 @@ const DetalleSolicitudTecnico = () => {
     return result;
   };
 
-  // CORRECCIÓN: Un solo useEffect para cargar todo y evitar el error de loop infinito
   useEffect(() => {
-    async function fetchDetalle() {
-      setLoading(true);
-      try {
-        const res = await getRequestDetail(id);
-        const data = res.detalle;
-        
-        setDetalle(data);
-        
-        // Inicializar documentos
-        setDocumentosEstado(
-          (data.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
-        );
+  async function fetchDetalle() {
+    setLoading(true);
+    try {
+      const res = await getRequestDetail(id);
+      const data = res.detalle;
+      
+      setDetalle(data);
+      
+      // Inicializar documentos
+      setDocumentosEstado(
+        (data.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
+      );
 
-        // Inicializar validaciones del formulario AQUÍ mismo
-        if (data.solicitud?.form_data) {
-          setFormValidaciones(
-            Object.entries(data.solicitud.form_data).map(([key]) => ({ 
-              key, 
-              cumple: null 
-            }))
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error('No se pudo cargar la solicitud');
-        navigate(-1);
+      // Inicializar validaciones del formulario CON SOPORTE PARA OBJETOS ANIDADOS
+      if (data.solicitud?.form_data) {
+        const validaciones = [];
+        
+        Object.entries(data.solicitud.form_data).forEach(([key, value]) => {
+          // Si es un objeto anidado, agregar cada subcampo
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            Object.entries(value).forEach(([subKey]) => {
+              validaciones.push({ key: `${key}-${subKey}`, cumple: null });
+            });
+          } else {
+            // Si es un valor simple, agregarlo directamente
+            validaciones.push({ key, cumple: null });
+          }
+        });
+        
+        setFormValidaciones(validaciones);
       }
-      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      toast.error('No se pudo cargar la solicitud');
+      navigate(-1);
     }
-    fetchDetalle();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    setLoading(false);
+  }
+  fetchDetalle();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [id]);
 
   const handleDocumentoChange = (docId, cumple) => {
     setDocumentosEstado(prev => 
@@ -76,9 +84,10 @@ const DetalleSolicitudTecnico = () => {
     );
   };
 
-  const handleFormChange = (idx, cumple) => {
-    setFormValidaciones(prev => 
-      prev.map((f, i) => i === idx ? { ...f, cumple } : f)
+  // Cambia la validación de un campo (por key)
+  const handleFormChange = (keyOrIdx, cumple) => {
+    setFormValidaciones(prev =>
+      prev.map((f, i) => (f.key === keyOrIdx || i === keyOrIdx) ? { ...f, cumple } : f)
     );
   };
 
@@ -240,14 +249,9 @@ const DetalleSolicitudTecnico = () => {
                   <tbody>
                     {Object.entries(solicitud.form_data).map(([key, value], idx) => (
                       typeof value === 'object' && value !== null && !Array.isArray(value) ? (
-                        Object.entries(value).map(([subKey, subValue], ) => {
+                        Object.entries(value).map(([subKey, subValue]) => {
                           const validIdx = `${key}-${subKey}`;
-                          // Buscar el estado de validación para este subcampo
-                          let validacion = formValidaciones.find(f => f.key === validIdx);
-                          if (!validacion) {
-                            validacion = { key: validIdx, cumple: null };
-                            // Solo para visualización, no modificar el estado aquí
-                          }
+                          const validacion = formValidaciones.find(f => f.key === validIdx) || { key: validIdx, cumple: null };
                           return (
                             <tr key={validIdx} className="border-b border-gray-200 last:border-0">
                               <td className="py-3 pr-6 font-semibold text-gray-600 w-1/4">
@@ -262,17 +266,7 @@ const DetalleSolicitudTecnico = () => {
                                         type="radio"
                                         name={`campo-cumple-${validIdx}`}
                                         checked={validacion.cumple === true}
-                                        onChange={() => {
-                                          setFormValidaciones(prev => {
-                                            // Si existe, actualiza; si no, agrega
-                                            const exists = prev.find(f => f.key === validIdx);
-                                            if (exists) {
-                                              return prev.map(f => f.key === validIdx ? { ...f, cumple: true } : f);
-                                            } else {
-                                              return [...prev, { key: validIdx, cumple: true }];
-                                            }
-                                          });
-                                        }}
+                                        onChange={() => handleFormChange(validIdx, true)}
                                         className="accent-[#085297] w-5 h-5"
                                       />
                                       <span className="text-base">Sí Cumple</span>
@@ -282,16 +276,7 @@ const DetalleSolicitudTecnico = () => {
                                         type="radio"
                                         name={`campo-cumple-${validIdx}`}
                                         checked={validacion.cumple === false}
-                                        onChange={() => {
-                                          setFormValidaciones(prev => {
-                                            const exists = prev.find(f => f.key === validIdx);
-                                            if (exists) {
-                                              return prev.map(f => f.key === validIdx ? { ...f, cumple: false } : f);
-                                            } else {
-                                              return [...prev, { key: validIdx, cumple: false }];
-                                            }
-                                          });
-                                        }}
+                                        onChange={() => handleFormChange(validIdx, false)}
                                         className="accent-[#085297] w-5 h-5"
                                       />
                                       <span className="text-base">No Cumple</span>
@@ -314,9 +299,9 @@ const DetalleSolicitudTecnico = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                   <input
                                     type="radio"
-                                    name={`campo-cumple-${idx}`}
-                                    checked={formValidaciones[idx]?.cumple === true}
-                                    onChange={() => handleFormChange(idx, true)}
+                                    name={`campo-cumple-${key}`}
+                                    checked={formValidaciones.find(f => f.key === key)?.cumple === true}
+                                    onChange={() => handleFormChange(key, true)}
                                     className="accent-[#085297] w-5 h-5"
                                   />
                                   <span className="text-base">Sí Cumple</span>
@@ -324,9 +309,9 @@ const DetalleSolicitudTecnico = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                   <input
                                     type="radio"
-                                    name={`campo-cumple-${idx}`}
-                                    checked={formValidaciones[idx]?.cumple === false}
-                                    onChange={() => handleFormChange(idx, false)}
+                                    name={`campo-cumple-${key}`}
+                                    checked={formValidaciones.find(f => f.key === key)?.cumple === false}
+                                    onChange={() => handleFormChange(key, false)}
                                     className="accent-[#085297] w-5 h-5"
                                   />
                                   <span className="text-base">No Cumple</span>
