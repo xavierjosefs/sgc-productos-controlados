@@ -1,34 +1,93 @@
 /**
- * AdminSolicitudes - Gestión de solicitudes con filtros
+ * AdminSolicitudes - Gestion de solicitudes con filtros
  */
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonStatsGrid, SkeletonTable } from '../../components/SkeletonLoaders';
 
 export default function AdminSolicitudes() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
   const [filterTipo, setFilterTipo] = useState('todos');
   const [filterEstado, setFilterEstado] = useState('todos');
+  const [sortOrder, setSortOrder] = useState('desc');
 
-  const mockSolicitudes = [
-    { id: 'SOL001', codigo: 'SOL-2024-001', nombre: 'Juan Pérez García', fechaCreacion: '2024-01-15', tipo: 'Clase A', estado: 'Pendiente' },
-    { id: 'SOL002', codigo: 'SOL-2024-002', nombre: 'María López Hernández', fechaCreacion: '2024-01-20', tipo: 'Clase B', estado: 'Aprobada' },
-    { id: 'SOL003', codigo: 'SOL-2024-003', nombre: 'Carlos Rodríguez Sánchez', fechaCreacion: '2024-02-01', tipo: 'Capa C', estado: 'Devuelta' },
-    { id: 'SOL004', codigo: 'SOL-2024-004', nombre: 'Ana Martínez Torres', fechaCreacion: '2024-02-10', tipo: 'Clase A', estado: 'Enviada' },
-    { id: 'SOL005', codigo: 'SOL-2024-005', nombre: 'Luis González Ramírez', fechaCreacion: '2024-02-15', tipo: 'Clase B', estado: 'Aprobada' },
-  ];
+  // Fetch en paralelo de solicitudes, servicios y estados 
+  const { data, loading, error } = useAdminData(async () => {
+    const [requestsRes, servicesRes, statusesRes] = await Promise.all([
+      api.getAllRequests(),
+      api.getServices(),
+      api.getRequestStatuses()
+    ]);
+    
+    return {
+      requests: requestsRes.requests || [],
+      services: servicesRes.services || [],
+      statuses: statusesRes.statuses || []
+    };
+  });
+
+  const solicitudes = data?.requests || [];
+  const tiposServicio = data?.services || [];
+  const estadosSolicitud = data?.statuses || [];
+
+  // Estadisticas (conteo de solicitudes por estado... etc)
+  const stats = useMemo(() => {
+    const counts = solicitudes.reduce((acc, curr) => {
+      const status = (curr.estado || '').toLowerCase();
+      if (status.includes('aprobada')) acc.aprobadas++;
+      else if (status.includes('devuelta')) acc.devueltas++;
+      else if (status.includes('pendiente')) acc.pendientes++;
+      return acc;
+    }, { aprobadas: 0, devueltas: 0, pendientes: 0 });
+    return counts;
+  }, [solicitudes]);
+
+  // Manejo de errores
+  if (error) {
+    toast.error(error);
+  }
 
   const statsCards = [
-    { label: 'Enviadas', value: 20, color: 'text-[#4A8BDF]' },
-    { label: 'Aprobadas', value: 8, color: 'text-green-600' },
-    { label: 'Devueltas', value: 2, color: 'text-orange-600' },
-    { label: 'Pendientes', value: 10, color: 'text-gray-600' },
+    { label: 'Pendientes', value: stats.pendientes, color: 'text-gray-600' },
+    { label: 'Aprobadas', value: stats.aprobadas, color: 'text-green-600' },
+    { label: 'Devueltas', value: stats.devueltas, color: 'text-orange-600' },
   ];
 
-  const filteredSolicitudes = mockSolicitudes.filter((sol) => {
-    const matchesTipo = filterTipo === 'todos' || sol.tipo === filterTipo;
-    const matchesEstado = filterEstado === 'todos' || sol.estado === filterEstado;
+  const filteredSolicitudes = solicitudes.filter((sol) => {
+    const solEstado = (sol.estado || '').toLowerCase();
+    
+    let matchesEstado = true;
+    if (filterEstado !== 'todos') {
+         matchesEstado = solEstado.includes(filterEstado.toLowerCase());
+    }
+    
+    const matchesTipo = filterTipo === 'todos' || (sol.nombre_servicio || '').toLowerCase().includes(filterTipo.toLowerCase());
+
     return matchesTipo && matchesEstado;
+  }).sort((a, b) => {
+      const dateA = new Date(a.fecha_creacion);
+      const dateB = new Date(b.fecha_creacion);
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
   });
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-6">Gestión de Solicitudes</h1>
+        <SkeletonStatsGrid cards={3} labels={['Pendientes', 'Aprobadas', 'Devueltas']} />
+        <SkeletonTable 
+          rows={8} 
+          columns={6}
+          headers={['ID', 'Solicitante', 'Servicio', 'Fecha', 'Estado', 'Acciones']}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -50,8 +109,10 @@ export default function AdminSolicitudes() {
       {/* Filtros y tabla */}
       <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
         {/* Controles de filtros */}
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1">
+        <div className="flex gap-4 mb-6 flex-wrap">
+          
+          {/* TIPO FILTER */}
+          <div className="min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tipo
             </label>
@@ -61,12 +122,16 @@ export default function AdminSolicitudes() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
             >
               <option value="todos">Todos</option>
-              <option value="Clase A">Clase A</option>
-              <option value="Clase B">Clase B</option>
-              <option value="Capa C">Capa C</option>
+              {tiposServicio.map(service => (
+                  <option key={service.codigo_servicio} value={service.nombre_servicio}>
+                      {service.nombre_servicio}
+                  </option>
+              ))}
             </select>
           </div>
-          <div className="flex-1">
+
+          {/* ESTADO FILTER */}
+          <div className="min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Estado
             </label>
@@ -76,16 +141,27 @@ export default function AdminSolicitudes() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
             >
               <option value="todos">Todos</option>
-              <option value="Enviada">Enviada</option>
-              <option value="Aprobada">Aprobada</option>
-              <option value="Devuelta">Devuelta</option>
-              <option value="Pendiente">Pendiente</option>
+              {estadosSolicitud.map(status => (
+                  <option key={status.id} value={status.nombre_mostrar || status.nombre_interno}>
+                      {status.nombre_mostrar}
+                  </option>
+              ))}
             </select>
           </div>
-          <div className="flex items-end">
-            <button className="px-6 py-2 bg-[#085297] text-white rounded-lg hover:bg-[#064175] font-medium">
-              Filtrar
-            </button>
+
+          {/* FECHA FILTER */}
+          <div className="min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha
+            </label>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
+            >
+              <option value="desc">Más recientes primero</option>
+              <option value="asc">Más antiguos primero</option>
+            </select>
           </div>
         </div>
 
@@ -103,7 +179,9 @@ export default function AdminSolicitudes() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredSolicitudes.length === 0 ? (
+              {loading ? (
+                <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Cargando...</td></tr>
+              ) : filteredSolicitudes.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                     No se encontraron solicitudes
@@ -113,20 +191,24 @@ export default function AdminSolicitudes() {
                 filteredSolicitudes.map((solicitud) => (
                   <tr key={solicitud.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {solicitud.codigo}
+                      {solicitud.codigo_solicitud || solicitud.id}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{solicitud.nombre}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{solicitud.fechaCreacion}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{solicitud.tipo}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{solicitud.usuario_nombre || solicitud.full_name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{
+                        solicitud.fecha_creacion ? new Date(solicitud.fecha_creacion).toLocaleDateString() : 'N/A'
+                    }</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{solicitud.nombre_servicio}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          solicitud.estado === 'Aprobada'
+                          (solicitud.estado || '').toLowerCase().includes('aprobada')
                             ? 'bg-green-100 text-green-800'
-                            : solicitud.estado === 'Enviada'
+                            : (solicitud.estado || '').toLowerCase().includes('pendiente')
                             ? 'bg-blue-100 text-blue-800'
-                            : solicitud.estado === 'Devuelta'
+                            : (solicitud.estado || '').toLowerCase().includes('devuelta')
                             ? 'bg-yellow-100 text-yellow-800'
+                            : (solicitud.estado || '').toLowerCase().includes('rechazada')
+                            ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >

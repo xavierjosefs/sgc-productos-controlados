@@ -19,9 +19,9 @@ const VentanillaSolicitudDetalle = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Estados para validación de documentos
+    // Estados para validación de documentos y campos del formulario
     const [documentValidation, setDocumentValidation] = useState({});
-    const [formularioValidation, setFormularioValidation] = useState(null);
+    const [formFieldsValidation, setFormFieldsValidation] = useState({});
     const [comments, setComments] = useState('');
     const [showValidationErrors, setShowValidationErrors] = useState(false);
     
@@ -31,7 +31,9 @@ const VentanillaSolicitudDetalle = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showFormDataModal, setShowFormDataModal] = useState(false);
     const [successType, setSuccessType] = useState(''); // 'devuelta' o 'aprobada'
-    
+    const [hasError, setHasError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
     const [validating, setValidating] = useState(false);
 
     // Cargar detalle de solicitud
@@ -98,7 +100,9 @@ const VentanillaSolicitudDetalle = () => {
         
         // Verificar si todos los campos están validados para limpiar errores
         const documentosLength = request?.documentos?.length || 0;
-        const allValidated = formularioValidation !== null && 
+        
+        // CORRECCIÓN 1: Se cambió 'formularioValidation' (no definido) por 'formFieldsValidation'
+        const allValidated = formFieldsValidation !== null && 
             Object.keys({...documentValidation, [docId]: value}).length === documentosLength &&
             Object.values({...documentValidation, [docId]: value}).every(val => val !== null);
         
@@ -107,15 +111,17 @@ const VentanillaSolicitudDetalle = () => {
         }
     };
 
-    // Manejar validación del formulario
-    const handleFormularioValidation = (value) => {
-        const isReturned = request?.estado_actual?.toLowerCase() === 'devuelta por vus';
-        if (isReturned && formularioValidation === true) {
-            return;
-        }
-        setFormularioValidation(value);
-        // Limpiar error cuando se valida
-        if (value !== null) {
+    // Manejar validación de campo del formulario
+    const handleFormFieldValidation = (fieldKey, value) => {
+        setFormFieldsValidation(prev => ({
+            ...prev,
+            [fieldKey]: value
+        }));
+        // Limpiar error si todos los campos están validados
+        const allFields = Object.keys(request?.form_data || {});
+            const allValidated = allFields.length > 0 &&
+                allFields.every(k => formFieldsValidation[k] !== undefined && formFieldsValidation[k] !== null);
+        if (allValidated) {
             setShowValidationErrors(false);
         }
     };
@@ -129,7 +135,9 @@ const VentanillaSolicitudDetalle = () => {
             setSuccessType('devuelta');
             setShowSuccessModal(true);
         } catch (err) {
-            alert(err.message);
+            setHasError(true);
+            setErrorMessage(err.message);
+
             setValidating(false);
             setShowRejectModal(false);
         }
@@ -143,16 +151,18 @@ const VentanillaSolicitudDetalle = () => {
             setShowApproveModal(false);
             navigate('/ventanilla');
         } catch (err) {
-            alert(err.message);
+            setHasError(true);
+            setErrorMessage(err.message);
+
             setValidating(false);
             setShowApproveModal(false);
         }
     };
 
-    // Verificar si hay algún documento o formulario marcado como "No Cumple"
+    // Verificar si hay algún documento o campo del formulario marcado como "No Cumple"
     const hasRejectedDocuments = Object.values(documentValidation).some(val => val === false);
-    const hasRejectedFormulario = formularioValidation === false;
-    const hasAnyRejection = hasRejectedDocuments || hasRejectedFormulario;
+    const hasRejectedFormFields = Object.values(formFieldsValidation).some(val => val === false);
+    const hasAnyRejection = hasRejectedDocuments || hasRejectedFormFields;
 
     // Verificar si la solicitud ya fue aprobada (está en evaluación técnica o estados posteriores)
     const isAlreadyApproved = request?.estado_actual?.toLowerCase() === 'en evaluación técnica' ||
@@ -168,28 +178,32 @@ const VentanillaSolicitudDetalle = () => {
     // Manejar Click en Devolver
     const handleRejectClick = () => {
         if (isAlreadyApproved) {
-            alert("No se puede devolver una solicitud que ya fue aprobada y está en evaluación técnica o en etapas posteriores.");
+            setHasError(true);
+            setErrorMessage("No se puede devolver una solicitud que ya fue aprobada y está en evaluación técnica o en etapas posteriores.");
             return;
         }
-        
         // Verificar que todos los campos estén validados
         const documentosLength = request?.documentos?.length || 0;
-        const allFieldsValidated = formularioValidation !== null && 
+        const formFieldsLength = Object.keys(request?.form_data || {}).length;
+        const allFieldsValidated = formFieldsLength > 0 &&
+            Object.keys(formFieldsValidation).length === formFieldsLength &&
+            Object.values(formFieldsValidation).every(val => val !== null) &&
             Object.keys(documentValidation).length === documentosLength &&
             Object.values(documentValidation).every(val => val !== null);
-        
         if (!allFieldsValidated) {
             setShowValidationErrors(true);
-            alert("Debes validar todos los requisitos (Formulario y Documentos) antes de devolver la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes validar todos los requisitos (Formulario y Documentos) antes de devolver la solicitud.");
             return;
         }
-        
         if (!hasAnyRejection) {
-            alert("Debes marcar al menos un requisito como 'No Cumple' para devolver la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes marcar al menos un requisito como 'No Cumple' para devolver la solicitud.");
             return;
         }
         if (!comments.trim()) {
-            alert("Debes ingresar los comentarios explicando por qué no cumple.");
+            setHasError(true);
+            setErrorMessage("Debes ingresar los comentarios explicando por qué no cumple.");
             return;
         }
         setShowRejectModal(true);
@@ -199,22 +213,24 @@ const VentanillaSolicitudDetalle = () => {
     const handleApproveClick = () => {
         // Verificar que todos los campos estén validados
         const documentosLength = request?.documentos?.length || 0;
-        const allFieldsValidated = formularioValidation !== null && 
+        const formFieldsLength = Object.keys(request?.form_data || {}).length;
+        const allFieldsValidated = formFieldsLength > 0 &&
+            Object.keys(formFieldsValidation).length === formFieldsLength &&
+            Object.values(formFieldsValidation).every(val => val !== null) &&
             Object.keys(documentValidation).length === documentosLength &&
             Object.values(documentValidation).every(val => val !== null);
-        
         if (!allFieldsValidated) {
             setShowValidationErrors(true);
-            alert("Debes validar todos los requisitos (Formulario y Documentos) antes de aprobar la solicitud.");
+            setHasError(true);
+            setErrorMessage("Debes validar todos los requisitos (Formulario y Documentos) antes de aprobar la solicitud.");
             return;
         }
-        
-        // Verificar que todos los documentos y el formulario estén marcados como "Sí Cumple"
+        // Verificar que todos los documentos y campos del formulario estén marcados como "Sí Cumple"
         const allDocsApproved = Object.values(documentValidation).every(val => val === true);
-        const formularioApproved = formularioValidation === true;
-        
-        if (!allDocsApproved || !formularioApproved) {
-            alert("Todos los documentos y el formulario deben estar marcados como 'Sí Cumple' para aprobar la solicitud.");
+        const allFormFieldsApproved = Object.values(formFieldsValidation).every(val => val === true);
+        if (!allDocsApproved || !allFormFieldsApproved) {
+            setHasError(true);
+            setErrorMessage("Todos los documentos y campos del formulario deben estar marcados como 'Sí Cumple' para aprobar la solicitud.");
             return;
         }
         setShowApproveModal(true);
@@ -250,7 +266,7 @@ const VentanillaSolicitudDetalle = () => {
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-gray-400 text-xs mb-1">Cédula de Identidad o Pasaporte</p>
+                                    <p className="text-gray-400 text-xs mb-1">Cédula de Identidad y Electoral</p>
                                     <p className="text-gray-900 font-medium text-sm">{formData.cedula || formData.rnc || formData.rncEmpresa || request.user_id}</p>
                                 </div>
                                 <div>
@@ -260,8 +276,8 @@ const VentanillaSolicitudDetalle = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-gray-400 text-xs mb-1">Exequatur</p>
-                                    <p className="text-gray-900 font-medium text-sm">{formData.exequatur || 'N/A'}</p>
+                                    <p className="text-gray-400 text-xs mb-1">Contacto</p>
+                                    <p className="text-gray-900 font-medium text-sm">{formData.telefono || formData.contacto || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-400 text-xs mb-1">Dirección</p>
@@ -298,144 +314,157 @@ const VentanillaSolicitudDetalle = () => {
                 {/* Requisitos */}
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                     <h2 className="text-[#4A8BDF] font-bold text-lg mb-6">Requisitos</h2>
-                    
-                    {/* Formulario de Solicitud - Primer requisito */}
+                    {/* Formulario de Solicitud - Todos los campos validables */}
                     <div className="mb-6">
                         <p className="text-gray-700 font-medium text-sm mb-3">
                             Formulario de Solicitud de Inscripción de {request.tipo_servicio}
                         </p>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value="Formulario de Solicitud"
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                            />
-                            <button
-                                onClick={() => setShowFormDataModal(true)}
-                                className="px-6 py-2.5 bg-[#085297] text-white rounded-lg text-sm font-medium hover:bg-[#064073] transition-colors"
-                            >
-                                Ver
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => !isAlreadyApproved && handleFormularioValidation(true)}
-                                    disabled={isAlreadyApproved}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
-                                        formularioValidation === true
-                                            ? 'bg-[#085297] text-white'
-                                            : isAlreadyApproved
-                                            ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
-                                    }`}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                        formularioValidation === true ? 'border-white bg-white' : 'border-gray-400'
-                                    }`}>
-                                        {formularioValidation === true && (
-                                            <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
-                                        )}
-                                    </div>
-                                    Sí Cumple
-                                </button>
-                                <button
-                                    onClick={() => !isAlreadyApproved && handleFormularioValidation(false)}
-                                    disabled={isAlreadyApproved}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
-                                        formularioValidation === false
-                                            ? 'bg-[#085297] text-white'
-                                            : isAlreadyApproved
-                                            ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
-                                    }`}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                        formularioValidation === false ? 'border-white bg-white' : 'border-gray-400'
-                                    }`}>
-                                        {formularioValidation === false && (
-                                            <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
-                                        )}
-                                    </div>
-                                    No Cumple
-                                </button>
-                            </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full border border-gray-200 rounded-lg">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="py-2 px-4 text-left text-xs font-semibold text-gray-600">Campo</th>
+                                        <th className="py-2 px-4 text-left text-xs font-semibold text-gray-600">Valor</th>
+                                        <th className="py-2 px-4 text-center text-xs font-semibold text-gray-600">Validación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(formData).map(([key, value]) => {
+                                        // Formatear nombre del campo
+                                            const fieldName = key
+                                                .replace(/_/g, ' ')
+                                                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                .replace(/^./, str => str.toUpperCase());
+                                        let displayValue = value;
+                                        if (typeof value === 'boolean') {
+                                            displayValue = value ? 'Sí' : 'No';
+                                        }
+                                        if (typeof value === 'object' && value !== null) {
+                                            displayValue = Array.isArray(value)
+                                                ? value.join(', ')
+                                                : Object.entries(value).map(([k, v]) => `${k}: ${v === true ? 'Sí' : v === false ? 'No' : v}`).join(', ');
+                                        }
+                                        return (
+                                            <tr key={key} className="border-b border-gray-100">
+                                                <td className="py-2 px-4 text-gray-700 text-sm font-medium">{fieldName}</td>
+                                                <td className="py-2 px-4 text-gray-900 text-sm">{displayValue}</td>
+                                                <td className="py-2 px-4 text-center">
+                                                    <div className="flex justify-center gap-4">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name={`formfield-cumple-${key}`}
+                                                                checked={formFieldsValidation[key] === true}
+                                                                onChange={() => !isAlreadyApproved && handleFormFieldValidation(key, true)}
+                                                                disabled={isAlreadyApproved}
+                                                                className="accent-[#085297] w-5 h-5"
+                                                            />
+                                                            <span className="text-base">Sí Cumple</span>
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name={`formfield-cumple-${key}`}
+                                                                checked={formFieldsValidation[key] === false}
+                                                                onChange={() => !isAlreadyApproved && handleFormFieldValidation(key, false)}
+                                                                disabled={isAlreadyApproved}
+                                                                className="accent-[#085297] w-5 h-5"
+                                                            />
+                                                            <span className="text-base">No Cumple</span>
+                                                        </label>
+                                                    </div>
+                                                    {showValidationErrors && (formFieldsValidation[key] === undefined || formFieldsValidation[key] === null) && (
+                                                        <p className="text-red-500 text-xs mt-2 font-semibold">* Debes validar este campo obligatoriamente</p>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
-                        {showValidationErrors && formularioValidation === null && (
-                            <p className="text-red-500 text-xs mt-2 font-semibold">* Debes validar este campo obligatoriamente</p>
-                        )}
                     </div>
 
                     {/* Lista de documentos */}
                     {request.documentos && request.documentos.length > 0 ? (
                         <div className="space-y-4">
-                            {request.documentos.map((doc, index) => (
-                                <div key={doc.id}>
-                                    <p className="text-gray-700 font-medium text-sm mb-3">{doc.tipo_documento || doc.nombre || `Documento ${index + 1}`}</p>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="text"
-                                            value={doc.nombre || doc.tipo_documento || `Documento ${index + 1}`}
-                                            readOnly
-                                            className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
-                                        />
-                                        {doc.url && (
-                                            <a
-                                                href={doc.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-6 py-2.5 bg-[#085297] text-white rounded-lg text-sm font-medium hover:bg-[#064073] transition-colors"
-                                            >
-                                                Ver
-                                            </a>
-                                        )}
+                            {[...new Map(request.documentos.map(doc => [doc.nombre + doc.tipo_documento, doc])).values()].map((doc, index) => {
+                                // Formatear el nombre del documento
+                                const docLabel = (doc.tipo_documento || doc.nombre || `Documento ${index + 1}`)
+                                    .replace(/_/g, ' ')
+                                    .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                    .replace(/^./, str => str.toUpperCase());
+                                return (
+                                    <div key={doc.id}>
+                                        <p className="text-gray-700 font-medium text-sm mb-3">{docLabel}</p>
                                         <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, true)}
-                                                disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
-                                                    documentValidation[doc.id] === true
-                                                        ? 'bg-[#085297] text-white'
-                                                        : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
-                                                        ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
-                                                }`}
-                                            >
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                    documentValidation[doc.id] === true ? 'border-white bg-white' : 'border-gray-400'
-                                                }`}>
-                                                    {documentValidation[doc.id] === true && (
-                                                        <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
-                                                    )}
-                                                </div>
-                                                Sí Cumple
-                                            </button>
-                                            <button
-                                                onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, false)}
-                                                disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
-                                                    documentValidation[doc.id] === false
-                                                        ? 'bg-[#085297] text-white'
-                                                        : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
-                                                        ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
-                                                }`}
-                                            >
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                    documentValidation[doc.id] === false ? 'border-white bg-white' : 'border-gray-400'
-                                                }`}>
-                                                    {documentValidation[doc.id] === false && (
-                                                        <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
-                                                    )}
-                                                </div>
-                                                No Cumple
-                                            </button>
+                                            <input
+                                                type="text"
+                                                value={docLabel}
+                                                readOnly
+                                                className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-700 text-sm"
+                                            />
+                                            {doc.url ? (
+                                                <a
+                                                    href={doc.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-6 py-2.5 bg-[#085297] text-white rounded-lg text-sm font-medium hover:bg-[#064073] transition-colors"
+                                                >
+                                                    Ver
+                                                </a>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">No enviado</span>
+                                            )}
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, true)}
+                                                    disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                        documentValidation[doc.id] === true
+                                                            ? 'bg-[#085297] text-white'
+                                                            : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
+                                                            ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
+                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
+                                                    }`}
+                                                >
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                        documentValidation[doc.id] === true ? 'border-white bg-white' : 'border-gray-400'
+                                                    }`}>
+                                                        {documentValidation[doc.id] === true && (
+                                                            <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                        )}
+                                                    </div>
+                                                    Sí Cumple
+                                                </button>
+                                                <button
+                                                    onClick={() => !isAlreadyApproved && !(isReturned && documentValidation[doc.id] === true) && handleDocumentValidation(doc.id, false)}
+                                                    disabled={isAlreadyApproved || (isReturned && documentValidation[doc.id] === true)}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                                                        documentValidation[doc.id] === false
+                                                            ? 'bg-[#085297] text-white'
+                                                            : (isAlreadyApproved || (isReturned && documentValidation[doc.id] === true))
+                                                            ? 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
+                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#085297]'
+                                                    }`}
+                                                >
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                        documentValidation[doc.id] === false ? 'border-white bg-white' : 'border-gray-400'
+                                                    }`}>
+                                                        {documentValidation[doc.id] === false && (
+                                                            <div className="w-3 h-3 rounded-full bg-[#085297]"></div>
+                                                        )}
+                                                    </div>
+                                                    No Cumple
+                                                </button>
+                                            </div>
                                         </div>
+                                        {showValidationErrors && (documentValidation[doc.id] === undefined || documentValidation[doc.id] === null) && (
+                                            <p className="text-red-500 text-xs mt-2 font-semibold">* Debes validar este campo obligatoriamente</p>
+                                        )}
                                     </div>
-                                    {showValidationErrors && (documentValidation[doc.id] === undefined || documentValidation[doc.id] === null) && (
-                                        <p className="text-red-500 text-xs mt-2 font-semibold">* Debes validar este campo obligatoriamente</p>
-                                    )}
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <p className="text-gray-500 text-center py-8">No hay documentos cargados</p>
@@ -496,6 +525,12 @@ const VentanillaSolicitudDetalle = () => {
                             Aprobar
                         </button>
                     </div>
+                    {hasError && (
+                        <span className="text-red-600 text-sm font-medium mb-4 inline-block mt-5">
+                            {errorMessage}
+                        </span>
+                    )}
+
                 </div>
             </div>
 
@@ -594,58 +629,78 @@ const VentanillaSolicitudDetalle = () => {
                                 </svg>
                             </button>
                         </div>
-                        
-                        {/* Verificar si hay datos completados */}
-                        {Object.entries(formData).filter(([, value]) => value && value !== '' && value !== null && value !== undefined).length === 0 ? (
-                            <div className="text-center py-12">
-                                <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <h4 className="text-lg font-semibold text-gray-700 mb-2">Formulario sin completar</h4>
-                                <p className="text-gray-500">
-                                    El cliente no ha completado los datos del formulario de solicitud.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {Object.entries(formData).map(([key, value]) => {
-                                    // Validar que el campo tenga valor
-                                    if (!value || value === '' || value === null || value === undefined) {
-                                        return null;
+
+
+                        {/* Unificar todos los campos del formulario, incluyendo los adicionales de cualquier nivel */}
+                        {(() => {
+                            // Función recursiva para aplanar todos los campos de un objeto anidado
+                            function flattenFields(obj, prefix = '') {
+                                let fields = {};
+                                for (const [key, value] of Object.entries(obj || {})) {
+                                    if (
+                                        value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0
+                                    ) {
+                                        fields = { ...fields, ...flattenFields(value, prefix + key + '.') };
+                                    } else {
+                                        fields[prefix + key] = value;
                                     }
-                                    
-                                    // Formatear el nombre del campo
-                                    const fieldName = key
-                                        .replace(/([A-Z])/g, ' $1')
-                                        .replace(/^./, str => str.toUpperCase());
-                                    
-                                    // Procesar el valor - si es Actividades, parsear el JSON
-                                    let displayValue = value;
-                                    if (key === 'actividades' && typeof value === 'string') {
-                                        try {
-                                            const actividadesObj = JSON.parse(value);
-                                            const actividadesActivas = Object.entries(actividadesObj)
-                                                .filter(([, isActive]) => isActive === true)
-                                                .map(([nombre]) => nombre.charAt(0).toUpperCase() + nombre.slice(1));
-                                            displayValue = actividadesActivas.length > 0 
-                                                ? actividadesActivas.join(', ') 
-                                                : 'Ninguna';
-                                        // eslint-disable-next-line no-unused-vars
-                                        } catch (_err) {
-                                            displayValue = value;
+                                }
+                                return fields;
+                            }
+                            const allFields = flattenFields(formData);
+                            // Si no hay datos, mostrar mensaje
+                            if (Object.entries(allFields).filter(([, value]) => value && value !== '' && value !== null && value !== undefined).length === 0) {
+                                return (
+                                    <div className="text-center py-12">
+                                        <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <h4 className="text-lg font-semibold text-gray-700 mb-2">Formulario sin completar</h4>
+                                        <p className="text-gray-500">
+                                            El cliente no ha completado los datos del formulario de solicitud.
+                                        </p>
+                                    </div>
+                                );
+                            }
+                            // Mostrar todos los campos
+                            return (
+                                <div className="space-y-4">
+                                    {Object.entries(allFields).map(([key, value]) => {
+                                        if (!value || value === '' || value === null || value === undefined) {
+                                            return null;
                                         }
-                                    }
-                                    
-                                    return (
-                                        <div key={key} className="border-b border-gray-200 pb-3">
-                                            <p className="text-sm text-gray-500 mb-1">{fieldName}</p>
-                                            <p className="text-base text-gray-900 font-medium">{displayValue}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                        
+                                        // Formatear el nombre del campo: separa camelCase, snake_case, puntos y pone mayúsculas
+                                        const fieldName = key
+                                            .replace(/_/g, ' ')
+                                            .replace(/\./g, ' ')
+                                            .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                            .replace(/^./, str => str.toUpperCase());
+                                        let displayValue = value;
+                                        if (key.endsWith('actividades') && typeof value === 'string') {
+                                            try {
+                                                const actividadesObj = JSON.parse(value);
+                                                const actividadesActivas = Object.entries(actividadesObj)
+                                                    .filter(([, isActive]) => isActive === true)
+                                                    .map(([nombre]) => nombre.charAt(0).toUpperCase() + nombre.slice(1));
+                                                displayValue = actividadesActivas.length > 0 
+                                                    ? actividadesActivas.join(', ') 
+                                                    : 'Ninguna';
+                                            } catch {
+                                                // CORRECCIÓN 2: Eliminado _err del catch
+                                                displayValue = value;
+                                            }
+                                        }
+                                        return (
+                                            <div key={key} className="border-b border-gray-200 pb-3">
+                                                <p className="text-sm text-gray-500 mb-1">{fieldName}</p>
+                                                <p className="text-base text-gray-900 font-medium">{displayValue}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
+
                         <div className="mt-6 flex justify-end">
                             <button
                                 onClick={() => setShowFormDataModal(false)}

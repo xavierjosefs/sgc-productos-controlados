@@ -4,15 +4,16 @@
  */
 import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
+import { useAuth } from '../context/AuthContext';
+
 
 export default function AdminTopbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    logout();
   };
 
   const isInicio = location.pathname === '/admin';
@@ -75,10 +76,10 @@ export default function AdminTopbar() {
         {/* Usuario con logout */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-bold text-sm">
-            XF
+            {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'AD'}
           </div>
           <div className="flex flex-col">
-            <span className="text-gray-700 font-medium text-sm">Xavier Fernandez</span>
+            <span className="text-gray-700 font-medium text-sm">{user?.full_name || 'Administrador'}</span>
             <span className="text-gray-500 text-xs">Administrador</span>
           </div>
           <button

@@ -85,7 +85,7 @@ export default function SolicitudImportacionMateriaPrimaFase01() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Botón volver */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/cliente')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

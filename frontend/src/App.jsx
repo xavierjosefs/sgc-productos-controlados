@@ -1,5 +1,6 @@
 import RequestDetail from './pages/cliente/RequestDetail';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import PreRegister from './pages/PreRegister';
 import CompleteRegister from './pages/CompleteRegister';
@@ -20,11 +21,14 @@ import VentanillaLayout from './components/VentanillaLayout';
 import VentanillaSolicitudes from './pages/ventanilla/VentanillaSolicitudes';
 import VentanillaSolicitudDetalle from './pages/ventanilla/VentanillaSolicitudDetalle';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
+import DetalleSolicitudTecnico from './pages/tecnico-controlados/DetalleSolicitudTecnico';
 import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
 import DirectorTecnicoLayout from './components/DirectorTecnicoLayout';
 import DirectorTecnicoSolicitudes from './pages/director-tecnico/DirectorTecnicoSolicitudes';
 import DirectorTecnicoSolicitudDetalle from './pages/director-tecnico/DirectorTecnicoSolicitudDetalle';
-import DireccionDashboard from './pages/direccion/Dashboard';
+import DireccionLayout from './components/DireccionLayout';
+import DireccionSolicitudes from './pages/direccion/DireccionSolicitudes';
+import DireccionSolicitudDetalle from './pages/direccion/DireccionSolicitudDetalle';
 import DncdDashboard from './pages/dncd/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminLayout from './components/AdminLayout';
@@ -77,6 +81,7 @@ import SolicitudImportacionMedicamentosExito from './pages/cliente/SolicitudImpo
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster />
       <AuthProvider>
         <SolicitudClaseAProvider>
           <SolicitudClaseBProvider>
@@ -128,6 +133,15 @@ export default function App() {
                 />
 
                 <Route
+                  path="/tecnico-controlados/solicitud/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={['tecnico_controlados']}>
+                      <DetalleSolicitudTecnico />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
                   path="/director-controlados"
                   element={
                     <ProtectedRoute allowedRoles={['director_controlados']}>
@@ -152,10 +166,13 @@ export default function App() {
                   path="/direccion"
                   element={
                     <ProtectedRoute allowedRoles={['direccion']}>
-                      <DireccionDashboard />
+                      <DireccionLayout />
                     </ProtectedRoute>
                   }
-                />
+                >
+                  <Route index element={<DireccionSolicitudes />} />
+                  <Route path="solicitud/:id" element={<DireccionSolicitudDetalle />} />
+                </Route>
 
                 <Route
                   path="/dncd"

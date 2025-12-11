@@ -334,6 +334,174 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  const getTecnicoRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/ventanilla/tecnico-upc/requests`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data; // {ok, requests}
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Error al obtener solicitudes para técnico UPC";
+      setError(errorMessage);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+  /**
+   * Obtener solicitudes para Dirección (estado Aprobada por UPC)
+   * Solo accesible para usuarios con rol direccion
+   */
+  const getDireccionRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/direccion/requests`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes de dirección';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Obtener detalle de solicitud con documentos
+   * Específico para Dirección
+   */
+  const getDireccionRequestDetail = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/direccion/request/${id}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Validar solicitud desde Dirección (Aprobar / Reprobar)
+   * @param {string} requestId
+   * @param {string} status - 'aprobado_direccion' | 'rechazado_direccion'
+   * @param {string} reasons - Razones si es rechazada
+   */
+  const validateDireccionRequest = useCallback(async (requestId, status, reasons) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${baseURL}/api/direccion/validate/${requestId}`,
+        { status, reasons },
+        {
+          withCredentials: true,
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al validar la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Descargar certificado PDF para una solicitud
+   * @param {string} requestId - ID de la solicitud
+   */
+  const downloadCertificatePDF = useCallback(async (requestId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/direccion/certificate/${requestId}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+        responseType: 'blob' // Important: receive as blob for file download
+      });
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `Certificado_Solicitud${requestId}.pdf`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { ok: true, message: 'Certificado descargado exitosamente' };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al descargar el certificado';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+
   return {
     // Estados
     loading,
@@ -344,6 +512,11 @@ export function useRequestsAPI() {
     getRequestDetail,
     getVentanillaRequests,
     getVentanillaRequestDetail,
+    getTecnicoRequests,
+    getDireccionRequests,
+    getDireccionRequestDetail,
+    validateDireccionRequest,
+    downloadCertificatePDF,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes
@@ -361,3 +534,4 @@ export function useRequestsAPI() {
 }
 
 export default useRequestsAPI;
+

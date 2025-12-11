@@ -58,6 +58,7 @@ export const registerComplete = async (req, res) => {
   if (!pending) {
     return res.status(400).json({ ok: false, message: "Token inválido o expirado" });
   }
+  console.log("antes del guardado def")
 
   await createUser(
     pending.full_name,

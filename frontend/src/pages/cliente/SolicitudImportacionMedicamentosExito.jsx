@@ -4,7 +4,7 @@ export default function SolicitudImportacionMedicamentosExito() {
   const navigate = useNavigate();
 
   const handleGoToRequests = () => {
-    navigate("/");
+    navigate("/cliente");
   };
 
   return (

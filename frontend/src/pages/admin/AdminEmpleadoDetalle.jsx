@@ -1,17 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+
 
 export default function AdminEmpleadoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // Mock: Simular carga de datos del empleado
-  const mockEmpleados = {
-    1: { id: 1, cedula: '001-1234567-8', nombre: 'Juan Pérez García', email: 'juan.perez@example.com', rol: 'ventanilla', activo: true },
-    2: { id: 2, cedula: '001-9876543-2', nombre: 'María López Hernández', email: 'maria.lopez@example.com', rol: 'tecnico_controlados', activo: true },
-    3: { id: 3, cedula: '001-5555555-5', nombre: 'Carlos Rodríguez Sánchez', email: 'carlos.rodriguez@example.com', rol: 'direccion', activo: false },
-  };
-
-  const mockEmpleado = mockEmpleados[id] || mockEmpleados[1];
+  const api = useAdminAPI();
+  const { data, loading, error } = useAdminData(() => api.getUserByCedula(id), [id]);
+  const empleado = data?.user;
 
   const rolesDisponibles = {
     ventanilla: 'Ventanilla',
@@ -21,6 +17,13 @@ export default function AdminEmpleadoDetalle() {
     dncd: 'DNCD',
     admin: 'Administrador',
   };
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Cargando empleado...</div>;
+  }
+  if (error || !empleado) {
+    return <div className="p-8 text-center text-red-500">No se pudo cargar el empleado.</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -38,7 +41,6 @@ export default function AdminEmpleadoDetalle() {
       
       <div className="bg-white rounded-xl border border-gray-200 p-8 max-w-[620px] mx-auto">
         <h2 className="text-lg font-bold text-[#4A8BDF] mb-6">Información</h2>
-        
         <div className="space-y-4">
           {/* Cédula - SOLO LECTURA */}
           <div>
@@ -47,12 +49,11 @@ export default function AdminEmpleadoDetalle() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.cedula}
+              value={empleado.cedula}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
           </div>
-
           {/* Nombre Completo - SOLO LECTURA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -60,12 +61,11 @@ export default function AdminEmpleadoDetalle() {
             </label>
             <input
               type="text"
-              value={mockEmpleado.nombre}
+              value={empleado.full_name}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
           </div>
-
           {/* Correo Electrónico - SOLO LECTURA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -73,12 +73,11 @@ export default function AdminEmpleadoDetalle() {
             </label>
             <input
               type="email"
-              value={mockEmpleado.email}
+              value={empleado.email}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
           </div>
-
           {/* Rol - SOLO LECTURA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -86,12 +85,11 @@ export default function AdminEmpleadoDetalle() {
             </label>
             <input
               type="text"
-              value={rolesDisponibles[mockEmpleado.rol] || mockEmpleado.rol}
+              value={rolesDisponibles[empleado.role] || empleado.role}
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
             />
           </div>
-
           {/* Estado - SOLO LECTURA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -101,7 +99,7 @@ export default function AdminEmpleadoDetalle() {
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
-                  checked={mockEmpleado.activo === true}
+                  checked={empleado.is_active === true}
                   disabled
                   className="w-4 h-4 text-[#4A8BDF] cursor-not-allowed"
                 />
@@ -110,7 +108,7 @@ export default function AdminEmpleadoDetalle() {
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
-                  checked={mockEmpleado.activo === false}
+                  checked={empleado.is_active === false}
                   disabled
                   className="w-4 h-4 text-[#4A8BDF] cursor-not-allowed"
                 />

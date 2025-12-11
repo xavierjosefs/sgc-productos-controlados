@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { serviceSchema, validateWithSchema } from '../../utils/validation';
+import { SkeletonForm } from '../../components/SkeletonLoaders';
 
 export default function AdminServicioCrear() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
   
+  const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
   const [tipoFormulario, setTipoFormulario] = useState('');
   const [precioTipo, setPrecioTipo] = useState('conPrecio');
@@ -14,10 +21,12 @@ export default function AdminServicioCrear() {
   ]);
   const [docsRenovacion, setDocsRenovacion] = useState([]);
   const [docsRoboPerdida, setDocsRoboPerdida] = useState([]);
-  
+
   const [errors, setErrors] = useState({});
 
-  const tiposFormulario = ['Clase A', 'Clase B', 'Capa C', 'Sin Formulario'];
+  // Fetch form types
+  const { data: formsData, loading } = useAdminData(api.getForms);
+  const tiposFormulario = formsData?.forms || [];
 
   const agregarDocumento = (tipo) => {
     const nuevoDoc = { nombre: '', obligatorio: true };
@@ -56,10 +65,13 @@ export default function AdminServicioCrear() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = {};
+    if (!codigo.trim()) {
+        newErrors.codigo = 'El código del servicio es requerido';
+    }
     if (!nombre.trim()) {
       newErrors.nombre = 'El nombre del servicio es requerido';
     }
@@ -74,9 +86,33 @@ export default function AdminServicioCrear() {
       setErrors(newErrors);
       return;
     }
-    
-    alert('Servicio creado exitosamente (mock)');
-    navigate('/admin/servicios');
+
+    try {
+        const documentosRequeridos = {
+            nueva: docsNuevaSolicitud.filter(d => d.nombre.trim()),
+            renovacion: docsRenovacion.filter(d => d.nombre.trim()),
+            robo: docsRoboPerdida.filter(d => d.nombre.trim())
+        };
+
+        await api.createService({
+            codigo_servicio: codigo,
+            nombre_servicio: nombre,
+            precio: precioTipo === 'conPrecio' ? parseFloat(precio) : 0,
+            documentos_requeridos: documentosRequeridos,
+            formulario: tipoFormulario
+        });
+        
+        toast.success('Servicio creado exitosamente');
+        navigate('/admin/servicios');
+
+    } catch (error) {
+        console.error("Error creating service:", error);
+        if (error.response && error.response.data && error.response.data.error) {
+             toast.error(`Error: ${error.response.data.error}`);
+        } else {
+             toast.error("Error creando el servicio");
+        }
+    }
   };
 
   const renderDocumentos = (tipo, documentos, titulo) => (
@@ -138,6 +174,8 @@ export default function AdminServicioCrear() {
     </div>
   );
 
+  if (loading) return <div className="p-8 text-center text-gray-500">Cargando formulario...</div>;
+
   return (
     <div className="max-w-4xl mx-auto">
       <button 
@@ -158,6 +196,25 @@ export default function AdminServicioCrear() {
           <h2 className="text-lg font-bold text-[#085297] mb-6">Información</h2>
           
           <div className="space-y-4">
+             {/* Codigo del Servicio */}
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código del Servicio
+              </label>
+              <input
+                type="text"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+                placeholder="Ej: SERV-001"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] ${
+                  errors.codigo ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.codigo && (
+                <p className="text-red-500 text-sm mt-1">{errors.codigo}</p>
+              )}
+            </div>
+
             {/* Nombre del Servicio */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -190,7 +247,7 @@ export default function AdminServicioCrear() {
               >
                 <option value="">Seleccione un tipo</option>
                 {tiposFormulario.map((tipo) => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
+                  <option key={tipo.id} value={tipo.nombre}>{tipo.nombre} ({tipo.codigo})</option>
                 ))}
               </select>
               {errors.tipoFormulario && (

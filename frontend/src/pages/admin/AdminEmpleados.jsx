@@ -1,44 +1,74 @@
 /**
  * AdminEmpleados - Tabla de empleados con filtros
  */
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAdminAPI, useAdminData } from '../../hooks/useAdminAPI';
+import { useToast } from '../../hooks/useToast';
+import { SkeletonStatsGrid, SkeletonTable } from '../../components/SkeletonLoaders';
 
 export default function AdminEmpleados() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const api = useAdminAPI();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
 
-  const mockEmpleados = [
-    { id: 1, codigo: 'EMP001', fecha: '2024-01-15', nombre: 'Juan Pérez García', rol: 'VUS', activo: true },
-    { id: 2, codigo: 'EMP002', fecha: '2024-01-20', nombre: 'María López Hernández', rol: 'UPC', activo: true },
-    { id: 3, codigo: 'EMP003', fecha: '2024-02-01', nombre: 'Carlos Rodríguez Sánchez', rol: 'Dirección', activo: false },
-    { id: 4, codigo: 'EMP004', fecha: '2024-02-10', nombre: 'Ana Martínez Torres', rol: 'DNCD', activo: true },
-    { id: 5, codigo: 'EMP005', fecha: '2024-02-15', nombre: 'Luis González Ramírez', rol: 'VUS', activo: true },
-    { id: 6, codigo: 'EMP006', fecha: '2024-03-01', nombre: 'Laura Fernández López', rol: 'UPC', activo: false },
-    { id: 7, codigo: 'EMP007', fecha: '2024-03-05', nombre: 'Pedro Sánchez García', rol: 'VUS', activo: true },
-    { id: 8, codigo: 'EMP008', fecha: '2024-03-10', nombre: 'Carmen Jiménez Ruiz', rol: 'Dirección', activo: true },
-  ];
+  const { data: usersData, loading, error } = useAdminData(api.getUsers);
+
+  const empleados = useMemo(() => {
+    if (!usersData?.users) return [];
+    return usersData.users.filter(u => (u.role || '').toLowerCase() !== 'cliente');
+  }, [usersData]);
+
+  const stats = useMemo(() => {
+    const total = empleados.length;
+    const activos = empleados.filter(u => u.is_active).length;
+    const inactivos = total - activos;
+    return { total, activos, inactivos };
+  }, [empleados]);
+
+  if (error) {
+    toast.error(error);
+  }
 
   const statsCards = [
-    { label: 'Total Empleados', value: 15, color: 'text-[#4A8BDF]' },
-    { label: 'Activos', value: 10, color: 'text-green-600' },
-    { label: 'Inactivo', value: 5, color: 'text-orange-600' },
+    { label: 'Total Empleados', value: stats.total, color: 'text-[#4A8BDF]' },
+    { label: 'Activos', value: stats.activos, color: 'text-green-600' },
+    { label: 'Inactivos', value: stats.inactivos, color: 'text-orange-600' },
   ];
 
-  const filteredEmpleados = mockEmpleados.filter((emp) => {
+  const filteredEmpleados = empleados.filter((emp) => {
+    // Mapeamos los campos del backend a los campos de la tabla
     const matchesSearch =
-      emp.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.rol.toLowerCase().includes(searchTerm.toLowerCase());
+      (emp.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (emp.cedula || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (emp.role || '').toLowerCase().includes(searchTerm.toLowerCase());
     
+    // bool de is_active 
+    const isActive = emp.is_active;
     const matchesStatus =
       filterStatus === 'todos' ||
-      (filterStatus === 'activos' && emp.activo) ||
-      (filterStatus === 'inactivos' && !emp.activo);
+      (filterStatus === 'activos' && isActive) ||
+      (filterStatus === 'inactivos' && !isActive);
 
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Gestión de Empleados</h1>
+        <SkeletonStatsGrid cards={3} labels={['Total Empleados', 'Activos', 'Inactivos']} />
+        <SkeletonTable 
+          rows={5} 
+          columns={5}
+          headers={['Cédula', 'Nombre', 'Email', 'Rol', 'Estado']}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -75,17 +105,17 @@ export default function AdminEmpleados() {
             </label>
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder="Buscar por nombre, cédula o rol..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
             />
           </div>
 
-          {/* Filtro de rol */}
+          {/* Filtro de Estado */}
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rol
+              Estado
             </label>
             <select
               value={filterStatus}
@@ -97,12 +127,6 @@ export default function AdminEmpleados() {
               <option value="inactivos">Inactivos</option>
             </select>
           </div>
-
-          <div className="flex items-end">
-            <button className="px-6 py-2 bg-[#085297] text-white rounded-lg hover:bg-[#064175] font-medium">
-              Filtrar
-            </button>
-          </div>
         </div>
       </div>
 
@@ -112,8 +136,8 @@ export default function AdminEmpleados() {
           <table className="w-full">
             <thead className="bg-[#4A8BDF] text-white">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold">CÓDIGO</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">FECHA CREACIÓN</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">CÉDULA</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">EMAIL</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">NOMBRE</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">ROL</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">ESTADO</th>
@@ -124,39 +148,41 @@ export default function AdminEmpleados() {
               {filteredEmpleados.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                    No se encontraron empleados
+                    No se encontraron usuarios
                   </td>
                 </tr>
               ) : (
                 filteredEmpleados.map((empleado) => (
-                  <tr key={empleado.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={empleado.cedula} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {empleado.codigo}
+                      {empleado.cedula}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{empleado.fecha}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{empleado.nombre}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{empleado.rol}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{empleado.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{empleado.full_name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 capitalize">{
+                        empleado.role
+                    }</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          empleado.activo
+                          empleado.is_active
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {empleado.activo ? 'Activo' : 'Inactivo'}
+                        {empleado.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          onClick={() => navigate(`/admin/empleados/${empleado.id}/editar`)}
+                          onClick={() => navigate(`/admin/empleados/${empleado.cedula}/editar`)}
                           className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                         >
                           Editar
                         </button>
                         <button 
-                          onClick={() => navigate(`/admin/empleados/${empleado.id}`)}
+                          onClick={() => navigate(`/admin/empleados/${empleado.cedula}`)}
                           className="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                         >
                           Ver Detalle
@@ -170,10 +196,9 @@ export default function AdminEmpleados() {
           </table>
         </div>
       </div>
-
-      {/* Resumen de resultados */}
+          
       <div className="mt-4 text-sm text-gray-600">
-        Mostrando {filteredEmpleados.length} de {mockEmpleados.length} empleados
+        Mostrando {filteredEmpleados.length} de {empleados.length} usuarios
       </div>
     </div>
   );

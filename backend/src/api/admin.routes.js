@@ -1,5 +1,5 @@
 import express from "express";
-import { adminCreateInternalUser, getAllUsersController, changeUserRoleController, getAllRequestsController, changeUserStatusController, adminCreateServiceController, getAllServicesController, getAllFormsController } from "../controllers/admin.controllers.js";
+import { adminCreateInternalUser, getAllUsersController, changeUserRoleController, getAllRequestsController, changeUserStatusController, adminCreateServiceController, getAllServicesController, getAllFormsController, getDashboardStatsController, getRequestStatusesController, getServiceByCodeController, getUserByCedulaController, setUserStatusController, getRolesController, updateUserController } from "../controllers/admin.controllers.js";
 import { getRequestsByStatusController } from "../controllers/request.controllers.js";
 import { updateServiceController } from "../controllers/service.controllers.js";
 
@@ -14,6 +14,13 @@ router.put("/users/:cedula/toggle-status", changeUserStatusController);
 router.post("/create-service", adminCreateServiceController);
 router.get("/get-services", getAllServicesController);
 router.get("/get-forms", getAllFormsController);
+router.get("/get-request-statuses", getRequestStatusesController);
+router.get("/services/:code", getServiceByCodeController);
+router.get("/users/:cedula", getUserByCedulaController);
+router.put("/users/:cedula/status", setUserStatusController);
+router.get("/stats", getDashboardStatsController);
 router.put("/services/:id", updateServiceController);
+router.get("/get-roles", getRolesController);
+router.put("/users/:cedula", updateUserController);
 
 export default router;
