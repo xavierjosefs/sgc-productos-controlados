@@ -76,13 +76,14 @@ export default function TecnicoControladosDashboard() {
             r.estado_actual === 'En evaluación técnica'
         ).length,
         devueltas: allRequests.filter(r => 
-            r.estado_actual && r.estado_actual.toLowerCase().includes('devuelta')
+            r.estado_actual === 'Rechazada por Director UPC'
         ).length,
         enRevisionDirector: allRequests.filter(r =>
             r.estado_actual && r.estado_actual.toLowerCase().includes('revisión') && 
             r.estado_actual.toLowerCase().includes('director')
         ).length,
     };
+
 
     // Tipos de servicio únicos
     const tiposUnicos = [...new Set(allRequests.map(r => r.tipo_servicio).filter(Boolean))];
