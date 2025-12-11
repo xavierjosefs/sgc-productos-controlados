@@ -23,10 +23,10 @@ function DirectorTecnicoSolicitudDetalle() {
     const fetchDetail = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:8000/api/requests/${id}`, {
+            const response = await axios.get(`http://localhost:8000/api/directorUPC/requests/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setRequest(response.data);
+            setRequest(response.data.detalle);
         } catch (error) {
             console.error('Error al cargar detalle:', error);
         } finally {
@@ -53,10 +53,10 @@ function DirectorTecnicoSolicitudDetalle() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:8000/api/requests/${id}/validate-director-tecnico`,
+                `http://localhost:8000/api/directorUPC/requests/${id}/decision`,
                 {
-                    accion: 'devuelto_tecnico',
-                    comentarios: comments
+                    decision: 'RECHAZAR',
+                    comentario: comments
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -64,7 +64,7 @@ function DirectorTecnicoSolicitudDetalle() {
             setSuccessType('devuelta');
             setShowSuccessModal(true);
         } catch (err) {
-            alert(err.response?.data?.message || 'Error al devolver la solicitud');
+            alert(err.response?.data?.error || 'Error al devolver la solicitud');
             setValidating(false);
             setShowRejectModal(false);
         }
@@ -75,10 +75,10 @@ function DirectorTecnicoSolicitudDetalle() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:8000/api/requests/${id}/validate-director-tecnico`,
+                `http://localhost:8000/api/directorUPC/requests/${id}/decision`,
                 {
-                    accion: 'aprobado_director_tecnico',
-                    comentarios: comments || ''
+                    decision: 'APROBAR',
+                    comentario: comments || ''
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -86,7 +86,7 @@ function DirectorTecnicoSolicitudDetalle() {
             setSuccessType('aprobada');
             setShowSuccessModal(true);
         } catch (err) {
-            alert(err.response?.data?.message || 'Error al aprobar la solicitud');
+            alert(err.response?.data?.error || 'Error al aprobar la solicitud');
             setValidating(false);
             setShowApproveModal(false);
         }

@@ -90,9 +90,21 @@ export const directorupcMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    if (decoded.role !== 4) {
-      return res.status(403).json({ error: "Acceso denegado. Solo Directores de controlados." });
+    
+    console.log('🔐 directorupcMiddleware - Usuario:', {
+      id: decoded?.id,
+      email: decoded?.email,
+      role: decoded?.role,
+      role_name: decoded?.role_name
+    });
+
+    // Permitir tanto director_controlados (role 4) como director_tecnico (si existe otro role)
+    if (decoded.role !== 4 && decoded.role_name !== 'director_controlados' && decoded.role_name !== 'director_tecnico') {
+      console.log('❌ Acceso denegado - Role:', decoded.role, 'Role name:', decoded.role_name);
+      return res.status(403).json({ error: "Acceso denegado. Solo Directores Técnicos." });
     }
+    
+    console.log('✅ Acceso permitido al Director Técnico');
     req.user = decoded;
     next();
   } catch (err) {

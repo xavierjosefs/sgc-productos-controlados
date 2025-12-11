@@ -18,10 +18,10 @@ function DirectorTecnicoSolicitudes() {
     const fetchRequests = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:8000/api/requests', {
+            const response = await axios.get('http://localhost:8000/api/directorUPC/requests', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setRequests(response.data);
+            setRequests(response.data.requests);
         } catch (error) {
             console.error('Error al cargar solicitudes:', error);
         } finally {
@@ -35,26 +35,16 @@ function DirectorTecnicoSolicitudes() {
     };
 
     const filteredRequests = requests.filter(req => {
-        const estadoLower = req.estado_actual?.toLowerCase() || '';
-        
-        // Director Técnico solo ve solicitudes "En evaluación técnica"
-        if (estadoLower !== 'en evaluación técnica') {
-            return false;
-        }
-
+        // El backend ya filtra por estado_id = 6, solo aplicamos filtros adicionales
         const matchesTipo = !appliedFilterTipo || req.tipo_servicio === appliedFilterTipo;
         const matchesEstado = !appliedFilterEstado || req.estado_actual === appliedFilterEstado;
 
         return matchesTipo && matchesEstado;
     });
 
-    const pendientesCount = requests.filter(r => 
-        r.estado_actual?.toLowerCase() === 'en evaluación técnica'
-    ).length;
+    const pendientesCount = requests.length; // Todas las que vienen del backend están pendientes
 
-    const aprobadasCount = requests.filter(r => 
-        r.estado_actual?.toLowerCase() === 'aprobada por director técnico'
-    ).length;
+    const aprobadasCount = 0; // Las aprobadas ya no están en estado 6, pasaron a estado 7
 
     if (loading) {
         return (
@@ -150,15 +140,15 @@ function DirectorTecnicoSolicitudes() {
                         <tbody className="divide-y divide-gray-200">
                             {filteredRequests.map((request) => (
                                 <tr key={request.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 text-sm text-gray-900">{request.codigo || request.id}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{request.id}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900">
-                                        {request.created_at ? new Date(request.created_at).toLocaleDateString('es-ES') : '-'}
+                                        {request.fecha_creacion ? new Date(request.fecha_creacion).toLocaleDateString('es-ES') : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">{request.nombre_solicitante || '-'}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{request.cliente_nombre || '-'}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900">{request.tipo_servicio || '-'}</td>
                                     <td className="px-6 py-4 text-sm">
                                         <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {request.estado_actual}
+                                            {request.estado_actual || 'En evaluación'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm">
@@ -166,7 +156,7 @@ function DirectorTecnicoSolicitudes() {
                                             onClick={() => navigate(`/director-tecnico/solicitud/${request.id}`)}
                                             className="text-[#4A8BDF] hover:text-[#085297] font-medium"
                                         >
-                                            {request.estado_actual?.toLowerCase() === 'en evaluación técnica' ? 'Validar' : 'Ver Detalle'}
+                                            Validar
                                         </button>
                                     </td>
                                 </tr>

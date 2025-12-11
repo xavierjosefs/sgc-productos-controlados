@@ -349,32 +349,37 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
   }
 
   // 3) Cambiar estado
-  const ESTADO_APROBADA_UPC = 6; // lista para Dirección
+  // Estado 6: En evaluación Director Técnico (antes de ir a Dirección)
+  const ESTADO_EN_EVALUACION_DIRECTOR_TECNICO = 6;
 
   await pool.query(
     `UPDATE solicitudes
      SET estado_id = $1
      WHERE id = $2`,
-    [ESTADO_APROBADA_UPC, solicitudId]
+    [ESTADO_EN_EVALUACION_DIRECTOR_TECNICO, solicitudId]
   );
 
   return {
     solicitud_id: solicitudId,
-    estado_id: ESTADO_APROBADA_UPC,
+    estado_id: ESTADO_EN_EVALUACION_DIRECTOR_TECNICO,
     recomendacion,
     comentario_general
   };
 };
 
 export const getRequestsForDirectorUPC = async () => {
-  const result = await pool.query(
-    `SELECT 
+  try {
+    console.log('🔍 Ejecutando query para solicitudes con estado_id = 6');
+    
+    const result = await pool.query(
+      `SELECT 
         s.id,
         s.user_id,
         s.fecha_creacion,
         s.tipo_solicitud,
         s.estado_id,
         ts.nombre_servicio AS tipo_servicio,
+        e.nombre_mostrar AS estado_actual,
         u.full_name AS cliente_nombre,
         u.cedula AS cliente_cedula,
         s.validacion_formulario,
@@ -383,10 +388,20 @@ export const getRequestsForDirectorUPC = async () => {
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
+     JOIN estados_solicitud e ON e.id = s.estado_id
      WHERE s.estado_id = 6
      ORDER BY s.fecha_creacion ASC`);
 
-  return result.rows;
+    console.log('✅ Registros encontrados:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('Primera solicitud:', result.rows[0]);
+    }
+
+    return result.rows;
+  } catch (error) {
+    console.error('❌ Error en getRequestsForDirectorUPC:', error);
+    throw error;
+  }
 };
 
 export const getDirectorUPCRequestDetails = async (id) => {
@@ -398,15 +413,19 @@ export const getDirectorUPCRequestDetails = async (id) => {
         s.fecha_creacion,
         s.tipo_solicitud,
         s.tipo_servicio_id,
+        s.estado_id,
         s.validacion_formulario,
         s.comentario_tecnico,
+        s.recomendacion_tecnico,
         ts.nombre_servicio,
+        e.nombre_mostrar AS estado_actual,
         u.full_name AS cliente_nombre,
         u.cedula AS cliente_cedula,
         u.email AS cliente_email
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
+     JOIN estados_solicitud e ON e.id = s.estado_id
      WHERE s.id = $1`,
     [id]);
 
@@ -420,19 +439,25 @@ export const getDirectorUPCRequestDetails = async (id) => {
   const documentos = await getDocumentosBySolicitudId(id)
 
   return {
-    solicitud: {
-      id: solicitud.id,
-      tipo_solicitud: solicitud.tipo_solicitud,
-      fecha_creacion: solicitud.fecha_creacion,
-      servicio: solicitud.nombre_servicio,
-      form_data: solicitud.form_data,
-      form_for_tech: solicitud.validacion_formulario,
-      tech_comment: solicitud.comentario_tecnico
-    },
-    cliente: {
-      cedula: solicitud.cliente_cedula,
-      nombre: solicitud.cliente_nombre,
-      email: solicitud.cliente_email
+    id: solicitud.id,
+    user_id: solicitud.user_id,
+    cedula_rnc: solicitud.cliente_cedula,
+    nombre_solicitante: solicitud.cliente_nombre,
+    email: solicitud.cliente_email,
+    tipo_servicio: solicitud.nombre_servicio,
+    condicion: solicitud.tipo_solicitud,
+    estado_actual: solicitud.estado_actual,
+    estado_id: solicitud.estado_id,
+    form_data: solicitud.form_data,
+    created_at: solicitud.fecha_creacion,
+    validaciones_tecnico: {
+      formulario_estado: solicitud.validacion_formulario,
+      comentarios: solicitud.comentario_tecnico,
+      recomendacion: solicitud.recomendacion_tecnico,
+      documentos_validados: documentos.reduce((acc, doc) => {
+        acc[doc.tipo_documento || doc.nombre] = doc.estado === 'APROBADO';
+        return acc;
+      }, {})
     },
     documentos: documentos
   };
@@ -446,11 +471,12 @@ export const directorUPCDecision = async (id, data) => {
     throw new Error("La decisión debe ser APROBAR o RECHAZAR.");
   }
 
-
+  // Si aprueba: va a Dirección (estado 7)
+  // Si rechaza: devuelve al técnico (estado 5)
   const nuevoEstadoId =
     decision === "APROBAR"
-      ? 15 //aprobada
-      : 16; //rechazada
+      ? 7  // Aprobada por Director Técnico - va a Dirección
+      : 5; // Devuelta por Director Técnico - regresa al técnico
 
   await pool.query(
     `UPDATE solicitudes

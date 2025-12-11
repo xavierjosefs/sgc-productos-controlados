@@ -22,7 +22,6 @@ import VentanillaSolicitudes from './pages/ventanilla/VentanillaSolicitudes';
 import VentanillaSolicitudDetalle from './pages/ventanilla/VentanillaSolicitudDetalle';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
 import DetalleSolicitudTecnico from './pages/tecnico-controlados/DetalleSolicitudTecnico';
-import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
 import DirectorTecnicoLayout from './components/DirectorTecnicoLayout';
 import DirectorTecnicoSolicitudes from './pages/director-tecnico/DirectorTecnicoSolicitudes';
 import DirectorTecnicoSolicitudDetalle from './pages/director-tecnico/DirectorTecnicoSolicitudDetalle';
@@ -142,18 +141,9 @@ export default function App() {
                 />
 
                 <Route
-                  path="/director-controlados"
-                  element={
-                    <ProtectedRoute allowedRoles={['director_controlados']}>
-                      <DirectorControladosDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-
-                <Route
                   path="/director-tecnico"
                   element={
-                    <ProtectedRoute allowedRoles={['director_tecnico']}>
+                    <ProtectedRoute allowedRoles={['director_tecnico', 'director_controlados']}>
                       <DirectorTecnicoLayout />
                     </ProtectedRoute>
                   }
