@@ -2,7 +2,8 @@ import express from "express";
 import {
     getDireccionRequestsController,
     getDireccionRequestDetailController,
-    validateDireccionRequestController
+    validateDireccionRequestController,
+    generateCertificatePDFController
 } from "../controllers/direccion.controllers.js";
 
 const router = express.Router();
@@ -79,5 +80,33 @@ router.get("/request/:id", getDireccionRequestDetailController);
  *         description: Request updated
  */
 router.post("/validate/:id", validateDireccionRequestController);
+
+/**
+ * @swagger
+ * /direccion/certificate/{id}:
+ *   get:
+ *     summary: Generate and download certificate PDF
+ *     tags: [Direccion]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Request ID
+ *     responses:
+ *       200:
+ *         description: PDF certificate file
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Request not found
+ *       500:
+ *         description: Error generating PDF
+ */
+router.get("/certificate/:id", generateCertificatePDFController);
 
 export default router;

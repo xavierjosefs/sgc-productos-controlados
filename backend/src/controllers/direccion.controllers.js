@@ -1,6 +1,7 @@
 import { getRequestDetailsById, findUserByCedula, updateRequestStatus } from "../models/user.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
+import { generateCertificatePDF, getCertificateFilename } from "../services/pdfGenerator.js";
 import pool from "../config/db.js";
 
 // Constantes para códigos de estado - más mantenible que IDs hardcodeados
@@ -19,6 +20,46 @@ const getEstadoIdByCode = async (codigo) => {
         [codigo]
     );
     return result.rows[0]?.id || null;
+};
+
+/**
+ * Helper para obtener el código del formulario de una solicitud
+ * @param {number} requestId 
+ * @returns {Promise<string>} 'FORM_CLASE_A' or 'FORM_CLASE_B'
+ */
+const getFormCodeByRequestId = async (requestId) => {
+    const result = await pool.query(`
+        SELECT f.codigo
+        FROM solicitudes s
+        JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+        JOIN formularios f ON ts.formulario_id = f.id
+        WHERE s.id = $1
+    `, [requestId]);
+    return result.rows[0]?.codigo || 'FORM_CLASE_A';
+};
+
+/**
+ * Helper para obtener datos completos de la solicitud para el PDF
+ */
+const getFullRequestDataForPDF = async (requestId) => {
+    const result = await pool.query(`
+        SELECT 
+            s.id,
+            s.user_id,
+            s.form_data,
+            s.fecha_creacion,
+            s.tipo_solicitud,
+            u.full_name AS nombre_cliente,
+            u.cedula AS cliente_cedula,
+            ts.nombre_servicio AS tipo_servicio,
+            f.codigo AS form_code
+        FROM solicitudes s
+        JOIN users u ON s.user_id = u.cedula
+        JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
+        JOIN formularios f ON ts.formulario_id = f.id
+        WHERE s.id = $1
+    `, [requestId]);
+    return result.rows[0] || null;
 };
 
 /**
@@ -206,3 +247,45 @@ Dirección`;
     }
 };
 
+/**
+ * Controller to generate and download certificate PDF
+ * For Dirección role - generates certificate after approval
+ */
+export const generateCertificatePDFController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('📄 Generando certificado PDF para solicitud:', id);
+
+        // Get full request data including form code
+        const requestData = await getFullRequestDataForPDF(id);
+
+        if (!requestData) {
+            return res.status(404).json({
+                ok: false,
+                message: "Solicitud no encontrada"
+            });
+        }
+
+        // Generate PDF buffer
+        const pdfBuffer = await generateCertificatePDF(requestData, requestData.form_code);
+        const filename = getCertificateFilename(id, requestData.form_code);
+
+        console.log('✅ PDF generado exitosamente:', filename);
+
+        // Set headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+
+        // Send PDF
+        return res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error("❌ Error al generar certificado PDF:", error);
+        return res.status(500).json({
+            ok: false,
+            message: "Error al generar el certificado PDF",
+            error: error.message
+        });
+    }
+};

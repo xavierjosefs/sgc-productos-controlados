@@ -12,7 +12,8 @@ const DireccionSolicitudDetalle = () => {
     const navigate = useNavigate();
     const {
         getDireccionRequestDetail,
-        validateDireccionRequest
+        validateDireccionRequest,
+        downloadCertificatePDF
     } = useRequestsAPI();
 
     const [request, setRequest] = useState(null);
@@ -60,6 +61,15 @@ const DireccionSolicitudDetalle = () => {
         setActionError('');
         try {
             await validateDireccionRequest(id, 'rechazado_direccion', rejectReasons);
+
+            // Descargar certificado PDF automáticamente
+            try {
+                await downloadCertificatePDF(id);
+            } catch (pdfError) {
+                console.error('Error descargando PDF:', pdfError);
+                // No bloqueamos la navegación si falla la descarga del PDF
+            }
+
             setShowRejectModal(false);
             navigate('/direccion');
         } catch (err) {
@@ -74,6 +84,15 @@ const DireccionSolicitudDetalle = () => {
         setActionError('');
         try {
             await validateDireccionRequest(id, 'aprobado_direccion', '');
+
+            // Descargar certificado PDF automáticamente
+            try {
+                await downloadCertificatePDF(id);
+            } catch (pdfError) {
+                console.error('Error descargando PDF:', pdfError);
+                // No bloqueamos la navegación si falla la descarga del PDF
+            }
+
             setShowApproveModal(false);
             navigate('/direccion');
         } catch (err) {

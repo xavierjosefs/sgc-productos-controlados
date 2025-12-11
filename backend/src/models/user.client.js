@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import {getDocumentosBySolicitudId} from "./document.client.js"
+import { getDocumentosBySolicitudId } from "./document.client.js"
 
 // Funcion para crear un nuevo usuario
 export const createUser = async (full_name, cedula, email, password, role_id) => {
@@ -135,6 +135,7 @@ export const getRequestDetailsById = async (id) => {
       s.solicitud_original_id,
       s.fase,
       s.solicitud_anterior_id,
+      s.estado_id,
       ts.nombre_servicio AS tipo_servicio,
       e.nombre_mostrar   AS estado_actual
     FROM solicitudes s
@@ -305,7 +306,7 @@ export const getTecnicoUPCRequestDetails = async (id) => {
 }
 
 export const validarSolicitudTecnica = async (solicitudId, data) => {
-   const { formulario_cumple, documentos, recomendacion, comentario_general } = data;
+  const { formulario_cumple, documentos, recomendacion, comentario_general } = data;
 
   // Validación mínima
   if (typeof formulario_cumple !== "boolean") {
@@ -384,7 +385,7 @@ export const getRequestsForDirectorUPC = async () => {
      JOIN users u ON u.cedula = s.user_id
      WHERE s.estado_id = 6
      ORDER BY s.fecha_creacion ASC`);
-     
+
   return result.rows;
 };
 
