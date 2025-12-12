@@ -368,7 +368,7 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${baseURL}/api/direccion/requests`, {
+      const response = await axios.get(`${baseURL}/api/director-general/requests`, {
         withCredentials: true,
         headers: getAuthHeaders(),
       });
@@ -395,7 +395,7 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${baseURL}/api/direccion/request/${id}`, {
+      const response = await axios.get(`${baseURL}/api/director-general/request/${id}`, {
         withCredentials: true,
         headers: getAuthHeaders(),
       });
@@ -424,7 +424,7 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${baseURL}/api/direccion/validate/${requestId}`,
+      const response = await axios.post(`${baseURL}/api/director-general/validate/${requestId}`,
         { status, reasons },
         {
           withCredentials: true,
@@ -454,7 +454,7 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${baseURL}/api/direccion/certificate/${requestId}`, {
+      const response = await axios.get(`${baseURL}/api/director-general/certificate/${requestId}`, {
         withCredentials: true,
         headers: getAuthHeaders(),
         responseType: 'blob' // Important: receive as blob for file download

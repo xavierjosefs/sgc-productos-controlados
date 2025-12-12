@@ -6,7 +6,7 @@ import pool from "../config/db.js";
 
 // Constantes para códigos de estado - más mantenible que IDs hardcodeados
 const ESTADO_CODES = {
-    APROBADA_DIRECTOR_UPC: 'aprobada_director_upc',
+    APROBADA_DIRECTOR_UPC: 'FIRMADA_DIRECCION',  // Solicitudes aprobadas por Director Técnico
     APROBADA_DIRECCION: 'aprobada_direccion',
     RECHAZADA_DIRECCION: 'rechazada_direccion'
 };
@@ -64,7 +64,7 @@ const getFullRequestDataForPDF = async (requestId) => {
 
 /**
  * Controller to get requests for Dirección role
- * Returns requests with estado 'aprobada_director_upc'
+ * Returns requests pendientes (estado 7), aprobadas (estado 8) y rechazadas (estado 18)
  */
 export const getDireccionRequestsController = async (req, res) => {
     try {
@@ -72,17 +72,19 @@ export const getDireccionRequestsController = async (req, res) => {
             SELECT 
                 s.id,
                 s.user_id,
+                s.estado_id,
                 u.full_name AS nombre_cliente,
                 ts.nombre_servicio AS tipo_servicio,
                 s.fecha_creacion,
-                e.nombre_mostrar AS estado_actual
+                e.nombre_mostrar AS estado_actual,
+                e.codigo_estado
             FROM solicitudes s
             JOIN users u ON s.user_id = u.cedula
             JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
             JOIN estados_solicitud e ON s.estado_id = e.id
-            WHERE e.codigo_estado = $1
+            WHERE s.estado_id IN (7, 8, 18)
             ORDER BY s.fecha_creacion DESC
-        `, [ESTADO_CODES.APROBADA_DIRECTOR_UPC]);
+        `);
 
         return res.status(200).json({
             ok: true,
@@ -122,8 +124,10 @@ export const getDireccionRequestDetailController = async (req, res) => {
 
         return res.status(200).json({
             ok: true,
-            ...request,
-            documentos
+            detalle: {
+                ...request,
+                documentos
+            }
         });
 
     } catch (error) {

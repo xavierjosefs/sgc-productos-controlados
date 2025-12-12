@@ -1,143 +1,229 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useRequestsAPI from '../../hooks/useRequestsAPI';
-import BadgeEstado from '../../components/BadgeEstado';
+import { ExternalLink } from 'lucide-react';
 
 /**
  * DireccionSolicitudes
- * Listado de solicitudes pendientes de aprobación por Dirección
+ * Dashboard principal de Dirección
  */
 export default function DireccionSolicitudes() {
     const navigate = useNavigate();
-    const { getDireccionRequests, loading, error } = useRequestsAPI();
     const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [filterTipo, setFilterTipo] = useState('');
+    const [filterEstado, setFilterEstado] = useState(''); // Puede ser 'pendiente', 'aprobada', 'rechazada' o ''
+    const [appliedTipo, setAppliedTipo] = useState('');
+    const [appliedEstado, setAppliedEstado] = useState('');
 
     useEffect(() => {
-        const fetchRequests = async () => {
-            try {
-                const response = await getDireccionRequests();
-                if (response.ok) {
-                    setRequests(response.requests || []);
-                }
-            } catch (err) {
-                console.error("Error al cargar solicitudes:", err);
-            }
-        };
         fetchRequests();
-    }, [getDireccionRequests]);
+    }, []);
 
-    // Filtrar solicitudes
+    const fetchRequests = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:8000/api/direccion/requests', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            if (data.ok) {
+                setRequests(data.requests || []);
+            }
+        } catch (error) {
+            console.error('Error al cargar solicitudes:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filtrar solicitudes según filtros aplicados
     const filteredRequests = requests.filter(request => {
-        if (filterTipo && !request.tipo_servicio?.toLowerCase().includes(filterTipo.toLowerCase())) {
+        // Filtro por tipo de servicio
+        if (appliedTipo && !request.tipo_servicio?.toLowerCase().includes(appliedTipo.toLowerCase())) {
             return false;
+        }
+        // Filtro por estado usando estado_id
+        if (appliedEstado) {
+            if (appliedEstado === 'pendiente' && request.estado_id !== 7) {
+                return false;
+            }
+            if (appliedEstado === 'aprobada' && request.estado_id !== 8) {
+                return false;
+            }
+            if (appliedEstado === 'rechazada' && request.estado_id !== 18) {
+                return false;
+            }
         }
         return true;
     });
 
-    // Navegar al detalle
-    const handleRowClick = (id) => {
+    // Calcular contadores basados en el estado_id
+    // Estado 7: FIRMADA_DIRECCION (Pendientes de aprobación por Dirección)
+    // Estado 8: EN_DNCD (Aprobadas por Dirección)
+    // Estado 18: rechazada_direccion (Rechazadas por Dirección)
+    const pendientesCount = requests.filter(r => r.estado_id === 7).length;
+    const aprobadasCount = requests.filter(r => r.estado_id === 8).length;
+    const rechazadasCount = requests.filter(r => r.estado_id === 18).length;
+
+    const handleFilter = () => {
+        setAppliedTipo(filterTipo);
+        setAppliedEstado(filterEstado);
+    };
+
+    const handleCardFilter = (estado) => {
+        setFilterEstado(estado);
+        setAppliedEstado(estado);
+    };
+
+    const handleVerDetalle = (id) => {
         navigate(`/direccion/solicitud/${id}`);
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-8">
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-[#4A8BDF]">Gestión de Solicitudes - Dirección</h1>
-                <p className="text-gray-600 mt-1">Solicitudes pendientes de aprobación</p>
-            </div>
+        <div className="max-w-[1400px] mx-auto px-8 py-8">
+            {/* Título */}
+            <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Solicitudes</h1>
 
-            {/* Estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <span className="text-sm text-gray-600">Pendientes de firma</span>
-                    <p className="text-4xl font-bold text-[#F59E0B] mt-2">{requests.length}</p>
+            {/* Tarjetas de estadísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                {/* Pendientes */}
+                <div 
+                    onClick={() => handleCardFilter('pendiente')}
+                    className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm cursor-pointer hover:border-[#60A5FA] hover:shadow-md transition-all"
+                >
+                    <div className="flex justify-between items-start">
+                        <span className="text-gray-700 font-medium">Pendientes</span>
+                        <ExternalLink className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-5xl font-bold text-[#60A5FA] mt-3">{pendientesCount}</p>
+                </div>
+
+                {/* Aprobadas */}
+                <div 
+                    onClick={() => handleCardFilter('aprobada')}
+                    className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm cursor-pointer hover:border-[#22C55E] hover:shadow-md transition-all"
+                >
+                    <div className="flex justify-between items-start">
+                        <span className="text-gray-700 font-medium">Aprobadas</span>
+                        <ExternalLink className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-5xl font-bold text-[#22C55E] mt-3">{aprobadasCount}</p>
+                </div>
+
+                {/* Rechazadas */}
+                <div 
+                    onClick={() => handleCardFilter('rechazada')}
+                    className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm cursor-pointer hover:border-[#F97316] hover:shadow-md transition-all"
+                >
+                    <div className="flex justify-between items-start">
+                        <span className="text-gray-700 font-medium">Rechazadas</span>
+                        <ExternalLink className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-5xl font-bold text-[#F97316] mt-3">{rechazadasCount}</p>
                 </div>
             </div>
 
-            {/* Filtros */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                <div className="flex flex-wrap gap-4 items-end">
-                    <div className="flex-1 min-w-48">
-                        <label className="block text-sm text-gray-600 mb-2">Tipo de Servicio</label>
-                        <input
-                            type="text"
-                            value={filterTipo}
-                            onChange={(e) => setFilterTipo(e.target.value)}
-                            placeholder="Buscar por tipo..."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A8BDF]"
-                        />
+            {/* Sección de tabla */}
+            <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm">
+                {/* Filtros */}
+                <div className="p-6 border-b border-gray-200">
+                    <div className="flex gap-4 items-end">
+                        <div className="flex-1">
+                            <select
+                                value={filterTipo}
+                                onChange={(e) => setFilterTipo(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                            >
+                                <option value="">Tipo</option>
+                                <option value="inscripcion">Inscripción</option>
+                                <option value="renovacion">Renovación</option>
+                                <option value="modificacion">Modificación</option>
+                            </select>
+                        </div>
+                        <div className="flex-1">
+                            <select
+                                value={filterEstado}
+                                onChange={(e) => setFilterEstado(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                            >
+                                <option value="">Estado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="aprobada">Aprobada</option>
+                                <option value="rechazada">Rechazada</option>
+                            </select>
+                        </div>
+                        <button
+                            onClick={handleFilter}
+                            className="px-8 py-2.5 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors"
+                        >
+                            Filtrar
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setFilterTipo('')}
-                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                    >
-                        Limpiar
-                    </button>
                 </div>
-            </div>
 
-            {/* Tabla de solicitudes */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-800">Solicitudes Pendientes de Firma</h2>
-                </div>
-
-                {loading ? (
-                    <div className="px-6 py-12 text-center text-gray-500">
-                        Cargando solicitudes...
-                    </div>
-                ) : error ? (
-                    <div className="px-6 py-12 text-center text-red-500">
-                        {error}
-                    </div>
-                ) : (
+                {/* Tabla */}
+                <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#4A8BDF]">
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">CLIENTE</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">TIPO DE SERVICIO</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">FECHA</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">ESTADO</th>
+                                <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Código</th>
+                                <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Fecha Creación</th>
+                                <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Tipo de Servicio</th>
+                                <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Estado</th>
+                                <th className="px-6 py-4 text-right text-white font-semibold uppercase tracking-wide">Acción</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredRequests.length === 0 ? (
+                            {loading ? (
                                 <tr>
                                     <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                        No hay solicitudes pendientes de aprobación
+                                        Cargando solicitudes...
+                                    </td>
+                                </tr>
+                            ) : filteredRequests.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                        No hay solicitudes disponibles
                                     </td>
                                 </tr>
                             ) : (
                                 filteredRequests.map((request) => (
-                                    <tr
-                                        key={request.id}
-                                        onClick={() => handleRowClick(request.id)}
-                                        className="hover:bg-gray-50 cursor-pointer transition-colors"
-                                    >
-                                        <td className="px-6 py-4 text-sm text-[#085297] font-medium">
-                                            #{request.id}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
-                                            {request.nombre_cliente}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {request.tipo_servicio}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {new Date(request.fecha_creacion).toLocaleDateString('es-DO')}
+                                    <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-900 font-medium">#{request.id}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <BadgeEstado estado={request.estado_actual} />
+                                            <span className="text-gray-700">
+                                                {new Date(request.fecha_creacion).toLocaleDateString('es-DO', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric'
+                                                })}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-700">{request.tipo_servicio}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-700">{request.estado_actual}</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                onClick={() => handleVerDetalle(request.id)}
+                                                className="text-[#085297] font-semibold hover:underline"
+                                            >
+                                                Ver Detalle
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
                             )}
                         </tbody>
                     </table>
-                )}
+                </div>
             </div>
         </div>
     );

@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import ClientTopbar from './ClientTopbar';
 
 /**
- * Layout component for Dirección role
+ * Layout component for Direccion role
  * Provides consistent layout with topbar and nested route outlet
  */
 export default function DireccionLayout() {

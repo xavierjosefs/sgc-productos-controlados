@@ -99,7 +99,7 @@ export default function Login() {
           ventanilla: '/ventanilla',
           tecnico_controlados: '/tecnico-controlados',
           director_controlados: '/director-controlados',
-          direccion: '/direccion',
+          direccion: '/director-general',
           dncd: '/dncd',
           admin: '/admin',
         };

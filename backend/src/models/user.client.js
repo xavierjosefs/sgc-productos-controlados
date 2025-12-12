@@ -478,12 +478,12 @@ export const directorUPCDecision = async (id, data) => {
     throw new Error("La decisión debe ser APROBAR o RECHAZAR.");
   }
 
-  // Si aprueba: va a Dirección (estado 7)
-  // Si rechaza: devuelve al técnico (estado 16)
+  // Si aprueba: va a Dirección (estado 7: FIRMADA_DIRECCION)
+  // Si rechaza: devuelve al técnico (estado 5)
   const nuevoEstadoId =
     decision === "APROBAR"
-      ? 7  // Aprobada por Director Técnico - va a Dirección
-      : 16; // Devuelta por Director Técnico - regresa al técnico
+      ? 7  // Va a Dirección - FIRMADA_DIRECCION
+      : 5;  // Devuelta por Director Técnico - regresa al técnico
 
   await pool.query(
     `UPDATE solicitudes
