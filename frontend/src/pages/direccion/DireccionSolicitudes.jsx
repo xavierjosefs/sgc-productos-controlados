@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
+import DireccionTopbar from '../../components/DireccionTopbar';
 
 /**
  * DireccionSolicitudes
  * Dashboard principal de Dirección
  */
 export default function DireccionSolicitudes() {
+        // Limpiar filtros
+        const handleClearFilters = () => {
+            setFilterTipo('');
+            setFilterEstado('');
+            setAppliedTipo('');
+            setAppliedEstado('');
+        };
     const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -14,6 +22,8 @@ export default function DireccionSolicitudes() {
     const [filterEstado, setFilterEstado] = useState(''); // Puede ser 'pendiente', 'aprobada', 'rechazada' o ''
     const [appliedTipo, setAppliedTipo] = useState('');
     const [appliedEstado, setAppliedEstado] = useState('');
+    // Tipos de servicio dinámicos según las solicitudes cargadas
+    const tiposServicio = Array.from(new Set(requests.map(r => r.tipo_servicio).filter(Boolean)));
 
     useEffect(() => {
         fetchRequests();
@@ -83,7 +93,9 @@ export default function DireccionSolicitudes() {
     };
 
     return (
-        <div className="max-w-[1400px] mx-auto px-8 py-8">
+        <>
+            <DireccionTopbar />
+            <div className="max-w-[1400px] mx-auto px-8 py-8">
             {/* Título */}
             <h1 className="text-3xl font-bold text-[#4A8BDF] mb-8">Solicitudes</h1>
 
@@ -130,24 +142,24 @@ export default function DireccionSolicitudes() {
             <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm">
                 {/* Filtros */}
                 <div className="p-6 border-b border-gray-200">
-                    <div className="flex gap-4 items-end">
-                        <div className="flex-1">
+                    <div className="flex gap-4 items-end justify-end">
+                        <div>
                             <select
                                 value={filterTipo}
                                 onChange={(e) => setFilterTipo(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                                className="min-w-[160px] max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
                             >
                                 <option value="">Tipo</option>
-                                <option value="inscripcion">Inscripción</option>
-                                <option value="renovacion">Renovación</option>
-                                <option value="modificacion">Modificación</option>
+                                {tiposServicio.map(tipo => (
+                                    <option key={tipo} value={tipo}>{tipo}</option>
+                                ))}
                             </select>
                         </div>
-                        <div className="flex-1">
+                        <div>
                             <select
                                 value={filterEstado}
                                 onChange={(e) => setFilterEstado(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                                className="min-w-[160px] max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
                             >
                                 <option value="">Estado</option>
                                 <option value="pendiente">Pendiente</option>
@@ -161,11 +173,19 @@ export default function DireccionSolicitudes() {
                         >
                             Filtrar
                         </button>
+                        {(filterTipo || filterEstado || appliedTipo || appliedEstado) && (
+                            <button
+                                onClick={handleClearFilters}
+                                className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors ml-2"
+                            >
+                                Limpiar
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 {/* Tabla */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#4A8BDF]">
@@ -208,7 +228,9 @@ export default function DireccionSolicitudes() {
                                             <span className="text-gray-700">{request.tipo_servicio}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-gray-700">{request.estado_actual}</span>
+                                            <span className="text-gray-700">
+                                                {request.estado_id === 7 ? 'Firmada por directorUPC' : request.estado_actual}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
@@ -225,6 +247,7 @@ export default function DireccionSolicitudes() {
                     </table>
                 </div>
             </div>
-        </div>
+            </div>
+        </>
     );
 }

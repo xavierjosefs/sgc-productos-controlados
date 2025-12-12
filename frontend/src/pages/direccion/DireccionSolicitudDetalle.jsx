@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DireccionTopbar from '../../components/DireccionTopbar';
 
 /**
  * DireccionSolicitudDetalle
@@ -145,34 +146,29 @@ export default function DireccionSolicitudDetalle() {
     const isPending = request.estado_id === 7;
 
     return (
-        <div className="max-w-[1400px] mx-auto px-8 py-8">
+        <>
+            <DireccionTopbar />
+            <div className="max-w-[1400px] mx-auto px-8 py-8">
             {/* Header con botón volver */}
             <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={() => navigate('/direccion')}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="focus:outline-none group"
+                    aria-label="Volver"
                 >
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    <ArrowLeft className="w-7 h-7 text-[#085297] cursor-pointer group-hover:scale-110 transition-transform" />
                 </button>
                 <h1 className="text-3xl font-bold text-[#4A8BDF]">Solicitud #{id}</h1>
             </div>
 
-            {/* Título completo de la solicitud */}
-            {request.tipo_servicio && (
-                <h2 className="text-2xl font-bold text-[#4A8BDF] mb-8">
-                    {request.tipo_servicio}
-                </h2>
-            )}
 
             {/* Sección de Documento */}
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-8 shadow-sm mb-8">
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-4 max-w-xl mx-auto shadow-sm mb-8">
                 <div className="flex items-center justify-between">
                     <div className="flex-1">
-                        <h3 className="text-[#4A8BDF] font-bold text-lg mb-4">Documento</h3>
-                        
-                        {/* Badge de estado solo si está aprobada o rechazada */}
-                        {(isApproved || isRejected) && (
-                            <div className="mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-[#4A8BDF] font-bold text-lg">Documento</h3>
+                            {(isApproved || isRejected) && (
                                 <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold border-2 ${
                                     isApproved 
                                         ? 'bg-green-50 text-green-600 border-green-200' 
@@ -180,8 +176,8 @@ export default function DireccionSolicitudDetalle() {
                                 }`}>
                                     {isApproved ? 'Aprobada' : 'Rechazada'}
                                 </span>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-4">
                             <input
@@ -227,7 +223,7 @@ export default function DireccionSolicitudDetalle() {
 
             {/* Modal de Rechazo */}
             {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
                         <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Rechazo</h3>
                         <p className="text-gray-600 text-center mb-8">
@@ -258,7 +254,7 @@ export default function DireccionSolicitudDetalle() {
 
             {/* Modal de Aprobación */}
             {showApproveModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
                         <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Aprobación</h3>
                         <p className="text-gray-600 text-center mb-8">
@@ -286,7 +282,7 @@ export default function DireccionSolicitudDetalle() {
 
             {/* Modal de Éxito */}
             {showSuccessModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
                         <h3 className="text-2xl font-bold text-[#4A8BDF] mb-6">Solicitud {successAction}</h3>
                         
@@ -307,6 +303,7 @@ export default function DireccionSolicitudDetalle() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </>
     );
 }

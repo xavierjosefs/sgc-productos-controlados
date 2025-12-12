@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import ClientTopbar from './ClientTopbar';
 
 /**
  * Layout component for Direccion role
@@ -8,7 +7,6 @@ import ClientTopbar from './ClientTopbar';
 export default function DireccionLayout() {
     return (
         <div className="min-h-screen bg-gray-50">
-            <ClientTopbar />
             <main>
                 <Outlet />
             </main>
