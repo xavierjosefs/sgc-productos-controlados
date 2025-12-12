@@ -1,16 +1,30 @@
 /**
- * PDF Certificate Generator Service - Enhanced Version
+ * PDF Certificate Generator Service - Enhanced Version with Official Logos
  * Generates official certificates for approved/rejected requests
  * Supports Clase A and Clase B certificate types
  * 
  * Design features:
+ * - Official government logos (DNCD and Gobierno)
  * - Decorative green guilloche border pattern
  * - Light green textured background
- * - Professional typography
+ * - Times New Roman typography (Bold/Italic)
  * - Official government certificate layout
  */
 
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+// Get directory path for assets
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Asset paths
+const ASSETS = {
+    logoDNCD: path.join(__dirname, '../assets/DIRECCION_NACIONAL_DE_CONTROL_DE_DROGAS.png'),
+    logoGobierno: path.join(__dirname, '../assets/gobierno_logo.png')
+};
 
 /**
  * Certificate configuration
@@ -31,93 +45,100 @@ const CONFIG = {
         headerText: '#1a3d2a',
         bodyText: '#2d3748',
         labelText: '#4a5568',
-        fieldLine: '#2d8a4a',
+        fieldBorder: '#1a5c2a',
         backgroundTint: '#f0f7f2',
-        patternLine: '#c8e6d0'
+        patternLine: '#c8e6d0',
+        saludPublica: '#2d8a4a'
+    },
+    // Times Roman font family (built into PDFKit)
+    fonts: {
+        regular: 'Times-Roman',
+        bold: 'Times-Bold',
+        italic: 'Times-Italic',
+        boldItalic: 'Times-BoldItalic'
     }
 };
 
 /**
  * Draw the decorative guilloche-style border pattern
- * Creates the characteristic security pattern seen on official certificates
  */
 function drawDecorativeBorder(doc) {
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
-    const margin = 25;
-    const borderWidth = 35;
+    const margin = 20;
+    const borderWidth = 30;
 
     doc.save();
 
     // Outer dark green border
-    doc.lineWidth(3);
+    doc.lineWidth(2.5);
     doc.strokeColor(CONFIG.colors.borderDark);
     doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2)).stroke();
 
-    // Inner lighter border
+    // Inner border
     doc.lineWidth(1);
     doc.strokeColor(CONFIG.colors.borderMedium);
-    doc.rect(margin + 8, margin + 8, pageWidth - (margin * 2) - 16, pageHeight - (margin * 2) - 16).stroke();
+    doc.rect(margin + 6, margin + 6, pageWidth - (margin * 2) - 12, pageHeight - (margin * 2) - 12).stroke();
 
     // Draw diagonal guilloche pattern in border area
-    const patternSpacing = 6;
-    doc.lineWidth(0.5);
+    const patternSpacing = 5;
+    doc.lineWidth(0.4);
     doc.strokeColor(CONFIG.colors.borderLight);
-    doc.opacity(0.6);
+    doc.opacity(0.7);
 
     // Top border pattern
     for (let x = margin; x < pageWidth - margin; x += patternSpacing) {
-        doc.moveTo(x, margin + 2)
-            .lineTo(x + patternSpacing / 2, margin + borderWidth - 10)
+        doc.moveTo(x, margin + 1)
+            .lineTo(x + patternSpacing / 2, margin + borderWidth - 8)
             .stroke();
-        doc.moveTo(x + patternSpacing / 2, margin + 2)
-            .lineTo(x, margin + borderWidth - 10)
+        doc.moveTo(x + patternSpacing / 2, margin + 1)
+            .lineTo(x, margin + borderWidth - 8)
             .stroke();
     }
 
     // Bottom border pattern
     for (let x = margin; x < pageWidth - margin; x += patternSpacing) {
-        doc.moveTo(x, pageHeight - margin - 2)
-            .lineTo(x + patternSpacing / 2, pageHeight - margin - borderWidth + 10)
+        doc.moveTo(x, pageHeight - margin - 1)
+            .lineTo(x + patternSpacing / 2, pageHeight - margin - borderWidth + 8)
             .stroke();
-        doc.moveTo(x + patternSpacing / 2, pageHeight - margin - 2)
-            .lineTo(x, pageHeight - margin - borderWidth + 10)
+        doc.moveTo(x + patternSpacing / 2, pageHeight - margin - 1)
+            .lineTo(x, pageHeight - margin - borderWidth + 8)
             .stroke();
     }
 
     // Left border pattern
     for (let y = margin + borderWidth; y < pageHeight - margin - borderWidth; y += patternSpacing) {
-        doc.moveTo(margin + 2, y)
-            .lineTo(margin + borderWidth - 10, y + patternSpacing / 2)
+        doc.moveTo(margin + 1, y)
+            .lineTo(margin + borderWidth - 8, y + patternSpacing / 2)
             .stroke();
-        doc.moveTo(margin + 2, y + patternSpacing / 2)
-            .lineTo(margin + borderWidth - 10, y)
+        doc.moveTo(margin + 1, y + patternSpacing / 2)
+            .lineTo(margin + borderWidth - 8, y)
             .stroke();
     }
 
     // Right border pattern
     for (let y = margin + borderWidth; y < pageHeight - margin - borderWidth; y += patternSpacing) {
-        doc.moveTo(pageWidth - margin - 2, y)
-            .lineTo(pageWidth - margin - borderWidth + 10, y + patternSpacing / 2)
+        doc.moveTo(pageWidth - margin - 1, y)
+            .lineTo(pageWidth - margin - borderWidth + 8, y + patternSpacing / 2)
             .stroke();
-        doc.moveTo(pageWidth - margin - 2, y + patternSpacing / 2)
-            .lineTo(pageWidth - margin - borderWidth + 10, y)
+        doc.moveTo(pageWidth - margin - 1, y + patternSpacing / 2)
+            .lineTo(pageWidth - margin - borderWidth + 8, y)
             .stroke();
     }
 
     // Corner decorations
     const corners = [
-        { x: margin + 5, y: margin + 5 },
-        { x: pageWidth - margin - 5, y: margin + 5 },
-        { x: margin + 5, y: pageHeight - margin - 5 },
-        { x: pageWidth - margin - 5, y: pageHeight - margin - 5 }
+        { x: margin + 4, y: margin + 4 },
+        { x: pageWidth - margin - 4, y: margin + 4 },
+        { x: margin + 4, y: pageHeight - margin - 4 },
+        { x: pageWidth - margin - 4, y: pageHeight - margin - 4 }
     ];
 
     doc.opacity(1);
-    doc.lineWidth(2);
+    doc.lineWidth(1.5);
     doc.strokeColor(CONFIG.colors.borderDark);
     corners.forEach(corner => {
-        doc.circle(corner.x, corner.y, 4).stroke();
+        doc.circle(corner.x, corner.y, 3).stroke();
     });
 
     doc.restore();
@@ -138,10 +159,10 @@ function drawBackgroundTexture(doc) {
 
     // Subtle diagonal pattern
     doc.strokeColor(CONFIG.colors.patternLine);
-    doc.lineWidth(0.3);
-    doc.opacity(0.3);
+    doc.lineWidth(0.25);
+    doc.opacity(0.25);
 
-    const spacing = 20;
+    const spacing = 18;
     for (let i = -pageHeight; i < pageWidth + pageHeight; i += spacing) {
         doc.moveTo(i, 0)
             .lineTo(i + pageHeight, pageHeight)
@@ -152,123 +173,120 @@ function drawBackgroundTexture(doc) {
 }
 
 /**
- * Draw official header with government titles
+ * Draw official header with government logos and titles
  */
 function drawHeader(doc, certificateClass) {
-    const centerX = doc.page.width / 2;
-    const contentStartY = 70;
+    const pageWidth = doc.page.width;
+    const contentStartY = 60;
 
-    // Main titles
-    doc.font('Helvetica-Bold')
-        .fontSize(20)
+    // Main titles - Times-Bold
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(22)
         .fillColor(CONFIG.colors.headerText)
         .text('República Dominicana', 0, contentStartY, { align: 'center' });
 
-    doc.font('Helvetica-Bold')
-        .fontSize(17)
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(18)
         .text('Presidencia de la República', { align: 'center' });
 
     // Logos section
     const logoY = contentStartY + 55;
 
-    // Left logo - DNCD (placeholder circle with text)
-    const leftLogoX = 100;
-    doc.save();
-    doc.circle(leftLogoX, logoY + 30, 35)
-        .lineWidth(2)
-        .strokeColor(CONFIG.colors.borderDark)
-        .stroke();
+    // Left logo - DNCD
+    const leftLogoX = 75;
+    try {
+        if (fs.existsSync(ASSETS.logoDNCD)) {
+            doc.image(ASSETS.logoDNCD, leftLogoX, logoY, {
+                width: 70
+            });
+        }
+    } catch (e) {
+        // Fallback circle if image not found
+        doc.circle(leftLogoX + 35, logoY + 35, 35)
+            .lineWidth(2)
+            .strokeColor(CONFIG.colors.borderDark)
+            .stroke();
+    }
 
-    // Inner circle
-    doc.circle(leftLogoX, logoY + 30, 28)
-        .lineWidth(1)
-        .stroke();
-
-    doc.font('Helvetica-Bold')
-        .fontSize(6)
+    // Text below left logo
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(9)
         .fillColor(CONFIG.colors.headerText)
-        .text('DIRECCIÓN', leftLogoX - 22, logoY + 20, { width: 44, align: 'center' })
-        .text('NACIONAL', leftLogoX - 22, logoY + 28, { width: 44, align: 'center' })
-        .text('DE CONTROL', leftLogoX - 22, logoY + 36, { width: 44, align: 'center' })
-        .text('DE DROGAS', leftLogoX - 22, logoY + 44, { width: 44, align: 'center' });
-    doc.restore();
+        .text('Dirección Nacional', leftLogoX - 5, logoY + 75, { width: 80, align: 'center' })
+        .text('de Control de Drogas', leftLogoX - 5, logoY + 87, { width: 80, align: 'center' });
 
-    // Separator text
-    doc.font('Helvetica')
-        .fontSize(8)
-        .fillColor(CONFIG.colors.labelText)
-        .text('Dirección Nacional', leftLogoX - 40, logoY + 75, { width: 80, align: 'center' })
-        .text('de Control de Drogas', leftLogoX - 40, logoY + 85, { width: 80, align: 'center' });
+    // Right logo - Gobierno (logo already contains text)
+    const rightLogoX = pageWidth - 180;
+    try {
+        if (fs.existsSync(ASSETS.logoGobierno)) {
+            doc.image(ASSETS.logoGobierno, rightLogoX, logoY, {
+                width: 120
+            });
+        }
+    } catch (e) {
+        // Fallback text if image not found
+        doc.font(CONFIG.fonts.regular)
+            .fontSize(9)
+            .fillColor(CONFIG.colors.labelText)
+            .text('GOBIERNO DE LA', rightLogoX, logoY + 5, { width: 120 });
 
-    // Right side - Government text
-    const rightTextX = doc.page.width - 210;
+        doc.font(CONFIG.fonts.bold)
+            .fontSize(12)
+            .fillColor(CONFIG.colors.headerText)
+            .text('REPÚBLICA DOMINICANA', rightLogoX, logoY + 20, { width: 120 });
+    }
 
-    doc.font('Helvetica')
-        .fontSize(10)
-        .fillColor(CONFIG.colors.labelText)
-        .text('GOBIERNO DE LA', rightTextX, logoY + 5, { width: 150 });
+    // Note: No additional text below logo - the logo image already contains "SALUD PÚBLICA"
 
-    doc.font('Helvetica-Bold')
-        .fontSize(14)
+    // Certificate title - with small caps effect
+    const titleY = logoY + 115;
+
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(11)
         .fillColor(CONFIG.colors.headerText)
-        .text('REPÚBLICA DOMINICANA', rightTextX, logoY + 20, { width: 170 });
+        .text('CERTIFICADO DE INSCRIPCIÓN DE DROGAS CONTROLADAS', 0, titleY, {
+            align: 'center',
+            characterSpacing: 0.5
+        });
 
-    // Decorative line
-    doc.moveTo(rightTextX, logoY + 40)
-        .lineTo(rightTextX + 160, logoY + 40)
-        .lineWidth(2)
-        .strokeColor(CONFIG.colors.borderMedium)
-        .stroke();
-
-    doc.font('Helvetica-Bold')
-        .fontSize(16)
-        .fillColor(CONFIG.colors.borderMedium)
-        .text('SALUD PÚBLICA', rightTextX, logoY + 48, { width: 160 });
-
-    // Certificate title
-    const titleY = logoY + 110;
-
-    doc.font('Helvetica-Bold')
-        .fontSize(12)
-        .fillColor(CONFIG.colors.headerText)
-        .text('CERTIFICADO DE INSCRIPCIÓN DE DROGAS CONTROLADAS', 0, titleY, { align: 'center' });
-
-    doc.font('Helvetica-Bold')
+    doc.font(CONFIG.fonts.bold)
         .fontSize(18)
         .fillColor(CONFIG.colors.borderDark)
-        .text(`- CLASE ${certificateClass} -`, 0, titleY + 20, { align: 'center' });
+        .text(`- CLASE ${certificateClass} -`, 0, titleY + 18, { align: 'center' });
 
-    return titleY + 55;
+    return titleY + 50;
 }
 
 /**
- * Draw a form field with label and underlined value area
+ * Draw a form field with label and bordered value area
  */
-function drawFormField(doc, number, label, value, y, valueWidth = 350) {
-    const labelX = 75;
-    const valueX = 170;
+function drawFormField(doc, number, label, value, y, fieldWidth = 400) {
+    const labelX = 60;
+    const fieldX = 60;
+    const fieldHeight = 35;
 
-    // Field label
-    doc.font('Helvetica')
+    // Field label - Times-Roman
+    doc.font(CONFIG.fonts.regular)
         .fontSize(11)
         .fillColor(CONFIG.colors.bodyText)
         .text(`${number}) ${label}:`, labelX, y);
 
-    // Value area with underline
-    const valueText = value || '';
-
-    // Draw underline
-    doc.moveTo(valueX, y + 15)
-        .lineTo(valueX + valueWidth, y + 15)
+    // Draw field box
+    const boxY = y + 15;
+    doc.rect(fieldX, boxY, fieldWidth, fieldHeight)
         .lineWidth(1)
-        .strokeColor(CONFIG.colors.fieldLine)
+        .strokeColor(CONFIG.colors.fieldBorder)
         .stroke();
 
-    // Value text
-    doc.font('Helvetica')
-        .fontSize(11)
-        .fillColor(CONFIG.colors.bodyText)
-        .text(valueText, valueX + 5, y, { width: valueWidth - 10 });
+    // Value text inside box - Times-Italic for filled values
+    if (value) {
+        doc.font(CONFIG.fonts.italic)
+            .fontSize(11)
+            .fillColor(CONFIG.colors.bodyText)
+            .text(value, fieldX + 8, boxY + 10, { width: fieldWidth - 16 });
+    }
+
+    return boxY + fieldHeight + 8;
 }
 
 /**
@@ -280,27 +298,23 @@ function drawPage1(doc, data, certificateClass) {
     drawDecorativeBorder(doc);
 
     // Header section
-    const startY = drawHeader(doc, certificateClass);
+    let y = drawHeader(doc, certificateClass);
 
     const formData = data.form_data || {};
-    let y = startY;
-    const fieldSpacing = 45;
+    const fieldWidth = doc.page.width - 130;
 
-    // Form fields
-    drawFormField(doc, 1, 'Nombre',
+    // Form fields with boxes
+    y = drawFormField(doc, 1, 'Nombre',
         formData.nombre || formData.nombreCompleto || formData.nombreSolicitante || data.nombre_cliente || '',
-        y);
-    y += fieldSpacing;
+        y, fieldWidth);
 
-    drawFormField(doc, 2, 'Dirección',
+    y = drawFormField(doc, 2, 'Dirección',
         formData.direccion || formData.direccionAdmin || '',
-        y);
-    y += fieldSpacing;
+        y, fieldWidth);
 
-    drawFormField(doc, 3, 'Ciudad',
+    y = drawFormField(doc, 3, 'Ciudad',
         formData.ciudad || formData.municipio || '',
-        y);
-    y += fieldSpacing;
+        y, fieldWidth);
 
     // Calculate expiration date (1 year from now)
     const expirationDate = new Date();
@@ -311,93 +325,97 @@ function drawPage1(doc, data, certificateClass) {
         year: 'numeric'
     });
 
-    drawFormField(doc, 4, 'Fecha de expiración', formattedExpDate, y);
-    y += fieldSpacing;
+    y = drawFormField(doc, 4, 'Fecha de expiración', formattedExpDate, y, fieldWidth);
 
-    drawFormField(doc, 5, 'Actividad',
+    y = drawFormField(doc, 5, 'Actividad',
         formData.actividad || formData.tipoActividad || formData.profesion || '',
-        y);
-    y += fieldSpacing;
+        y, fieldWidth);
 
     // Category and Number fields (side by side)
+    const halfFieldWidth = (fieldWidth - 20) / 2;
     const halfFieldY = y;
 
-    doc.font('Helvetica')
+    // Category field
+    doc.font(CONFIG.fonts.regular)
         .fontSize(11)
         .fillColor(CONFIG.colors.bodyText)
-        .text('6) Categoría:', 75, halfFieldY);
+        .text('6) Categoría:', 60, halfFieldY);
 
-    // Category underline and value
-    doc.moveTo(160, halfFieldY + 15)
-        .lineTo(280, halfFieldY + 15)
+    doc.rect(60, halfFieldY + 15, halfFieldWidth, 35)
         .lineWidth(1)
-        .strokeColor(CONFIG.colors.fieldLine)
+        .strokeColor(CONFIG.colors.fieldBorder)
         .stroke();
 
-    doc.text(formData.categoria || certificateClass, 165, halfFieldY);
+    doc.font(CONFIG.fonts.italic)
+        .text(formData.categoria || certificateClass, 68, halfFieldY + 25);
 
     // Number field
-    doc.text('7) Número de Lista:', 320, halfFieldY);
+    const numberFieldX = 60 + halfFieldWidth + 20;
+    doc.font(CONFIG.fonts.regular)
+        .text('7) Número de Lista:', numberFieldX, halfFieldY);
 
-    doc.moveTo(430, halfFieldY + 15)
-        .lineTo(530, halfFieldY + 15)
+    doc.rect(numberFieldX, halfFieldY + 15, halfFieldWidth, 35)
+        .lineWidth(1)
+        .strokeColor(CONFIG.colors.fieldBorder)
         .stroke();
 
-    doc.text(String(data.id || ''), 435, halfFieldY);
+    doc.font(CONFIG.fonts.italic)
+        .text(String(data.id || ''), numberFieldX + 8, halfFieldY + 25);
 
     // Footer with seal and signatures
-    y = 580;
+    const footerY = 600;
 
-    // Central seal placeholder
-    const sealX = doc.page.width / 2;
-    doc.save();
-    doc.circle(sealX, y + 35, 40)
-        .lineWidth(2)
-        .strokeColor(CONFIG.colors.borderDark)
-        .stroke();
+    // Central seal - DNCD logo smaller
+    const sealX = doc.page.width / 2 - 30;
+    try {
+        if (fs.existsSync(ASSETS.logoDNCD)) {
+            doc.image(ASSETS.logoDNCD, sealX, footerY, {
+                width: 60
+            });
+        }
+    } catch (e) {
+        // Fallback circle
+        doc.circle(sealX + 30, footerY + 30, 30)
+            .lineWidth(2)
+            .strokeColor(CONFIG.colors.borderDark)
+            .stroke();
+    }
 
-    doc.circle(sealX, y + 35, 33)
-        .lineWidth(1)
-        .stroke();
+    // Signature lines
+    const signatureY = footerY + 75;
 
-    doc.circle(sealX, y + 35, 25)
-        .lineWidth(0.5)
-        .stroke();
-
-    doc.font('Helvetica-Bold')
-        .fontSize(6)
-        .fillColor(CONFIG.colors.headerText)
-        .text('REPÚBLICA', sealX - 20, y + 25, { width: 40, align: 'center' })
-        .text('DOMINICANA', sealX - 20, y + 33, { width: 40, align: 'center' })
-        .text('SELLO', sealX - 20, y + 43, { width: 40, align: 'center' });
-    doc.restore();
-
-    // Signature labels
-    const signatureY = y + 95;
-
-    doc.font('Helvetica')
+    // Left signature - MISPAS
+    doc.font(CONFIG.fonts.regular)
         .fontSize(10)
-        .fillColor(CONFIG.colors.bodyText);
+        .fillColor(CONFIG.colors.bodyText)
+        .text('8)', 80, signatureY);
 
-    doc.text('8)', 90, signatureY);
-    doc.moveTo(110, signatureY + 12)
-        .lineTo(220, signatureY + 12)
+    doc.moveTo(100, signatureY + 12)
+        .lineTo(230, signatureY + 12)
         .lineWidth(1)
-        .strokeColor(CONFIG.colors.fieldLine)
+        .strokeColor(CONFIG.colors.fieldBorder)
         .stroke();
-    doc.text('Por MISPAS', 130, signatureY + 18);
 
-    doc.text('9)', 370, signatureY);
-    doc.moveTo(390, signatureY + 12)
-        .lineTo(500, signatureY + 12)
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(10)
+        .text('Por MISPAS', 130, signatureY + 18);
+
+    // Right signature - DNCD
+    doc.font(CONFIG.fonts.regular)
+        .text('9)', 360, signatureY);
+
+    doc.moveTo(380, signatureY + 12)
+        .lineTo(510, signatureY + 12)
         .stroke();
-    doc.text('Por DNCD', 420, signatureY + 18);
+
+    doc.font(CONFIG.fonts.bold)
+        .text('Por DNCD', 420, signatureY + 18);
 
     // "Ver al dorso" text
-    doc.font('Helvetica-Oblique')
+    doc.font(CONFIG.fonts.italic)
         .fontSize(9)
         .fillColor(CONFIG.colors.labelText)
-        .text('Ver al dorso', doc.page.width - 120, signatureY + 18);
+        .text('Ver al dorso', doc.page.width - 110, signatureY + 18);
 }
 
 /**
@@ -408,15 +426,15 @@ function drawPage2(doc, certificateClass) {
     drawBackgroundTexture(doc);
     drawDecorativeBorder(doc);
 
-    const marginLeft = 80;
-    const marginRight = 80;
+    const marginLeft = 70;
+    const marginRight = 70;
     const textWidth = doc.page.width - marginLeft - marginRight;
     let y = 100;
 
-    // Main legal text with proper paragraph styling
+    // Main legal text - Times-Italic with proper justification
     const mainParagraph = `En virtud de las atribuciones que nos confiere la Ley 50-88, sobre Drogas y Sustancias Controladas; damos fé que el titular de este Certificado de Inscripción de Drogas Controladas - CLASE "${certificateClass}" ha cumplido con todas las disposiciones legales establecidas por lo cual se le autoriza a prescribir sustancias controladas según la actividad indicada en el renglón No. 5 de este formulario.`;
 
-    doc.font('Helvetica-Oblique')
+    doc.font(CONFIG.fonts.italic)
         .fontSize(12)
         .fillColor(CONFIG.colors.bodyText)
         .text(mainParagraph, marginLeft, y, {
@@ -426,13 +444,13 @@ function drawPage2(doc, certificateClass) {
         });
 
     // Note section
-    y = 300;
-    doc.font('Helvetica')
+    y = 280;
+    doc.font(CONFIG.fonts.regular)
         .fontSize(12)
         .fillColor(CONFIG.colors.bodyText)
         .text('Nota: Este Certificado no. es válido si:', marginLeft, y);
 
-    y += 50;
+    y += 45;
     const conditions = [
         'No esta debidamente firmado y sellado por los funcionarios autorizados por MISPAS y DNCD.',
         'Los renglones que lo conforman no están completos.',
@@ -443,29 +461,29 @@ function drawPage2(doc, certificateClass) {
     conditions.forEach((condition, index) => {
         const letter = String.fromCharCode(97 + index); // a, b, c, d
 
-        doc.font('Helvetica')
+        doc.font(CONFIG.fonts.regular)
             .fontSize(11)
             .fillColor(CONFIG.colors.bodyText)
             .text(`${letter})`, marginLeft, y);
 
-        doc.font('Helvetica-Oblique')
+        doc.font(CONFIG.fonts.italic)
             .fontSize(11)
             .text(condition, marginLeft + 25, y, {
                 width: textWidth - 25,
                 lineGap: 4
             });
 
-        y += 55;
+        y += 50;
     });
 
     // Warning section
-    y = 580;
-    doc.font('Helvetica-Bold')
+    y = 560;
+    doc.font(CONFIG.fonts.bold)
         .fontSize(12)
         .fillColor(CONFIG.colors.bodyText)
         .text('Advertencia:', marginLeft, y);
 
-    doc.font('Helvetica')
+    doc.font(CONFIG.fonts.regular)
         .fontSize(11)
         .text('El Código Penal de la Rep. Dom. sanciona la falsificación, alteración o falsedad de escritura técnica o pública.',
             marginLeft, y + 20, {
