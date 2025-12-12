@@ -147,7 +147,7 @@ export default function DireccionSolicitudes() {
                             <select
                                 value={filterTipo}
                                 onChange={(e) => setFilterTipo(e.target.value)}
-                                className="min-w-[160px] max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                                className="min-w-40 max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
                             >
                                 <option value="">Tipo</option>
                                 {tiposServicio.map(tipo => (
@@ -159,7 +159,7 @@ export default function DireccionSolicitudes() {
                             <select
                                 value={filterEstado}
                                 onChange={(e) => setFilterEstado(e.target.value)}
-                                className="min-w-[160px] max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
+                                className="min-w-40 max-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] bg-white"
                             >
                                 <option value="">Estado</option>
                                 <option value="pendiente">Pendiente</option>

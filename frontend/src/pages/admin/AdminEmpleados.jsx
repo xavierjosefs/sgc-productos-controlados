@@ -132,7 +132,7 @@ export default function AdminEmpleados() {
 
       {/* Tabla de empleados */}
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <table className="w-full">
             <thead className="bg-[#4A8BDF] text-white">
               <tr>
