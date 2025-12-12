@@ -127,7 +127,7 @@ function DirectorTecnicoSolicitudDetalle() {
     const formData = request.form_data || {};
     const documentos = request.documentos || [];
     // Estado de validación del formulario (booleano o null)
-    const formularioCumple = tecnicoValidation.formulario_estado;
+    // const formularioCumple = tecnicoValidation.formulario_estado;
     // Validaciones por campo (si existen)
     const camposValidaciones = tecnicoValidation.campos_formulario || {};
 

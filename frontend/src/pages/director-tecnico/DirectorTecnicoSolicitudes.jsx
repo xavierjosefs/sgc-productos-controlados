@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+
+
 function DirectorTecnicoSolicitudes() {
     const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
@@ -29,22 +31,29 @@ function DirectorTecnicoSolicitudes() {
         }
     };
 
+
+
     const handleFilter = () => {
         setAppliedFilterTipo(filterTipo);
         setAppliedFilterEstado(filterEstado);
     };
 
-    const filteredRequests = requests.filter(req => {
-        // El backend ya filtra por estado_id = 6, solo aplicamos filtros adicionales
-        const matchesTipo = !appliedFilterTipo || req.tipo_servicio === appliedFilterTipo;
-        const matchesEstado = !appliedFilterEstado || req.estado_actual === appliedFilterEstado;
+    // Solo mostrar tipos de solicitud que existen en los datos
+    const tiposUnicos = Array.from(new Set(requests.map(r => r.tipo_servicio))).filter(Boolean);
 
+    const filteredRequests = requests.filter(req => {
+        const matchesTipo = !appliedFilterTipo || req.tipo_servicio === appliedFilterTipo;
+        // Estado visual: solo 'Aprobado' (estado_id 7) y 'Pendiente' (estado_id 6)
+        let estadoVisual = req.estado_id === 7 ? 'Aprobado' : 'Pendiente';
+        const matchesEstado = !appliedFilterEstado || estadoVisual === appliedFilterEstado;
         return matchesTipo && matchesEstado;
     });
 
-    const pendientesCount = requests.length; // Todas las que vienen del backend están pendientes
 
-    const aprobadasCount = 0; // Las aprobadas ya no están en estado 6, pasaron a estado 7
+    // Las pendientes son las que vienen del backend (estado 6)
+    const pendientesCount = requests.filter(r => r.estado_id === 6).length;
+    // Las aprobadas son solo las que el director mandó a dirección (estado 7)
+    const aprobadasCount = requests.filter(r => r.estado_id === 7).length;
 
     if (loading) {
         return (
@@ -63,69 +72,108 @@ function DirectorTecnicoSolicitudes() {
 
             {/* Tarjetas de resumen */}
             <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 mb-1">Pendientes</p>
-                            <p className="text-4xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-[#4A8BDF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                {/* Card Pendientes */}
+                <button
+                    type="button"
+                    className={`group bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left transition ring-2 ring-transparent flex flex-col justify-between h-full cursor-pointer hover:shadow-lg hover:bg-blue-50 ${appliedFilterEstado === 'Pendiente' ? 'ring-[#085297] bg-blue-50' : ''}`}
+                    style={{ minHeight: 140 }}
+                    onClick={() => {
+                        setAppliedFilterEstado('Pendiente');
+                        setAppliedFilterTipo('');
+                    }}
+                >
+                    <div className="flex items-start justify-between w-full mb-2">
+                        <span className="text-base font-medium text-black">Pendientes</span>
+                        <span className="inline-flex items-center justify-center">
+                            <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover:scale-110">
+                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                        </div>
+                        </span>
                     </div>
-                </div>
+                    <div>
+                        <span className="text-5xl font-bold" style={{ color: '#7BA9E6' }}>{pendientesCount}</span>
+                    </div>
+                </button>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 mb-1">Aprobadas</p>
-                            <p className="text-4xl font-bold text-green-600">{aprobadasCount}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {/* Card Aprobadas */}
+                <button
+                    type="button"
+                    className={`group bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left transition ring-2 ring-transparent flex flex-col justify-between h-full cursor-pointer hover:shadow-lg hover:bg-green-50 ${appliedFilterEstado === 'Aprobado' ? 'ring-[#085297] bg-green-50' : ''}`}
+                    style={{ minHeight: 140 }}
+                    onClick={() => {
+                        setAppliedFilterEstado('Aprobado');
+                        setAppliedFilterTipo('');
+                    }}
+                >
+                    <div className="flex items-start justify-between w-full mb-2">
+                        <span className="text-base font-medium text-black">Aprobadas</span>
+                        <span className="inline-flex items-center justify-center">
+                            <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover:scale-110">
+                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                        </div>
+                        </span>
                     </div>
-                </div>
+                    <div>
+                        <span className="text-5xl font-bold" style={{ color: '#4FC37B' }}>{aprobadasCount}</span>
+                    </div>
+                </button>
             </div>
 
             {/* Tabla */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 {/* Filtros */}
-                <div className="flex justify-end gap-4 mb-6">
-                    <select
-                        value={filterTipo}
-                        onChange={(e) => setFilterTipo(e.target.value)}
-                        className="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4A8BDF]"
-                    >
-                        <option value="">Tipo</option>
-                        <option value="Solicitud de Certificado de Inscripción de Drogas Controladas Clase A">Clase A</option>
-                        <option value="Solicitud de Certificado de Inscripción de Drogas Controladas Clase B">Clase B</option>
-                        <option value="Solicitud de Certificado de Inscripción de Drogas Controladas Clase B Capa C">Clase B Capa C</option>
-                    </select>
-
-                    <select
-                        value={filterEstado}
-                        onChange={(e) => setFilterEstado(e.target.value)}
-                        className="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4A8BDF]"
-                    >
-                        <option value="">Estado</option>
-                        <option value="En evaluación técnica">En evaluación técnica</option>
-                    </select>
-
+                <form className="flex flex-wrap justify-end gap-4 mb-6 items-end" onSubmit={e => { e.preventDefault(); handleFilter(); }}>
+                    <div className="w-full sm:w-64">
+                        <select
+                            value={filterTipo}
+                            onChange={e => setFilterTipo(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4A8BDF]"
+                        >
+                            <option value="">Tipo</option>
+                            {tiposUnicos.map(tipo => (
+                                <option key={tipo} value={tipo}>{tipo}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="w-full sm:w-64">
+                        <select
+                            value={filterEstado}
+                            onChange={e => setFilterEstado(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#4A8BDF]"
+                        >
+                            <option value="">Estado</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Pendiente">Pendiente</option>
+                        </select>
+                    </div>
                     <button
-                        onClick={handleFilter}
+                        type="submit"
                         className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064073] transition-colors"
                     >
                         Filtrar
                     </button>
-                </div>
+                    {(filterTipo || filterEstado || appliedFilterEstado) && (
+                        <button
+                            type="button"
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                            onClick={() => {
+                                setFilterTipo('');
+                                setFilterEstado('');
+                                setAppliedFilterTipo('');
+                                setAppliedFilterEstado('');
+                            }}
+                        >
+                            Limpiar
+                        </button>
+                    )}
+                </form>
 
                 {/* Tabla */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#4A8BDF]">
@@ -148,9 +196,11 @@ function DirectorTecnicoSolicitudes() {
                                     <td className="px-6 py-4 text-sm text-gray-900">{request.tipo_servicio || '-'}</td>
                                     {/* columna de recomendación técnico eliminada, solo queda estado */}
                                     <td className="px-6 py-4 text-sm">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${request.recomendacion_tecnico ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                                            {request.recomendacion_tecnico ? 'Aprobado' : 'Rechazado'}
-                                        </span>
+                                        {request.estado_id === 7 ? (
+                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Aprobado</span>
+                                        ) : (
+                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pendiente</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-sm">
                                         <button

@@ -230,7 +230,20 @@ const DetalleSolicitudTecnico = () => {
               <div><span className="font-medium text-gray-500">Tipo:</span> <span className="font-bold text-lg">{solicitud.tipo_solicitud}</span></div>
               <div><span className="font-medium text-gray-500">Servicio:</span> <span className="font-bold text-lg">{solicitud.servicio}</span></div>
               <div><span className="font-medium text-gray-500">Fecha:</span> <span className="font-bold text-lg">{new Date(solicitud.fecha_creacion).toLocaleDateString()}</span></div>
-              <div className="flex items-center gap-2"><span className="font-medium text-gray-500">Estado:</span> <BadgeEstado estado={solicitud.estado} /></div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-500">Estado:</span>
+                <BadgeEstado estado={
+                  solicitud.estado_actual && solicitud.estado_actual.trim() !== ''
+                    ? solicitud.estado_actual
+                    : solicitud.estado && solicitud.estado.trim() !== ''
+                      ? solicitud.estado
+                      : solicitud.estado_id === 7
+                        ? 'Aprobado'
+                        : solicitud.estado_id === 6
+                          ? 'Pendiente'
+                          : 'Sin estado'
+                } />
+              </div>
             </div>
           </div>
         </div>
@@ -255,7 +268,7 @@ const DetalleSolicitudTecnico = () => {
               {solicitud.form_data && typeof solicitud.form_data === 'object' ? (
                 <table className="w-full text-left">
                   <tbody>
-                    {Object.entries(solicitud.form_data).map(([key, value], idx) => (
+                    {Object.entries(solicitud.form_data).map(([key, value]) => (
                       typeof value === 'object' && value !== null && !Array.isArray(value) ? (
                         Object.entries(value).map(([subKey, subValue]) => {
                           const validIdx = `${key}-${subKey}`;

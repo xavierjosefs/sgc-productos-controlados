@@ -274,10 +274,12 @@ export const getTecnicoUPCRequestDetails = async (id) => {
         u.cedula AS cliente_cedula,
         u.email AS cliente_email,
         s.comentario_director_upc,
-        s.estado_id
+        s.estado_id,
+        e.nombre_mostrar AS estado_actual
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
+     JOIN estados_solicitud e ON s.estado_id = e.id
      WHERE s.id = $1`,
     [id]);
 
@@ -298,7 +300,8 @@ export const getTecnicoUPCRequestDetails = async (id) => {
       servicio: solicitud.nombre_servicio,
       form_data: solicitud.form_data,
       comentario_director_upc: solicitud.comentario_director_upc,
-      estado_id: solicitud.estado_id
+      estado_id: solicitud.estado_id,
+      estado_actual: solicitud.estado_actual
     },
     cliente: {
       cedula: solicitud.cliente_cedula,
@@ -393,7 +396,7 @@ export const getRequestsForDirectorUPC = async () => {
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
-     WHERE s.estado_id = 6
+     WHERE s.estado_id IN (6, 7)
      ORDER BY s.fecha_creacion ASC`);
 
     console.log('✅ Registros encontrados:', result.rows.length);
