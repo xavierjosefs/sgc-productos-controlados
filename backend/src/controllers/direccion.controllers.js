@@ -3,6 +3,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 import { generateCertificatePDF, getCertificateFilename } from "../services/pdfGenerator.js";
 import pool from "../config/db.js";
+import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 
 // Constantes para códigos de estado - más mantenible que IDs hardcodeados
 const ESTADO_CODES = {
@@ -190,6 +191,19 @@ export const validateDireccionRequestController = async (req, res) => {
 
         // Actualizar estado en BD
         const updatedRequest = await updateRequestStatus(id, newStatusId);
+
+        // Registrar en historial
+        const accionType = status === 'aprobado_direccion' ? ACCION_TYPES.APROBACION_DIRECCION : ACCION_TYPES.RECHAZO_DIRECCION;
+        await addHistorialEntry({
+            solicitud_id: parseInt(id),
+            estado_anterior_id: request.estado_id,
+            estado_nuevo_id: newStatusId,
+            usuario_id: req.user?.cedula || req.user?.id,
+            rol_usuario: 'direccion',
+            accion: accionType,
+            comentario: reasons || null,
+            metadata: { status }
+        });
 
         // Buscar usuario para notificación por email
         const user = await findUserByCedula(request.user_id);

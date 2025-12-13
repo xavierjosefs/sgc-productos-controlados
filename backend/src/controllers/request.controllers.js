@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 import { createRequest, getRequestsBycedula, getRequestDetailsById, getSentRequestsByUserId, getAproveRequestsByUserId, getReturnedRequestsByUserId, getPendingRequestsByUserId, getRequestsByStatus, getStatuses } from "../models/user.client.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
+import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 
 export const createRequestController = async (req, res) => {
     try {
@@ -37,6 +38,18 @@ export const createRequestController = async (req, res) => {
             condicion
         );
 
+        // Registrar en historial
+        await addHistorialEntry({
+            solicitud_id: newRequest.id,
+            estado_anterior_id: null,
+            estado_nuevo_id: newRequest.estado_id || 1, // Estado Pendiente
+            usuario_id: cedula,
+            rol_usuario: 'cliente',
+            accion: ACCION_TYPES.CREACION,
+            comentario: null,
+            metadata: { tipo_servicio: nombre_servicio, condicion }
+        });
+
         return res.status(201).json({
             ok: true,
             message: "Solicitud creada con éxito",
@@ -53,6 +66,7 @@ export const createRequestController = async (req, res) => {
         });
     }
 };
+
 
 export const getRequestsController = async (req, res) => {
     try {

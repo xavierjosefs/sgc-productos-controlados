@@ -500,6 +500,33 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  /**
+   * Get request timeline/history
+   * @param {number} requestId - ID of the request
+   */
+  const getRequestTimeline = useCallback(async (requestId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/requests/${requestId}/timeline`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener el historial de la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
 
 
   return {
@@ -517,6 +544,7 @@ export function useRequestsAPI() {
     getDireccionRequestDetail,
     validateDireccionRequest,
     downloadCertificatePDF,
+    getRequestTimeline,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes
