@@ -2,6 +2,7 @@ import { getRequestsForVentanilla, updateRequestStatus, getRequestDetailsById, f
 import { sendEmail } from "../utils/sendEmail.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 import pool from "../config/db.js";
+import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 
 /**
  * Controller to get requests for Ventanilla role
@@ -34,17 +35,17 @@ export const validateRequestController = async (req, res) => {
         const { id } = req.params;
         const { status, reasons, documentValidation, formDataValidation } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ ok: false, message: "ID de solicitud requerido" });
-    }
-    if (!status) {
-      return res.status(400).json({ ok: false, message: "Estado requerido" });
-    }
+        if (!id) {
+            return res.status(400).json({ ok: false, message: "ID de solicitud requerido" });
+        }
+        if (!status) {
+            return res.status(400).json({ ok: false, message: "Estado requerido" });
+        }
 
-    const request = await getRequestDetailsById(id);
-    if (!request) {
-      return res.status(404).json({ ok: false, message: "Solicitud no encontrada" });
-    }
+        const request = await getRequestDetailsById(id);
+        if (!request) {
+            return res.status(404).json({ ok: false, message: "Solicitud no encontrada" });
+        }
 
         // Determinar ID de estado
         let newStatusId;
@@ -89,16 +90,29 @@ export const validateRequestController = async (req, res) => {
         }
         // ====== FIN GUARDAR VALIDACIONES ======
 
-    // Actualizar estado en BD
-    const updatedRequest = await updateRequestStatus(id, newStatusId);
+        // Actualizar estado en BD
+        const updatedRequest = await updateRequestStatus(id, newStatusId);
 
-    // Buscar usuario solo una vez (para ambos casos)
-    const user = await findUserByCedula(request.user_id);
+        // Registrar en historial
+        const accionType = status === 'devuelto_vus' ? ACCION_TYPES.DEVOLUCION_VENTANILLA : ACCION_TYPES.VALIDACION_VENTANILLA;
+        await addHistorialEntry({
+            solicitud_id: parseInt(id),
+            estado_anterior_id: request.estado_id,
+            estado_nuevo_id: newStatusId,
+            usuario_id: req.user?.cedula || req.user?.id,
+            rol_usuario: 'ventanilla',
+            accion: accionType,
+            comentario: reasons || null,
+            metadata: { documentValidation, formDataValidation }
+        });
 
-    // Si la solicitud fue devuelta, enviar correo con razones
-    if (status === "devuelto_vus" && reasons && user?.email) {
-      const subject = `Solicitud #${id} - Corrección requerida`;
-      const text = `Estimado usuario,
+        // Buscar usuario solo una vez (para ambos casos)
+        const user = await findUserByCedula(request.user_id);
+
+        // Si la solicitud fue devuelta, enviar correo con razones
+        if (status === "devuelto_vus" && reasons && user?.email) {
+            const subject = `Solicitud #${id} - Corrección requerida`;
+            const text = `Estimado usuario,
 
         Su solicitud #${id} fue devuelta por Ventanilla Única por las siguientes razones:
 
@@ -109,15 +123,15 @@ export const validateRequestController = async (req, res) => {
         Atentamente,
         Ventanilla Única de Servicios`;
 
-      sendEmail(user.email, subject, text).catch(err =>
-        console.error("Error enviando email de devolución:", err)
-      );
-    }
+            sendEmail(user.email, subject, text).catch(err =>
+                console.error("Error enviando email de devolución:", err)
+            );
+        }
 
-    // Si la solicitud fue aprobada por Ventanilla, enviar correo de confirmación
-    if (status === "aprobado_vus" && user?.email) {
-      const subject = `Solicitud #${id} - Recibida y validada`;
-      const text = `Estimado usuario,
+        // Si la solicitud fue aprobada por Ventanilla, enviar correo de confirmación
+        if (status === "aprobado_vus" && user?.email) {
+            const subject = `Solicitud #${id} - Recibida y validada`;
+            const text = `Estimado usuario,
 
         Su solicitud #${id} ha sido validada correctamente por la Ventanilla Única de Servicios
         y ha pasado a la etapa de evaluación técnica.
@@ -127,25 +141,25 @@ export const validateRequestController = async (req, res) => {
         Atentamente,
         Ventanilla Única de Servicios`;
 
-      sendEmail(user.email, subject, text).catch(err =>
-        console.error("Error enviando email de aprobación:", err)
-      );
+            sendEmail(user.email, subject, text).catch(err =>
+                console.error("Error enviando email de aprobación:", err)
+            );
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Solicitud actualizada correctamente",
+            request: updatedRequest,
+        });
+
+    } catch (error) {
+        console.error("Error al validar solicitud:", error);
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+            error: error.message,
+        });
     }
-
-    return res.status(200).json({
-      ok: true,
-      message: "Solicitud actualizada correctamente",
-      request: updatedRequest,
-    });
-
-  } catch (error) {
-    console.error("Error al validar solicitud:", error);
-    return res.status(500).json({
-      ok: false,
-      message: "Error interno del servidor",
-      error: error.message,
-    });
-  }
 };
 
 /**

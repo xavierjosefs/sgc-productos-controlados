@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase.js";
 import { findSolicitudById, createDocumento, getDocumentosBySolicitudId, sendRequestBySoliciutudId, findDocumentoById, deleteDocumento } from "../models/document.client.js";
+import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 
 export const uploadDocumentController = async (req, res) => {
   try {
@@ -90,6 +91,18 @@ export const uploadDocumentController = async (req, res) => {
     );
 
     const sendRequest = await sendRequestBySoliciutudId(solicitudId);
+
+    // Registrar en historial: documento subido y solicitud enviada
+    await addHistorialEntry({
+      solicitud_id: parseInt(solicitudId),
+      estado_anterior_id: solicitud.estado_id,
+      estado_nuevo_id: 12, // Estado Enviada
+      usuario_id: usuarioCedula,
+      rol_usuario: 'cliente',
+      accion: ACCION_TYPES.ENVIO,
+      comentario: `Documento subido: ${tipoDocumento}`,
+      metadata: { documento_nombre: archivo.originalname, tipo_documento: tipoDocumento }
+    });
 
     return res.status(201).json({
       ok: true,
@@ -202,6 +215,18 @@ export const deleteDocumentController = async (req, res) => {
 
     // Eliminar registro de la base de datos
     await deleteDocumento(documentoId);
+
+    // Registrar en historial
+    await addHistorialEntry({
+      solicitud_id: parseInt(solicitudId),
+      estado_anterior_id: solicitud.estado_id,
+      estado_nuevo_id: solicitud.estado_id, // Estado no cambia
+      usuario_id: usuarioCedula,
+      rol_usuario: 'cliente',
+      accion: ACCION_TYPES.DOCUMENTO_ELIMINADO,
+      comentario: `Documento eliminado: ${documento.nombre_archivo || documento.tipo_documento}`,
+      metadata: { documento_id: documentoId, tipo_documento: documento.tipo_documento }
+    });
 
     return res.status(200).json({
       ok: true,
