@@ -9,8 +9,6 @@ export const direccionDecisionController = async (req, res) => {
         const { id } = req.params;
         const { decision, comentario } = req.body;
 
-        console.log(`📋 Dirección - Decisión sobre solicitud ${id}:`, decision);
-
         // Validar decisión
         if (!["APROBAR", "RECHAZAR"].includes(decision)) {
             return res.status(400).json({
@@ -51,8 +49,6 @@ export const direccionDecisionController = async (req, res) => {
              WHERE id = $2`,
             [nuevoEstadoId, id]
         );
-
-        console.log(`✅ Solicitud ${id} ${decision === "APROBAR" ? "aprobada" : "rechazada"} por Dirección`);
 
         return res.status(200).json({
             ok: true,

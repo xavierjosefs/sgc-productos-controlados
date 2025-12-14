@@ -501,8 +501,6 @@ export function useRequestsAPI() {
     }
   }, []);
 
-
-
   return {
     // Estados
     loading,
