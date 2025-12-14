@@ -83,16 +83,18 @@ export default function useTecnicoAPI() {
 
   // Validar solicitud desde Técnico (ajustado a backend)
   const validateTecnicoRequest = useCallback(
-    async (requestId, recomendacion, comentario_general, documentos, formulario_cumple) => {
+    async ( requestId, recomendacion, comentario_general, documentos, formulario_cumple, formulario_detalle ) => {
       setLoading(true);
       setError(null);
       try {
         const payload = {
           formulario_cumple,
+          formulario_detalle,
           documentos,
           recomendacion,
           comentario_general,
         };
+
         const res = await api.post(
           `/api/tecnico-upc/request/${requestId}/validacion-tecnica`,
           payload

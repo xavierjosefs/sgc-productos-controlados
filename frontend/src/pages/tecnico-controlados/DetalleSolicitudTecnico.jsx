@@ -131,26 +131,40 @@ const DetalleSolicitudTecnico = () => {
   const enviarValidacion = async (recomendacion) => {
     setEnviando(true);
     try {
-      // Preparar los datos según lo que espera el backend
       const formulario_cumple = formValidaciones.every(f => f.cumple === true);
-      const documentos = documentosEstado.map(doc => ({ id: doc.id, cumple: doc.cumple }));
+
+      // 👇 NUEVO: convertir validaciones a objeto
+      const formulario_detalle = formValidaciones.reduce((acc, f) => {
+        acc[f.key] = f.cumple;
+        return acc;
+      }, {});
+
+      const documentos = documentosEstado.map(doc => ({
+        id: doc.id,
+        cumple: doc.cumple
+      }));
+
       const comentario_general = comentario || '';
+      console.log(formValidaciones);
+
+
       await validateTecnicoRequest(
         id,
-        recomendacion, // "APROBADO" o "NO_APROBADO"
+        recomendacion,
         comentario_general,
         documentos,
-        formulario_cumple
+        formulario_cumple,
+        formulario_detalle // 👈 NUEVO
       );
+
       setTipoAccion(recomendacion);
       setProcesado(true);
     } catch {
       toast.error('Error al enviar validación');
     }
     setEnviando(false);
-    setShowAprobarModal(false);
-    setShowRechazoModal(false);
   };
+
 
   if (procesado) {
     return (

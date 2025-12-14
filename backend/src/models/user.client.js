@@ -254,7 +254,7 @@ export const getRequestsForTecnicoUPC = async () => {
     JOIN users u ON s.user_id = u.cedula
     JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
     JOIN estados_solicitud e ON s.estado_id = e.id
-    WHERE s.estado_id IN (4, 16)
+    WHERE s.estado_id IN (5, 4)
     ORDER BY s.fecha_creacion DESC
   `);
   return result.rows;
@@ -313,28 +313,32 @@ export const getTecnicoUPCRequestDetails = async (id) => {
 }
 
 export const validarSolicitudTecnica = async (solicitudId, data) => {
-  const { formulario_cumple, documentos, recomendacion, comentario_general } = data;
+  const {
+    formulario_cumple,
+    formulario_detalle,
+    documentos,
+    recomendacion,
+    comentario_general
+  } = data;
 
-  // Validación mínima
   if (typeof formulario_cumple !== "boolean") {
-    throw new Error("formulario_cumple debe ser boolean.");
-  }
-  if (!Array.isArray(documentos)) {
-    throw new Error("documentos debe ser un arreglo.");
-  }
-  if (!["APROBADO", "NO_APROBADO"].includes(recomendacion)) {
-    throw new Error("recomendacion debe ser APROBADO o NO_APROBADO.");
+    throw new Error("formulario_cumple debe ser boolean");
   }
 
-  // 1) Guardar validación del formulario y comentario del técnico
+  if (typeof formulario_detalle !== "object") {
+    throw new Error("formulario_detalle debe ser un objeto");
+  }
+
   await pool.query(
     `UPDATE solicitudes
      SET validacion_formulario = $1,
-         comentario_tecnico = $2,
-         recomendacion_tecnico = $3
-     WHERE id = $4`,
+         validacion_formulario_detalle = $2,
+         comentario_tecnico = $3,
+         recomendacion_tecnico = $4
+     WHERE id = $5`,
     [
       formulario_cumple,
+      JSON.stringify(formulario_detalle),
       comentario_general || null,
       recomendacion === "APROBADO",
       solicitudId
@@ -422,6 +426,7 @@ export const getDirectorUPCRequestDetails = async (id) => {
         s.tipo_servicio_id,
         s.estado_id,
         s.validacion_formulario,
+        s.validacion_formulario_detalle,
         s.comentario_tecnico,
         s.recomendacion_tecnico,
         ts.nombre_servicio,
@@ -459,6 +464,7 @@ export const getDirectorUPCRequestDetails = async (id) => {
     created_at: solicitud.fecha_creacion,
     validaciones_tecnico: {
       formulario_estado: solicitud.validacion_formulario,
+      formulario_detalle: solicitud.validacion_formulario_detalle,
       comentarios: solicitud.comentario_tecnico,
       recomendacion: solicitud.recomendacion_tecnico,
       documentos_validados: documentos.reduce((acc, doc) => {

@@ -131,7 +131,7 @@ function DirectorTecnicoSolicitudDetalle() {
     // Estado de validación del formulario (booleano o null)
     // const formularioCumple = tecnicoValidation.formulario_estado;
     // Validaciones por campo (si existen)
-    const camposValidaciones = tecnicoValidation.campos_formulario || {};
+    const camposValidaciones = tecnicoValidation.formulario_detalle || {};
 
     // Estado visual: mostrar solo "Aprobada" o "Rechazada" según recomendacion_tecnico si existe
     let estadoVisual = '';
