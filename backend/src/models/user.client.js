@@ -501,3 +501,42 @@ export const directorUPCDecision = async (id, data) => {
     comentario: comentario || null
   };
 };
+
+export const getDNCDRequest = async () => {
+  try {
+    console.log('🔍 Ejecutando query para solicitudes con estado_id = 10');
+    
+    const result = await pool.query(
+      `SELECT 
+        s.id,
+        s.user_id,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        s.estado_id,
+        ts.nombre_servicio AS tipo_servicio,
+        e.nombre_mostrar AS estado_actual,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula,
+        s.validacion_formulario,
+        s.comentario_tecnico,
+        s.recomendacion_tecnico
+        s.decision_director,
+        s.comentario_director
+     FROM solicitudes s
+     JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     JOIN estados_solicitud e ON e.id = s.estado_id
+     WHERE s.estado_id = 10
+     ORDER BY s.fecha_creacion ASC`);
+
+    console.log('✅ Registros encontrados:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('Primera solicitud:', result.rows[0]);
+    }
+
+    return result.rows;
+  } catch (error) {
+    console.error('❌ Error en getRequestsForDirectorUPC:', error);
+    throw error;
+  }
+}
