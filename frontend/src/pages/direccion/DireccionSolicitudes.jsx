@@ -1,20 +1,22 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import DireccionTopbar from '../../components/DireccionTopbar';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 /**
  * DireccionSolicitudes
  * Dashboard principal de Dirección
  */
 export default function DireccionSolicitudes() {
-        // Limpiar filtros
-        const handleClearFilters = () => {
-            setFilterTipo('');
-            setFilterEstado('');
-            setAppliedTipo('');
-            setAppliedEstado('');
-        };
+    // Limpiar filtros
+    const handleClearFilters = () => {
+        setFilterTipo('');
+        setFilterEstado('');
+        setAppliedTipo('');
+        setAppliedEstado('');
+    };
     const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,30 +26,31 @@ export default function DireccionSolicitudes() {
     const [appliedEstado, setAppliedEstado] = useState('');
     // Tipos de servicio dinámicos según las solicitudes cargadas
     const tiposServicio = Array.from(new Set(requests.map(r => r.tipo_servicio).filter(Boolean)));
+    const { getDireccionRequests } = useRequestsAPI();
 
     useEffect(() => {
-        fetchRequests();
-    }, []);
-
-    const fetchRequests = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/direccion/requests', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        const fetchRequests = async () => {
+            setLoading(true);
+            try {
+                const data = await getDireccionRequests();
+                // El backend responde { ok, requests } o solo requests
+                if (data?.ok && data.requests) {
+                    setRequests(data.requests);
+                } else if (Array.isArray(data)) {
+                    setRequests(data);
+                } else if (data?.requests) {
+                    setRequests(data.requests);
+                } else {
+                    setRequests([]);
                 }
-            });
-            
-            const data = await response.json();
-            if (data.ok) {
-                setRequests(data.requests || []);
+            } catch (error) {
+                console.error('Error al cargar solicitudes:', error);
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error('Error al cargar solicitudes:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchRequests();
+    }, [getDireccionRequests]);
 
     // Filtrar solicitudes según filtros aplicados
     const filteredRequests = requests.filter(request => {

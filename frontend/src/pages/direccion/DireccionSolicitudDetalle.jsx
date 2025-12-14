@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DireccionTopbar from '../../components/DireccionTopbar';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
 
 /**
  * DireccionSolicitudDetalle
@@ -19,34 +21,31 @@ export default function DireccionSolicitudDetalle() {
     const [successAction, setSuccessAction] = useState('');
     const [comentario, setComentario] = useState('');
     const [processing, setProcessing] = useState(false);
+    const { getDireccionRequestDetail, validateDireccionRequest } = useRequestsAPI();
 
     useEffect(() => {
-        fetchDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
-
-    const fetchDetail = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/direccion/requests/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        const fetchDetail = async () => {
+            setLoading(true);
+            try {
+                const data = await getDireccionRequestDetail(id);
+                // El backend responde { ok, detalle } o solo el detalle
+                if (data?.ok && data.detalle) {
+                    setRequest(data.detalle);
+                } else if (data?.detalle) {
+                    setRequest(data.detalle);
+                } else {
+                    setRequest(data);
                 }
-            });
-            
-            const data = await response.json();
-            if (data.ok) {
-                setRequest(data.detalle);
-            } else {
-                toast.error(data.error || 'Error al cargar solicitud');
+            } catch (error) {
+                console.error('Error al cargar solicitud:', error);
+                toast.error(error?.message || 'Error al cargar la solicitud');
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error('Error al cargar solicitud:', error);
-            toast.error('Error al cargar la solicitud');
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchDetail();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
 
     const handleReject = () => {
         setShowRejectModal(true);
@@ -59,20 +58,7 @@ export default function DireccionSolicitudDetalle() {
     const executeReject = async () => {
         setProcessing(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/direccion/requests/${id}/decision`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    decision: 'RECHAZAR',
-                    comentario: ''
-                })
-            });
-
-            const data = await response.json();
+            const data = await validateDireccionRequest(id, 'rechazado_direccion', comentario || '');
             if (data.ok) {
                 setShowRejectModal(false);
                 setSuccessAction('Rechazada');
@@ -82,7 +68,7 @@ export default function DireccionSolicitudDetalle() {
             }
         } catch (error) {
             console.error('Error al rechazar:', error);
-            toast.error('Error al rechazar la solicitud');
+            toast.error(error?.message || 'Error al rechazar la solicitud');
         } finally {
             setProcessing(false);
         }
@@ -91,20 +77,7 @@ export default function DireccionSolicitudDetalle() {
     const executeApprove = async () => {
         setProcessing(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/direccion/requests/${id}/decision`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    decision: 'APROBAR',
-                    comentario: comentario || ''
-                })
-            });
-
-            const data = await response.json();
+            const data = await validateDireccionRequest(id, 'aprobado_direccion', comentario || '');
             if (data.ok) {
                 setShowApproveModal(false);
                 setSuccessAction('Aprobada');
@@ -114,7 +87,7 @@ export default function DireccionSolicitudDetalle() {
             }
         } catch (error) {
             console.error('Error al aprobar:', error);
-            toast.error('Error al aprobar la solicitud');
+            toast.error(error?.message || 'Error al aprobar la solicitud');
         } finally {
             setProcessing(false);
         }

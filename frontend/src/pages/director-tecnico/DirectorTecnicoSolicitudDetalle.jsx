@@ -1,17 +1,19 @@
+
 import { useState, useEffect } from 'react';
-// Función para formatear nombres de campos (igual que en técnico)
-function formatearNombreCampo(texto) {
-        let result = texto.replace(/([a-z])([A-Z])/g, '$1 $2');
-        result = result.replace(/([a-zA-Z])([0-9])/g, '$1 $2');
-        result = result.replace(/[_-]/g, ' ');
-        result = result.split(' ').map(palabra => {
-            if (palabra.length === 0) return palabra;
-            return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase();
-        }).join(' ');
-        return result;
-}
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+// Función para formatear nombres de campos (igual que en técnico)
+function formatearNombreCampo(texto) {
+    let result = texto.replace(/([a-z])([A-Z])/g, '$1 $2');
+    result = result.replace(/([a-zA-Z])([0-9])/g, '$1 $2');
+    result = result.replace(/[_-]/g, ' ');
+    result = result.split(' ').map(palabra => {
+        if (palabra.length === 0) return palabra;
+        return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase();
+    }).join(' ');
+    return result;
+}
 
 function DirectorTecnicoSolicitudDetalle() {
     const { id } = useParams();

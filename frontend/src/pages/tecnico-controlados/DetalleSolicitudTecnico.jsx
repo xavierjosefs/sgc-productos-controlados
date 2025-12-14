@@ -14,7 +14,7 @@ const DetalleSolicitudTecnico = () => {
   
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getRequestDetail, sendValidacionTecnica } = useTecnicoAPI();
+  const { getRequestDetail, validateTecnicoRequest } = useTecnicoAPI();
   
   const [detalle, setDetalle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -131,12 +131,17 @@ const DetalleSolicitudTecnico = () => {
   const enviarValidacion = async (recomendacion) => {
     setEnviando(true);
     try {
-      await sendValidacionTecnica(id, {
-        formulario_cumple: formValidaciones.every(f => f.cumple === true),
-        documentos: documentosEstado,
-        recomendacion,
-        comentario_general: comentario || '',
-      });
+      // Preparar los datos según lo que espera el backend
+      const formulario_cumple = formValidaciones.every(f => f.cumple === true);
+      const documentos = documentosEstado.map(doc => ({ id: doc.id, cumple: doc.cumple }));
+      const comentario_general = comentario || '';
+      await validateTecnicoRequest(
+        id,
+        recomendacion, // "APROBADO" o "NO_APROBADO"
+        comentario_general,
+        documentos,
+        formulario_cumple
+      );
       setTipoAccion(recomendacion);
       setProcesado(true);
     } catch {
