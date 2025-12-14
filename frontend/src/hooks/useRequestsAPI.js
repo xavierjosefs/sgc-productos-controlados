@@ -395,7 +395,8 @@ export function useRequestsAPI() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${baseURL}/api/direccion/request/${id}`, {
+      // Usar el endpoint correcto para Dirección
+      const response = await axios.get(`${baseURL}/api/direccion/requests/${id}`, {
         withCredentials: true,
         headers: getAuthHeaders(),
       });

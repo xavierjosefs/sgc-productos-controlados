@@ -17,7 +17,7 @@ export default function Home() {
   const servicesAPI = useServicesAPI();
   
   const [allRequests, setAllRequests] = useState([]);
-  const [recentRequests, setRecentRequests] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]); // Will be renamed to filteredRequests
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [errorRequests, setErrorRequests] = useState('');
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -38,7 +38,7 @@ export default function Home() {
         // El backend responde { ok: true, requests } o directamente un array
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
-        setRecentRequests(normalized.slice(0, 5));
+        setRecentRequests(normalized); // Show all by default
         setErrorRequests('');
       } catch (error) {
         console.error('Error al cargar solicitudes:', error);
@@ -75,26 +75,34 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Aplicar filtros a las solicitudes
+  // Business-rule-driven filtering logic (mirroring RequestsFiltered.jsx)
   const applyFilters = useCallback((requests) => {
     let filtered = [...requests];
-    
     // Filtrar por tipo de servicio
     if (filterTipo) {
-      filtered = filtered.filter(r => 
-        (r.tipo_servicio || '').toLowerCase().includes(filterTipo.toLowerCase())
-      );
+      filtered = filtered.filter(r => (r.tipo_servicio || '').toLowerCase().includes(filterTipo.toLowerCase()));
     }
-    
-    // Filtrar por estado
+    // Filtrar por estado según reglas de negocio
     if (filterEstado) {
-      filtered = filtered.filter(r => 
-        (r.estado || r.estado_actual || '').toLowerCase() === filterEstado.toLowerCase()
-      );
+      const estado = filterEstado.toLowerCase();
+      filtered = filtered.filter(r => {
+        const est = (r.estado || r.estado_actual || '').toString().toLowerCase();
+        if (estado === 'aprobada') {
+          return est.includes('finalizada') || est.includes('autorizada');
+        }
+        if (estado === 'pendiente') {
+          return est.includes('pendiente') || est.includes('borrador') || est.includes('incompleta');
+        }
+        if (estado === 'enviada') {
+          return est.includes('enviada') || est.includes('en proceso') || est.includes('progreso');
+        }
+        if (estado === 'devuelta') {
+          return est.includes('devuelta') || est.includes('rechazada');
+        }
+        return false;
+      });
     }
-    
-    // Mostrar solo las últimas 5 solicitudes filtradas
-    setRecentRequests(filtered.slice(0, 5));
+    setRecentRequests(filtered);
   }, [filterTipo, filterEstado]);
 
   // Handler para aplicar filtros
@@ -106,7 +114,7 @@ export default function Home() {
   const handleResetFilters = () => {
     setFilterTipo('');
     setFilterEstado('');
-    setRecentRequests(allRequests.slice(0, 5));
+    setRecentRequests(allRequests);
   };
 
   // Alternar el menú de creación de solicitudes
@@ -373,8 +381,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Tabla de solicitudes - Desktop */}
-        <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto">
+        {/* Tabla de solicitudes - Desktop con barra de desplazamiento */}
+        <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <table className="w-full">
             <thead>
               <tr className="bg-[#4A8BDF]">

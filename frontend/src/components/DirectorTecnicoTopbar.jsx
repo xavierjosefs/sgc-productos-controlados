@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
 
-export default function VentanillaTopbar() {
+function DirectorTecnicoTopbar() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
 
@@ -11,8 +11,6 @@ export default function VentanillaTopbar() {
         navigate('/login');
     };
 
-    // Get current path to highlight nav item
-    const path = window.location.pathname;
         return (
             <header
                 className="h-20 w-full flex items-center justify-center bg-white border border-[#9B9A9A] shadow-[inset_0_0_4px_rgba(0,0,0,0.25)] rounded-2xl mt-6 max-w-7xl mx-auto"
@@ -27,12 +25,12 @@ export default function VentanillaTopbar() {
                     {/* Navegación */}
                     <nav className="flex-1 flex justify-center items-center gap-8">
                         <button
-                            onClick={() => navigate('/ventanilla')}
+                            onClick={() => navigate('/director-tecnico')}
                             className={
                                 `font-bold transition-colors px-6 py-2 rounded-xl ` +
-                                (path === '/ventanilla'
+                                (window.location.pathname === '/director-tecnico'
                                     ? 'bg-[#085297] text-white'
-                                    : 'text-[#085297] hover:bg-[#085297] hover:text-white')
+                                    : 'text-[#4A8BDF] hover:bg-[#4A8BDF]/90 hover:text-white')
                             }
                         >
                             Solicitudes
@@ -42,12 +40,12 @@ export default function VentanillaTopbar() {
                     {/* Usuario y Logout */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#085297] flex items-center justify-center text-white font-semibold">
-                                {user?.full_name?.charAt(0) || 'V'}
+                            <div className="w-10 h-10 rounded-full bg-[#4A8BDF] flex items-center justify-center text-white font-semibold">
+                                {user?.full_name?.charAt(0) || 'D'}
                             </div>
                             <div className="hidden sm:block">
-                                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Ventanilla'}</p>
-                                <p className="text-xs text-gray-500">Ventanilla</p>
+                                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Director Técnico'}</p>
+                                <p className="text-xs text-gray-500">Director de Técnico</p>
                             </div>
                         </div>
                         <button
@@ -62,5 +60,7 @@ export default function VentanillaTopbar() {
                     </div>
                 </div>
             </header>
-        );
+    );
 }
+
+export default DirectorTecnicoTopbar;

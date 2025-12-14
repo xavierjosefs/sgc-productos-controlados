@@ -67,7 +67,7 @@ export default function TecnicoControladosDashboard() {
 
     // Verificar si una solicitud puede ser validada (editable)
     const puedeValidar = (estado) => {
-        return estado === 'En evaluación técnica';
+        return estado === 'En evaluación técnica' || estado === 'Rechazada por Director UPC';
     };
 
     // Contar solicitudes por estado

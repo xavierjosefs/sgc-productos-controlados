@@ -81,11 +81,46 @@ export default function useTecnicoAPI() {
     }
   }, []);
 
+  // Validar solicitud desde Técnico (ajustado a backend)
+  const validateTecnicoRequest = useCallback(
+    async (requestId, recomendacion, comentario_general, documentos, formulario_cumple) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const payload = {
+          formulario_cumple,
+          documentos,
+          recomendacion,
+          comentario_general,
+        };
+        const res = await api.post(
+          `/api/tecnico-upc/request/${requestId}/validacion-tecnica`,
+          payload
+        );
+        return res.data;
+      } catch (err) {
+        setError(
+          err.response?.data?.message || 'Error al validar la solicitud (técnico)'
+        );
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   return {
     loading,
     error,
     getRequests,
     getRequestDetail,
     sendValidacionTecnica,
+    validateTecnicoRequest,
   };
 }

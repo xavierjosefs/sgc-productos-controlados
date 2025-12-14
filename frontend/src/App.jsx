@@ -22,7 +22,9 @@ import VentanillaSolicitudes from './pages/ventanilla/VentanillaSolicitudes';
 import VentanillaSolicitudDetalle from './pages/ventanilla/VentanillaSolicitudDetalle';
 import TecnicoControladosDashboard from './pages/tecnico-controlados/Dashboard';
 import DetalleSolicitudTecnico from './pages/tecnico-controlados/DetalleSolicitudTecnico';
-import DirectorControladosDashboard from './pages/director-controlados/Dashboard';
+import DirectorTecnicoLayout from './components/DirectorTecnicoLayout';
+import DirectorTecnicoSolicitudes from './pages/director-tecnico/DirectorTecnicoSolicitudes';
+import DirectorTecnicoSolicitudDetalle from './pages/director-tecnico/DirectorTecnicoSolicitudDetalle';
 import DireccionLayout from './components/DireccionLayout';
 import DireccionSolicitudes from './pages/direccion/DireccionSolicitudes';
 import DireccionSolicitudDetalle from './pages/direccion/DireccionSolicitudDetalle';
@@ -74,6 +76,7 @@ import SolicitudImportacionMateriaPrimaExito from './pages/cliente/SolicitudImpo
 import SolicitudImportacionMedicamentosFase01 from './pages/cliente/SolicitudImportacionMedicamentosFase01';
 import SolicitudImportacionMedicamentosFase02 from './pages/cliente/SolicitudImportacionMedicamentosFase02';
 import SolicitudImportacionMedicamentosExito from './pages/cliente/SolicitudImportacionMedicamentosExito';
+
 
 export default function App() {
   return (
@@ -139,13 +142,16 @@ export default function App() {
                 />
 
                 <Route
-                  path="/director-controlados"
+                  path="/director-tecnico"
                   element={
-                    <ProtectedRoute allowedRoles={['director_controlados']}>
-                      <DirectorControladosDashboard />
+                    <ProtectedRoute allowedRoles={['director_tecnico', 'director_controlados']}>
+                      <DirectorTecnicoLayout />
                     </ProtectedRoute>
                   }
-                />
+                >
+                  <Route index element={<DirectorTecnicoSolicitudes />} />
+                  <Route path="solicitud/:id" element={<DirectorTecnicoSolicitudDetalle />} />
+                </Route>
 
                 <Route
                   path="/direccion"

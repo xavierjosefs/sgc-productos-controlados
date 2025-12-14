@@ -60,24 +60,29 @@ export default function RequestsFiltered() {
         const data = await getUserRequests();
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         
-        // Filtrar según el estado con lógica más flexible
+        // Filtrado avanzado según reglas de negocio
         const filtered = normalized.filter(r => {
-          const estadoActual = (r.estado || r.estado_actual || '').toString().toLowerCase();
-          
-          switch(status) {
-            case 'enviadas':
-              return estadoActual.includes('enviada');
-            case 'aprobadas':
-              return estadoActual.includes('finalizada') || estadoActual.includes('autorizada') || estadoActual.includes('aprobada');
-            case 'devueltas':
-              return estadoActual.includes('devuelta') || estadoActual.includes('rechazada');
-            case 'pendientes':
-              return estadoActual.includes('pendiente') || estadoActual.includes('revisión') || estadoActual.includes('evaluación');
-            default:
-              return false;
+          const estado = (r.estado || r.estado_actual || '').toString().toLowerCase();
+          // Aprobadas: solo las que Dirección aprobó (finalizada o autorizada)
+          if (status === 'aprobadas') {
+            return estado.includes('finalizada') || estado.includes('autorizada');
           }
+          // Pendientes: las que el usuario no terminó de llenar (no enviadas, incompletas, etc)
+          if (status === 'pendientes') {
+            // Consideramos pendiente si no está enviada, ni finalizada, ni devuelta, ni rechazada
+            return estado.includes('pendiente') || estado.includes('borrador') || estado.includes('incompleta');
+          }
+          // Enviadas: las que están en proceso, no finalizadas, no devueltas, no rechazadas
+          if (status === 'enviadas') {
+            return estado.includes('enviada') || estado.includes('en proceso') || estado.includes('progreso');
+          }
+          // Devueltas: devueltas o rechazadas por dirección
+          if (status === 'devueltas') {
+            return estado.includes('devuelta') || estado.includes('rechazada');
+          }
+          return false;
         });
-        
+
         setAllRequests(filtered);
         setFilteredRequests(filtered);
       } catch (error) {
@@ -145,19 +150,18 @@ export default function RequestsFiltered() {
           {/* Filtro de Tipo */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-end items-center gap-4">
-              <div className="relative w-48">
-                <select 
+              <div className="relative w-64">
+                <select
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 truncate"
-                  title={filterTipo || "Todos los tipos"}
+                  title={filterTipo || 'Todos los tipos'}
                   disabled={loadingServices}
                 >
                   <option value="">Todos los tipos</option>
-                  {serviceTypes.map((service) => (
-                    <option key={service.id} value={service.nombre_servicio}>
-                      {service.nombre_servicio}
-                    </option>
+                  {/* Mostrar todos los tipos únicos de las solicitudes filtradas */}
+                  {[...new Set(allRequests.map(r => r.tipo_servicio).filter(Boolean))].map(tipo => (
+                    <option key={tipo} value={tipo}>{tipo}</option>
                   ))}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -181,8 +185,8 @@ export default function RequestsFiltered() {
             </div>
           </div>
 
-          {/* Tabla - Desktop */}
-          <div className="hidden md:block overflow-auto max-h-[600px]">
+          {/* Tabla - Desktop con barra de desplazamiento */}
+          <div className="hidden md:block overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <table className="w-full">
               <thead>
                 <tr className="bg-[#4A8BDF]">

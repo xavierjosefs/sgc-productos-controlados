@@ -5,29 +5,30 @@ import {
     validateDireccionRequestController,
     generateCertificatePDFController
 } from "../controllers/direccion.controllers.js";
+import { direccionDecisionController } from "../controllers/direccionDecision.controllers.js";
 
 const router = express.Router();
 
 /**
  * @swagger
  * tags:
- *   name: Direccion
- *   description: Endpoints for Dirección role
+ *   name: DirectorGeneral
+ *   description: Endpoints for Director General role
  */
 
 /**
  * @swagger
- * /direccion/requests:
+ * /director-general/requests:
  *   get:
- *     summary: Get all requests for Dirección (estado Aprobada por UPC)
- *     tags: [Direccion]
+ *     summary: Get all requests for Director General (estado Aprobada por UPC)
+ *     tags: [DirectorGeneral]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of requests
  *       403:
- *         description: Access denied - Dirección role required
+ *         description: Access denied - Director General role required
  *       500:
  *         description: Internal server error
  */
@@ -35,10 +36,10 @@ router.get("/requests", getDireccionRequestsController);
 
 /**
  * @swagger
- * /direccion/request/{id}:
+ * /director-general/request/{id}:
  *   get:
  *     summary: Get request detail with documents
- *     tags: [Direccion]
+ *     tags: [DirectorGeneral]
  *     parameters:
  *       - in: path
  *         name: id
@@ -49,14 +50,17 @@ router.get("/requests", getDireccionRequestsController);
  *       200:
  *         description: Request detail with documents
  */
-router.get("/request/:id", getDireccionRequestDetailController);
+router.get("/requests/:id", getDireccionRequestDetailController);
+
+// Endpoint para decisión (APROBAR/RECHAZAR) - usado por el frontend
+router.post("/requests/:id/decision", direccionDecisionController);
 
 /**
  * @swagger
- * /direccion/validate/{id}:
+ * /director-general/validate/{id}:
  *   post:
  *     summary: Validate a request (Aprobar/Reprobar)
- *     tags: [Direccion]
+ *     tags: [DirectorGeneral]
  *     parameters:
  *       - in: path
  *         name: id
@@ -83,10 +87,10 @@ router.post("/validate/:id", validateDireccionRequestController);
 
 /**
  * @swagger
- * /direccion/certificate/{id}:
+ * /director-general/certificate/{id}:
  *   get:
  *     summary: Generate and download certificate PDF
- *     tags: [Direccion]
+ *     tags: [DirectorGeneral]
  *     parameters:
  *       - in: path
  *         name: id

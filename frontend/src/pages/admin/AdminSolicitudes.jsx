@@ -166,7 +166,7 @@ export default function AdminSolicitudes() {
         </div>
 
         {/* Tabla */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <table className="w-full">
             <thead className="bg-[#4A8BDF] text-white">
               <tr>

@@ -4,6 +4,9 @@ import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 export const getDirectorRequestsController = async (req, res) => {
   try {
     const requests = await getRequestsForDirectorUPC();
+    
+    console.log('📋 Solicitudes para Director Técnico:', requests.length);
+    console.log('Solicitudes:', requests);
 
     res.json({
       ok: true,
@@ -11,7 +14,7 @@ export const getDirectorRequestsController = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error en getDirectorRequestsController:', error);
 
     res.status(500).json({
       ok: false,

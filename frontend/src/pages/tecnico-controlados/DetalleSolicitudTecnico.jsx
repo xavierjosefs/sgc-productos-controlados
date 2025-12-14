@@ -14,7 +14,7 @@ const DetalleSolicitudTecnico = () => {
   
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getRequestDetail, sendValidacionTecnica } = useTecnicoAPI();
+  const { getRequestDetail, validateTecnicoRequest } = useTecnicoAPI();
   
   const [detalle, setDetalle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -131,12 +131,17 @@ const DetalleSolicitudTecnico = () => {
   const enviarValidacion = async (recomendacion) => {
     setEnviando(true);
     try {
-      await sendValidacionTecnica(id, {
-        formulario_cumple: formValidaciones.every(f => f.cumple === true),
-        documentos: documentosEstado,
-        recomendacion,
-        comentario_general: comentario || '',
-      });
+      // Preparar los datos según lo que espera el backend
+      const formulario_cumple = formValidaciones.every(f => f.cumple === true);
+      const documentos = documentosEstado.map(doc => ({ id: doc.id, cumple: doc.cumple }));
+      const comentario_general = comentario || '';
+      await validateTecnicoRequest(
+        id,
+        recomendacion, // "APROBADO" o "NO_APROBADO"
+        comentario_general,
+        documentos,
+        formulario_cumple
+      );
       setTipoAccion(recomendacion);
       setProcesado(true);
     } catch {
@@ -182,6 +187,8 @@ const DetalleSolicitudTecnico = () => {
   }
 
   const { solicitud, cliente, documentos } = detalle;
+  // Mostrar comentario del director si la solicitud fue devuelta por director UPC (estado_id 16)
+  const mostrarComentarioDirector = solicitud.estado_id === 16 && solicitud.comentario_director_upc;
   const modoSoloLectura = solicitud.estado && solicitud.estado.toLowerCase().includes('devuelta');
 
   return (
@@ -228,14 +235,33 @@ const DetalleSolicitudTecnico = () => {
               <div><span className="font-medium text-gray-500">Tipo:</span> <span className="font-bold text-lg">{solicitud.tipo_solicitud}</span></div>
               <div><span className="font-medium text-gray-500">Servicio:</span> <span className="font-bold text-lg">{solicitud.servicio}</span></div>
               <div><span className="font-medium text-gray-500">Fecha:</span> <span className="font-bold text-lg">{new Date(solicitud.fecha_creacion).toLocaleDateString()}</span></div>
-              <div className="flex items-center gap-2"><span className="font-medium text-gray-500">Estado:</span> <BadgeEstado estado={solicitud.estado} /></div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-500">Estado:</span>
+                <BadgeEstado estado={
+                  solicitud.estado_actual && solicitud.estado_actual.trim() !== ''
+                    ? solicitud.estado_actual
+                    : solicitud.estado && solicitud.estado.trim() !== ''
+                      ? solicitud.estado
+                      : solicitud.estado_id === 7
+                        ? 'Aprobado'
+                        : solicitud.estado_id === 6
+                          ? 'Pendiente'
+                          : 'Sin estado'
+                } />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Sección de Validación */}
         <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-200 mb-8">
-          
+          {/* Comentario del director UPC si fue devuelta */}
+          {mostrarComentarioDirector && (
+            <div className="mb-8 p-4 border-l-4 border-yellow-500 bg-yellow-50">
+              <div className="font-semibold text-yellow-700 mb-2">Comentario del Director UPC:</div>
+              <div className="text-gray-800 whitespace-pre-line">{solicitud.comentario_director_upc}</div>
+            </div>
+          )}
           {/* NUEVO: Subtítulo para el Formulario */}
           <div className="mb-8">
             <div className="border-b border-gray-200 pb-2 mb-4">
@@ -247,7 +273,7 @@ const DetalleSolicitudTecnico = () => {
               {solicitud.form_data && typeof solicitud.form_data === 'object' ? (
                 <table className="w-full text-left">
                   <tbody>
-                    {Object.entries(solicitud.form_data).map(([key, value], idx) => (
+                    {Object.entries(solicitud.form_data).map(([key, value]) => (
                       typeof value === 'object' && value !== null && !Array.isArray(value) ? (
                         Object.entries(value).map(([subKey, subValue]) => {
                           const validIdx = `${key}-${subKey}`;

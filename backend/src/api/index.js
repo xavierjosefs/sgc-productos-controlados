@@ -8,7 +8,7 @@ import ventanillaRoutes from "./ventanilla.routes.js";
 import tecnicoRoutes from "./tecnico.routes.js"
 import directorUPCRoutes from "./directorUPC.routes.js"
 import direccionRoutes from "./direccion.routes.js"
-import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware, tecnicoMiddleware, directorupcMiddleware, direccionMiddleware } from "../middleware/auth.middleware.js";
+import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware, tecnicoMiddleware, directorupcMiddleware, direccionMiddleware, dncdMiddleware } from "../middleware/auth.middleware.js";
 
 
 const router = express.Router();
