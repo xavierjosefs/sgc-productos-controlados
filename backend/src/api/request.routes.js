@@ -2,6 +2,7 @@ import express from "express";
 import { upload } from "../middleware/upload.middleware.js";
 import { createRequestController, getRequestsController, getRequestDetailsController, getSendRequestsController, getAproveRequestsController, getReturnedRequestsController, getPendingRequestsController, getRequestsStatusController } from "../controllers/request.controllers.js";
 import { uploadDocumentController, getDocumentosBySolicitudController, deleteDocumentController } from "../controllers/document.controllers.js";
+import { getRequestTimelineController, getUserActivityController } from "../controllers/historial.controllers.js";
 
 const router = express.Router();
 /**
@@ -43,6 +44,49 @@ router.get("/get-requests", getRequestsController);
 router.post("/:id/documents", upload.single("archivo"), uploadDocumentController);
 router.get("/:id/details", getRequestDetailsController);
 router.get("/:id/documents", getDocumentosBySolicitudController);
+
+/**
+ * @swagger
+ * /requests/{id}/timeline:
+ *   get:
+ *     summary: Get timeline/history for a request
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Request ID
+ *     responses:
+ *       200:
+ *         description: Timeline retrieved successfully
+ *       404:
+ *         description: Request not found
+ */
+router.get("/:id/timeline", getRequestTimelineController);
+
+/**
+ * @swagger
+ * /requests/my-activity:
+ *   get:
+ *     summary: Get activity history for authenticated user
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *     responses:
+ *       200:
+ *         description: Activity history retrieved
+ */
+router.get("/my-activity", getUserActivityController);
 
 /**
  * @swagger

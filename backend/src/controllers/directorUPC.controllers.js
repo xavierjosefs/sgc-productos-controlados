@@ -1,4 +1,5 @@
-import {getRequestsForDirectorUPC, getDirectorUPCRequestDetails, directorUPCDecision} from "../models/user.client.js";
+import { getRequestsForDirectorUPC, getDirectorUPCRequestDetails, directorUPCDecision, getRequestDetailsById } from "../models/user.client.js";
+import { addHistorialEntry, ACCION_TYPES } from "../models/historial.client.js";
 
 export const getDirectorRequestsController = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ export const getDirectorUPCRequestDetailsController = async (req, res) => {
 
     const detalle = await getDirectorUPCRequestDetails(id);
     console.log(detalle);
-    
+
 
     res.json({
       ok: true,
@@ -50,7 +51,23 @@ export const directorUPCDecisionController = async (req, res) => {
     const { id } = req.params;
     const { decision, comentario } = req.body;
 
+    // Obtener estado anterior
+    const requestBefore = await getRequestDetailsById(id);
+    const estadoAnteriorId = requestBefore?.estado_id;
+
     const resultado = await directorUPCDecision(id, { decision, comentario });
+
+    // Registrar en historial
+    await addHistorialEntry({
+      solicitud_id: parseInt(id),
+      estado_anterior_id: estadoAnteriorId,
+      estado_nuevo_id: resultado.estado_id,
+      usuario_id: req.user?.cedula || req.user?.id,
+      rol_usuario: 'director_controlados',
+      accion: ACCION_TYPES.DECISION_DIRECTOR_UPC,
+      comentario: comentario || null,
+      metadata: { decision: resultado.decision }
+    });
 
     res.json({
       ok: true,
