@@ -205,7 +205,8 @@ function DirectorTecnicoSolicitudes() {
                                     <td className="px-6 py-4 text-sm">
                                         <button
                                             onClick={() => navigate(`/director-tecnico/solicitud/${request.id}`)}
-                                            className="text-[#4A8BDF] hover:text-[#085297] font-medium"
+                                            className={`text-[#4A8BDF] hover:text-[#085297] font-medium ${request.estado_id === 7 ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                                            disabled={request.estado_id === 7}
                                         >
                                             Validar
                                         </button>

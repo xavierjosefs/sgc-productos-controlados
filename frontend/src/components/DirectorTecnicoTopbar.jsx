@@ -11,17 +11,19 @@ function DirectorTecnicoTopbar() {
         navigate('/login');
     };
 
-    return (
-        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20">
+        return (
+            <header
+                className="h-20 w-full flex items-center justify-center bg-white border border-[#9B9A9A] shadow-[inset_0_0_4px_rgba(0,0,0,0.25)] rounded-2xl mt-6 max-w-7xl mx-auto"
+                style={{ boxSizing: 'border-box' }}
+            >
+                <div className="w-full flex items-center justify-between px-8 gap-x-8">
                     {/* Logo */}
-                    <div className="flex items-center gap-3">
+                    <div className="w-20 shrink-0">
                         <Logo className="h-10 w-10" />
                     </div>
 
                     {/* Navegación */}
-                    <nav className="flex items-center gap-2">
+                    <nav className="flex-1 flex justify-center items-center gap-8">
                         <button
                             onClick={() => navigate('/director-tecnico')}
                             className={
@@ -57,8 +59,7 @@ function DirectorTecnicoTopbar() {
                         </button>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
     );
 }
 

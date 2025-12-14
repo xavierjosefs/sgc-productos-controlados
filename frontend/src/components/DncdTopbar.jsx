@@ -10,8 +10,11 @@ export default function DncdTopbar() {
   const userName = user?.full_name || user?.nombre || user?.name || 'Usuario';
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
-      <div className="flex items-center justify-between w-full">
+    <header
+      className="h-20 w-full flex items-center justify-center bg-white border border-[#9B9A9A] shadow-[inset_0_0_4px_rgba(0,0,0,0.25)] rounded-2xl mt-6 max-w-7xl mx-auto"
+      style={{ boxSizing: 'border-box' }}
+    >
+      <div className="w-full flex items-center justify-between px-6">
         {/* Logo */}
         <div className="w-20 shrink-0">
           <Logo />
@@ -46,6 +49,6 @@ export default function DncdTopbar() {
           </button>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
