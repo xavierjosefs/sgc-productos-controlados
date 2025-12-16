@@ -1,17 +1,22 @@
 import pool from "../config/db.js";
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
-import { getDocumentosBySolicitudId } from "./document.client.js"
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { getDocumentosBySolicitudId } from "./document.client.js";
 
 // Funcion para crear un nuevo usuario
-export const createUser = async (full_name, cedula, email, password, role_id) => {
+export const createUser = async (
+  full_name,
+  cedula,
+  email,
+  password,
+  role_id
+) => {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedName = full_name.trim();
 
-  const search = await pool.query(
-    "SELECT * FROM users WHERE email = $1",
-    [normalizedEmail]
-  );
+  const search = await pool.query("SELECT * FROM users WHERE email = $1", [
+    normalizedEmail,
+  ]);
   if (search.rows.length > 0) {
     throw new Error("El correo ya está registrado");
   }
@@ -30,18 +35,16 @@ export const createUser = async (full_name, cedula, email, password, role_id) =>
 
 export const findUserByEmail = async (email) => {
   const normalizedEmail = email.trim().toLowerCase();
-  const result = await pool.query(
-    "SELECT * FROM users WHERE email = $1",
-    [normalizedEmail]
-  );
+  const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+    normalizedEmail,
+  ]);
   return result.rows[0];
 };
 
 export const findUserByCedula = async (cedula) => {
-  const result = await pool.query(
-    "SELECT * FROM users WHERE cedula = $1",
-    [cedula]
-  );
+  const result = await pool.query("SELECT * FROM users WHERE cedula = $1", [
+    cedula,
+  ]);
   return result.rows[0];
 };
 
@@ -54,10 +57,9 @@ export const login = async (email, password) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const { rows } = await pool.query(
-      `SELECT * FROM users WHERE email = $1`,
-      [normalizedEmail]
-    );
+    const { rows } = await pool.query(`SELECT * FROM users WHERE email = $1`, [
+      normalizedEmail,
+    ]);
 
     if (rows.length === 0) {
       const error = new Error("No existe una cuenta asociada con ese correo");
@@ -87,7 +89,12 @@ export const login = async (email, password) => {
   }
 };
 
-export const createRequest = async (user_id, tipo_servicio_id, formulario, condicion) => {
+export const createRequest = async (
+  user_id,
+  tipo_servicio_id,
+  formulario,
+  condicion
+) => {
   const result = await pool.query(
     `INSERT INTO solicitudes (user_id, tipo_servicio_id, form_data, tipo_solicitud)
      VALUES ($1, $2, $3, $4)
@@ -99,7 +106,8 @@ export const createRequest = async (user_id, tipo_servicio_id, formulario, condi
 };
 
 export const getRequestsBycedula = async (cedula) => {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT 
       s.id,
       s.user_id,
@@ -119,13 +127,16 @@ export const getRequestsBycedula = async (cedula) => {
       ON s.estado_id = e.id
     WHERE s.user_id = $1
     ORDER BY s.fecha_creacion DESC
-  `, [cedula]);
+  `,
+    [cedula]
+  );
 
   return result.rows;
-}
+};
 
 export const getRequestDetailsById = async (id) => {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT 
       s.id,
       s.user_id,
@@ -144,58 +155,78 @@ export const getRequestDetailsById = async (id) => {
     JOIN estados_solicitud e
       ON s.estado_id = e.id
     WHERE s.id = $1
-  `, [id]);
+  `,
+    [id]
+  );
 
   return result.rows[0] || null;
 };
 
 export const getRequestsByStatus = async (status) => {
-  const result = await pool.query(`SELECT s.id, s.user_id, s.form_data, s.fecha_creacion, s.tipo_solicitud, s.solicitud_original_id, s.fase, s.solicitud_anterior_id, s.estado_id, ts.nombre_servicio AS tipo_servicio, e.nombre_mostrar AS estado_actual
+  const result = await pool.query(
+    `SELECT s.id, s.user_id, s.form_data, s.fecha_creacion, s.tipo_solicitud, s.solicitud_original_id, s.fase, s.solicitud_anterior_id, s.estado_id, ts.nombre_servicio AS tipo_servicio, e.nombre_mostrar AS estado_actual
     FROM solicitudes s
     JOIN tipos_servicio ts ON s.tipo_servicio_id = ts.id
     JOIN estados_solicitud e ON s.estado_id = e.id
     WHERE e.nombre_mostrar = $1
-    ORDER BY s.fecha_creacion DESC`, [status]);
+    ORDER BY s.fecha_creacion DESC`,
+    [status]
+  );
 
   return result.rows || null;
-}
+};
 
 export const getSentRequestsByUserId = async (cedula) => {
-  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 12`, [cedula]);
+  const result = await pool.query(
+    `SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 12`,
+    [cedula]
+  );
 
   return result.rows || null;
-}
+};
 
 export const getAproveRequestsByUserId = async (cedula) => {
-  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 10`, [cedula]);
+  const result = await pool.query(
+    `SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 10`,
+    [cedula]
+  );
 
   return result.rows || null;
-}
+};
 
 export const getReturnedRequestsByUserId = async (cedula) => {
-  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND (estado_id = 3 OR estado_id = 5)`, [cedula]);
+  const result = await pool.query(
+    `SELECT * FROM solicitudes WHERE user_id = $1 AND (estado_id = 3 OR estado_id = 5)`,
+    [cedula]
+  );
 
   return result.rows || null;
-}
+};
 
 export const getPendingRequestsByUserId = async (cedula) => {
-  const result = await pool.query(`SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 1`, [cedula]);
+  const result = await pool.query(
+    `SELECT * FROM solicitudes WHERE user_id = $1 AND estado_id = 1`,
+    [cedula]
+  );
 
   return result.rows || null;
-}
+};
 
 export const getStatuses = async () => {
-  const result = await pool.query(`SELECT nombre_mostrar FROM estados_solicitud`);
+  const result = await pool.query(
+    `SELECT nombre_mostrar FROM estados_solicitud`
+  );
 
   return result.rows || null;
-}
+};
 
 /**
  * Find user by cedula with role information
  * Used by getProfile controller
  */
 export const findUserByCedulaWithRole = async (cedula) => {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT 
       u.cedula,
       u.full_name,
@@ -206,7 +237,9 @@ export const findUserByCedulaWithRole = async (cedula) => {
     FROM users u
     LEFT JOIN roles r ON u.role_id = r.id
     WHERE u.cedula = $1
-  `, [cedula]);
+  `,
+    [cedula]
+  );
   return result.rows[0];
 };
 
@@ -281,7 +314,8 @@ export const getTecnicoUPCRequestDetails = async (id) => {
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON s.estado_id = e.id
      WHERE s.id = $1`,
-    [id]);
+    [id]
+  );
 
   if (result.rowCount === 0) {
     throw new Error("Solicitud no encontrada");
@@ -290,7 +324,7 @@ export const getTecnicoUPCRequestDetails = async (id) => {
   const solicitud = result.rows[0];
 
   // 2) Obtener documentos entregados
-  const documentos = await getDocumentosBySolicitudId(id)
+  const documentos = await getDocumentosBySolicitudId(id);
 
   return {
     solicitud: {
@@ -301,16 +335,16 @@ export const getTecnicoUPCRequestDetails = async (id) => {
       form_data: solicitud.form_data,
       comentario_director_upc: solicitud.comentario_director_upc,
       estado_id: solicitud.estado_id,
-      estado_actual: solicitud.estado_actual
+      estado_actual: solicitud.estado_actual,
     },
     cliente: {
       cedula: solicitud.cliente_cedula,
       nombre: solicitud.cliente_nombre,
-      email: solicitud.cliente_email
+      email: solicitud.cliente_email,
     },
-    documentos: documentos
+    documentos: documentos,
   };
-}
+};
 
 export const validarSolicitudTecnica = async (solicitudId, data) => {
   const {
@@ -318,7 +352,7 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
     formulario_detalle,
     documentos,
     recomendacion,
-    comentario_general
+    comentario_general,
   } = data;
 
   if (typeof formulario_cumple !== "boolean") {
@@ -341,7 +375,7 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
       JSON.stringify(formulario_detalle),
       comentario_general || null,
       recomendacion === "APROBADO",
-      solicitudId
+      solicitudId,
     ]
   );
 
@@ -351,11 +385,7 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
       `UPDATE documentos_solicitud
        SET estado = $1
        WHERE id = $2 AND solicitud_id = $3`,
-      [
-        doc.cumple ? "APROBADO" : "RECHAZADO",
-        doc.id,
-        solicitudId
-      ]
+      [doc.cumple ? "APROBADO" : "RECHAZADO", doc.id, solicitudId]
     );
   }
 
@@ -374,7 +404,7 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
     solicitud_id: solicitudId,
     estado_id: ESTADO_EN_EVALUACION_DIRECTOR_TECNICO,
     recomendacion,
-    comentario_general
+    comentario_general,
   };
 };
 
@@ -400,17 +430,18 @@ export const getRequestsForDirectorUPC = async () => {
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
-     WHERE s.estado_id IN (6, 7, 8)
-     ORDER BY s.fecha_creacion ASC`);
+     WHERE s.estado_id IN (6, 7)
+     ORDER BY s.fecha_creacion ASC`
+    );
 
-    console.log('✅ Registros encontrados:', result.rows.length);
+    console.log("✅ Registros encontrados:", result.rows.length);
     if (result.rows.length > 0) {
-      console.log('Primera solicitud:', result.rows[0]);
+      console.log("Primera solicitud:", result.rows[0]);
     }
 
     return result.rows;
   } catch (error) {
-    console.error('❌ Error en getRequestsForDirectorUPC:', error);
+    console.error("❌ Error en getRequestsForDirectorUPC:", error);
     throw error;
   }
 };
@@ -439,7 +470,8 @@ export const getDirectorUPCRequestDetails = async (id) => {
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
      WHERE s.id = $1`,
-    [id]);
+    [id]
+  );
 
   if (result.rowCount === 0) {
     throw new Error("Solicitud no encontrada");
@@ -448,7 +480,7 @@ export const getDirectorUPCRequestDetails = async (id) => {
   const solicitud = result.rows[0];
 
   // 2) Obtener documentos entregados
-  const documentos = await getDocumentosBySolicitudId(id)
+  const documentos = await getDocumentosBySolicitudId(id);
 
   return {
     id: solicitud.id,
@@ -468,13 +500,13 @@ export const getDirectorUPCRequestDetails = async (id) => {
       comentarios: solicitud.comentario_tecnico,
       recomendacion: solicitud.recomendacion_tecnico,
       documentos_validados: documentos.reduce((acc, doc) => {
-        acc[doc.tipo_documento || doc.nombre] = doc.estado === 'APROBADO';
+        acc[doc.tipo_documento || doc.nombre] = doc.estado === "APROBADO";
         return acc;
-      }, {})
+      }, {}),
     },
-    documentos: documentos
+    documentos: documentos,
   };
-}
+};
 
 export const directorUPCDecision = async (id, data) => {
   const { decision, comentario } = data;
@@ -488,8 +520,8 @@ export const directorUPCDecision = async (id, data) => {
   // Si rechaza: devuelve al técnico (estado 5)
   const nuevoEstadoId =
     decision === "APROBAR"
-      ? 7  // Va a Dirección - FIRMADA_DIRECCION
-      : 5;  // Devuelta por Director Técnico - regresa al técnico
+      ? 7 // Va a Dirección - FIRMADA_DIRECCION
+      : 5; // Devuelta por Director Técnico - regresa al técnico
 
   await pool.query(
     `UPDATE solicitudes
@@ -504,7 +536,7 @@ export const directorUPCDecision = async (id, data) => {
     solicitud_id: id,
     estado_id: nuevoEstadoId,
     decision,
-    comentario: comentario || null
+    comentario: comentario || null,
   };
 };
 
@@ -537,7 +569,7 @@ export const getDNCDRequest = async () => {
 
     console.log('✅ Registros encontrados para DNCD:', result.rows.length);
     if (result.rows.length > 0) {
-      console.log('Primera solicitud:', result.rows[0]);
+      console.log("Primera solicitud:", result.rows[0]);
     }
 
     return result.rows;
