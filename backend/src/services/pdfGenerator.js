@@ -48,7 +48,10 @@ const CONFIG = {
         fieldBorder: '#1a5c2a',
         backgroundTint: '#f0f7f2',
         patternLine: '#c8e6d0',
-        saludPublica: '#2d8a4a'
+        saludPublica: '#2d8a4a',
+        // Watermark colors
+        watermarkApproved: '#2d8a4a',  // Green for approved
+        watermarkRejected: '#c53030'    // Red for rejected
     },
     // Times Roman font family (built into PDFKit)
     fonts: {
@@ -56,6 +59,16 @@ const CONFIG = {
         bold: 'Times-Bold',
         italic: 'Times-Italic',
         boldItalic: 'Times-BoldItalic'
+    },
+    // Watermark configuration
+    watermark: {
+        count: 4,           // Number of watermarks per page
+        fontSize: 48,       // Font size in points
+        opacity: 0.12,      // Transparency (0-1)
+        minRotation: -35,   // Minimum rotation angle
+        maxRotation: -15,   // Maximum rotation angle
+        margin: 100,        // Distance from page edges
+        minDistance: 120    // Minimum distance between watermarks
     }
 };
 
@@ -168,6 +181,92 @@ function drawBackgroundTexture(doc) {
             .lineTo(i + pageHeight, pageHeight)
             .stroke();
     }
+
+    doc.restore();
+}
+
+/**
+ * Generate random positions for watermarks avoiding overlaps
+ * @param {number} pageWidth - Width of the page
+ * @param {number} pageHeight - Height of the page
+ * @param {number} count - Number of watermarks to generate
+ * @returns {Array<{x: number, y: number, rotation: number}>} Array of positions
+ */
+function generateWatermarkPositions(pageWidth, pageHeight, count) {
+    const { margin, minDistance, minRotation, maxRotation } = CONFIG.watermark;
+    const positions = [];
+    const maxAttempts = 100;
+
+    for (let i = 0; i < count; i++) {
+        let attempts = 0;
+        let validPosition = false;
+        let x, y;
+
+        while (!validPosition && attempts < maxAttempts) {
+            // Generate random position within margins
+            x = margin + Math.random() * (pageWidth - 2 * margin);
+            y = margin + Math.random() * (pageHeight - 2 * margin);
+
+            // Check distance from existing watermarks
+            validPosition = positions.every(pos => {
+                const distance = Math.sqrt(Math.pow(pos.x - x, 2) + Math.pow(pos.y - y, 2));
+                return distance >= minDistance;
+            });
+
+            attempts++;
+        }
+
+        // Add position with random rotation
+        const rotation = minRotation + Math.random() * (maxRotation - minRotation);
+        positions.push({ x, y, rotation });
+    }
+
+    return positions;
+}
+
+/**
+ * Draw watermarks on the current page
+ * @param {PDFDocument} doc - PDFKit document
+ * @param {boolean} isApproved - True if request is approved, false if rejected
+ */
+function drawWatermarks(doc, isApproved) {
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const { count, fontSize, opacity } = CONFIG.watermark;
+
+    // Determine watermark text and color based on status
+    const watermarkText = isApproved ? 'APROBADO' : 'RECHAZADO';
+    const watermarkColor = isApproved
+        ? CONFIG.colors.watermarkApproved
+        : CONFIG.colors.watermarkRejected;
+
+    // Generate random positions for this page
+    const positions = generateWatermarkPositions(pageWidth, pageHeight, count);
+
+    doc.save();
+
+    // Set watermark styling
+    doc.font(CONFIG.fonts.bold)
+        .fontSize(fontSize)
+        .fillColor(watermarkColor)
+        .opacity(opacity);
+
+    // Draw each watermark
+    positions.forEach(({ x, y, rotation }) => {
+        doc.save();
+
+        // Translate to position and rotate
+        doc.translate(x, y);
+        doc.rotate(rotation);
+
+        // Draw the watermark text centered at origin
+        doc.text(watermarkText, 0, 0, {
+            align: 'center',
+            baseline: 'middle'
+        });
+
+        doc.restore();
+    });
 
     doc.restore();
 }
@@ -291,8 +390,12 @@ function drawFormField(doc, number, label, value, y, fieldWidth = 400) {
 
 /**
  * Draw page 1 - Certificate front page with form data
+ * @param {PDFDocument} doc - PDFKit document
+ * @param {Object} data - Request data
+ * @param {string} certificateClass - 'A' or 'B'
+ * @param {boolean|null} isApproved - True if approved, false if rejected, null for no watermark
  */
-function drawPage1(doc, data, certificateClass) {
+function drawPage1(doc, data, certificateClass, isApproved = null) {
     // Background and border
     drawBackgroundTexture(doc);
     drawDecorativeBorder(doc);
@@ -416,12 +519,20 @@ function drawPage1(doc, data, certificateClass) {
         .fontSize(9)
         .fillColor(CONFIG.colors.labelText)
         .text('Ver al dorso', doc.page.width - 110, signatureY + 18);
+
+    // Draw watermarks if status is defined
+    if (isApproved !== null) {
+        drawWatermarks(doc, isApproved);
+    }
 }
 
 /**
  * Draw page 2 - Legal text and conditions
+ * @param {PDFDocument} doc - PDFKit document
+ * @param {string} certificateClass - 'A' or 'B'
+ * @param {boolean|null} isApproved - True if approved, false if rejected, null for no watermark
  */
-function drawPage2(doc, certificateClass) {
+function drawPage2(doc, certificateClass, isApproved = null) {
     // Background and border
     drawBackgroundTexture(doc);
     drawDecorativeBorder(doc);
@@ -490,11 +601,16 @@ function drawPage2(doc, certificateClass) {
             width: textWidth,
             lineGap: 4
         });
+
+    // Draw watermarks if status is defined
+    if (isApproved !== null) {
+        drawWatermarks(doc, isApproved);
+    }
 }
 
 /**
  * Generate a certificate PDF
- * @param {Object} requestData - Request data including form_data, id, user info
+ * @param {Object} requestData - Request data including form_data, id, user info, estado_id
  * @param {string} formCode - 'FORM_CLASE_A' or 'FORM_CLASE_B'
  * @returns {Promise<Buffer>} PDF buffer
  */
@@ -502,6 +618,16 @@ export async function generateCertificatePDF(requestData, formCode) {
     return new Promise((resolve, reject) => {
         try {
             const certificateClass = formCode === 'FORM_CLASE_A' ? 'A' : 'B';
+
+            // Determine approval status for watermarks
+            // estado_id 8 = approved (aprobada_direccion)
+            // estado_id 18 = rejected (rechazada_direccion)
+            let isApproved = null;
+            if (requestData.estado_id === 8) {
+                isApproved = true;
+            } else if (requestData.estado_id === 18) {
+                isApproved = false;
+            }
 
             const doc = new PDFDocument({
                 size: CONFIG.pageSize,
@@ -523,11 +649,11 @@ export async function generateCertificatePDF(requestData, formCode) {
             doc.on('error', reject);
 
             // Page 1 - Certificate front
-            drawPage1(doc, requestData, certificateClass);
+            drawPage1(doc, requestData, certificateClass, isApproved);
 
             // Page 2 - Legal text
             doc.addPage();
-            drawPage2(doc, certificateClass);
+            drawPage2(doc, certificateClass, isApproved);
 
             doc.end();
         } catch (error) {

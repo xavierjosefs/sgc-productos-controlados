@@ -41,6 +41,7 @@ const getFormCodeByRequestId = async (requestId) => {
 
 /**
  * Helper para obtener datos completos de la solicitud para el PDF
+ * Includes estado_id for watermark determination
  */
 const getFullRequestDataForPDF = async (requestId) => {
     const result = await pool.query(`
@@ -50,6 +51,7 @@ const getFullRequestDataForPDF = async (requestId) => {
             s.form_data,
             s.fecha_creacion,
             s.tipo_solicitud,
+            s.estado_id,
             u.full_name AS nombre_cliente,
             u.cedula AS cliente_cedula,
             ts.nombre_servicio AS tipo_servicio,
