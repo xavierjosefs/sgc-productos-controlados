@@ -529,6 +529,61 @@ export function useRequestsAPI() {
   }, []);
 
 
+  /**
+   * Obtener solicitudes para DNCD (aprobadas y rechazadas por Dirección)
+   * Solo accesible para usuarios con rol dncd
+   */
+  const getDncdRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/dncd/requests`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener las solicitudes de DNCD';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Obtener detalle de solicitud para DNCD
+   * @param {string} id - ID de la solicitud
+   */
+  const getDncdRequestDetail = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${baseURL}/api/dncd/requests/${id}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener el detalle de la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
 
   return {
     // Estados
@@ -546,6 +601,10 @@ export function useRequestsAPI() {
     validateDireccionRequest,
     downloadCertificatePDF,
     getRequestTimeline,
+
+    // DNCD
+    getDncdRequests,
+    getDncdRequestDetail,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes

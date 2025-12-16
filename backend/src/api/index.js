@@ -8,6 +8,7 @@ import ventanillaRoutes from "./ventanilla.routes.js";
 import tecnicoRoutes from "./tecnico.routes.js"
 import directorUPCRoutes from "./directorUPC.routes.js"
 import direccionRoutes from "./direccion.routes.js"
+import dncdRoutes from "./dncd.routes.js"
 import { authMiddleware, adminOnlyMiddleware, ventanillaMiddleware, tecnicoMiddleware, directorupcMiddleware, direccionMiddleware, dncdMiddleware } from "../middleware/auth.middleware.js";
 
 
@@ -22,6 +23,7 @@ router.use("/ventanilla", ventanillaMiddleware, ventanillaRoutes);
 router.use("/tecnico-upc", tecnicoMiddleware, tecnicoRoutes);
 router.use("/director-upc", directorupcMiddleware, directorUPCRoutes);
 router.use("/direccion", direccionMiddleware, direccionRoutes);
+router.use("/dncd", dncdMiddleware, dncdRoutes);
 
 
 export default router;

@@ -29,6 +29,7 @@ import DireccionLayout from './components/DireccionLayout';
 import DireccionSolicitudes from './pages/direccion/DireccionSolicitudes';
 import DireccionSolicitudDetalle from './pages/direccion/DireccionSolicitudDetalle';
 import DncdDashboard from './pages/dncd/Dashboard';
+import DncdSolicitudDetalle from './pages/dncd/DncdSolicitudDetalle';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminLayout from './components/AdminLayout';
 import AdminSolicitudes from './pages/admin/AdminSolicitudes';
@@ -170,6 +171,15 @@ export default function App() {
                   element={
                     <ProtectedRoute allowedRoles={['dncd']}>
                       <DncdDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/dncd/solicitud/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={['dncd']}>
+                      <DncdSolicitudDetalle />
                     </ProtectedRoute>
                   }
                 />

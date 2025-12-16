@@ -381,7 +381,7 @@ export const validarSolicitudTecnica = async (solicitudId, data) => {
 export const getRequestsForDirectorUPC = async () => {
   try {
     console.log('🔍 Ejecutando query para solicitudes con estado_id = 6');
-    
+
     const result = await pool.query(
       `SELECT 
         s.id,
@@ -400,7 +400,7 @@ export const getRequestsForDirectorUPC = async () => {
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
-     WHERE s.estado_id IN (6, 7)
+     WHERE s.estado_id IN (6, 7, 8)
      ORDER BY s.fecha_creacion ASC`);
 
     console.log('✅ Registros encontrados:', result.rows.length);
@@ -510,8 +510,8 @@ export const directorUPCDecision = async (id, data) => {
 
 export const getDNCDRequest = async () => {
   try {
-    console.log('🔍 Ejecutando query para solicitudes con estado_id = 10');
-    
+    console.log('🔍 Ejecutando query para solicitudes DNCD (aprobadas y rechazadas por Dirección)');
+
     const result = await pool.query(
       `SELECT 
         s.id,
@@ -525,24 +525,75 @@ export const getDNCDRequest = async () => {
         u.cedula AS cliente_cedula,
         s.validacion_formulario,
         s.comentario_tecnico,
-        s.recomendacion_tecnico
-        s.decision_director,
-        s.comentario_director
+        s.recomendacion_tecnico,
+        s.decision_director_upc,
+        s.comentario_director_upc
      FROM solicitudes s
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
-     WHERE s.estado_id = 10
-     ORDER BY s.fecha_creacion ASC`);
+     WHERE s.estado_id IN (10, 18)
+     ORDER BY s.fecha_creacion DESC`);
 
-    console.log('✅ Registros encontrados:', result.rows.length);
+    console.log('✅ Registros encontrados para DNCD:', result.rows.length);
     if (result.rows.length > 0) {
       console.log('Primera solicitud:', result.rows[0]);
     }
 
     return result.rows;
   } catch (error) {
-    console.error('❌ Error en getRequestsForDirectorUPC:', error);
+    console.error('❌ Error en getDNCDRequest:', error);
     throw error;
   }
+};
+
+/**
+ * Get DNCD request details by ID
+ * Returns request with documents for DNCD role
+ */
+export const getDNCDRequestDetail = async (id) => {
+  const result = await pool.query(
+    `SELECT 
+        s.id,
+        s.user_id,
+        s.form_data,
+        s.fecha_creacion,
+        s.tipo_solicitud,
+        s.tipo_servicio_id,
+        s.estado_id,
+        ts.nombre_servicio,
+        e.nombre_mostrar AS estado_actual,
+        u.full_name AS cliente_nombre,
+        u.cedula AS cliente_cedula,
+        u.email AS cliente_email
+     FROM solicitudes s
+     JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
+     JOIN users u ON u.cedula = s.user_id
+     JOIN estados_solicitud e ON e.id = s.estado_id
+     WHERE s.id = $1`,
+    [id]);
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  const solicitud = result.rows[0];
+  const documentos = await getDocumentosBySolicitudId(id);
+
+  return {
+    id: solicitud.id,
+    user_id: solicitud.user_id,
+    tipo_servicio: solicitud.nombre_servicio,
+    tipo_solicitud: solicitud.tipo_solicitud,
+    estado_actual: solicitud.estado_actual,
+    estado_id: solicitud.estado_id,
+    form_data: solicitud.form_data,
+    fecha_creacion: solicitud.fecha_creacion,
+    cliente: {
+      nombre: solicitud.cliente_nombre,
+      cedula: solicitud.cliente_cedula,
+      email: solicitud.cliente_email
+    },
+    documentos
+  };
 }
