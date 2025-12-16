@@ -1,5 +1,5 @@
 import { getRequestDetailsById, findUserByCedula, updateRequestStatus } from "../models/user.client.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail, sendEmailWithAttachment } from "../utils/sendEmail.js";
 import { getDocumentosBySolicitudId } from "../models/document.client.js";
 import { generateCertificatePDF, getCertificateFilename } from "../services/pdfGenerator.js";
 import pool from "../config/db.js";
@@ -214,23 +214,55 @@ export const validateDireccionRequestController = async (req, res) => {
         // Buscar usuario para notificación por email
         const user = await findUserByCedula(request.user_id);
 
+        // Generar PDF del certificado para adjuntar al email
+        let pdfBuffer = null;
+        let pdfFilename = null;
+        if (user?.email) {
+            try {
+                // Obtener datos completos para el PDF con el nuevo estado
+                const pdfRequestData = await getFullRequestDataForPDF(id);
+                if (pdfRequestData) {
+                    // Actualizar estado_id para que el PDF refleje el estado correcto
+                    pdfRequestData.estado_id = newStatusId;
+                    pdfBuffer = await generateCertificatePDF(pdfRequestData, pdfRequestData.form_code);
+                    pdfFilename = getCertificateFilename(id, pdfRequestData.form_code);
+                    console.log('📄 PDF generado para email:', pdfFilename);
+                }
+            } catch (pdfError) {
+                console.error('⚠️ Error generando PDF para email (continuando sin adjunto):', pdfError);
+            }
+        }
+
         // Enviar correo si la solicitud fue rechazada
-        if (status === 'rechazado_direccion' && reasons && user?.email) {
+        if (status === 'rechazado_direccion' && user?.email) {
             const subject = `Solicitud #${id} - Rechazada por Dirección`;
             const text = `Estimado usuario,
 
-Su solicitud #${id} fue rechazada por la Dirección por las siguientes razones:
+Su solicitud #${id} fue rechazada por la Dirección${reasons ? ` por las siguientes razones:\n\n${reasons}` : '.'}\n\nAdjunto encontrará el certificado con el estado de su solicitud.\n\nPor favor, ingrese a la plataforma para revisar los detalles.\n\nAtentamente,\nDirección`;
 
-${reasons}
+            const html = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #c53030;">Solicitud Rechazada</h2>
+                    <p>Estimado usuario,</p>
+                    <p>Su solicitud <strong>#${id}</strong> fue rechazada por la Dirección${reasons ? ` por las siguientes razones:</p><blockquote style="border-left: 3px solid #c53030; padding-left: 10px; color: #666;">${reasons}</blockquote>` : '.</p>'}
+                    ${pdfBuffer ? '<p>Adjunto encontrará el certificado con el estado de su solicitud.</p>' : ''}
+                    <p>Por favor, ingrese a la plataforma para revisar los detalles.</p>
+                    <p>Atentamente,<br><strong>Dirección</strong></p>
+                </div>`;
 
-Por favor, ingrese a la plataforma para revisar los detalles.
+            const attachments = pdfBuffer ? [{
+                filename: pdfFilename,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+            }] : [];
 
-Atentamente,
-Dirección`;
-
-            sendEmail(user.email, subject, text).catch(err =>
-                console.error("Error enviando email de rechazo:", err)
-            );
+            sendEmailWithAttachment({
+                to: user.email,
+                subject,
+                text,
+                html,
+                attachments
+            }).catch(err => console.error("❌ Error enviando email de rechazo:", err));
         }
 
         // Enviar correo si la solicitud fue aprobada
@@ -238,17 +270,31 @@ Dirección`;
             const subject = `Solicitud #${id} - Aprobada por Dirección`;
             const text = `Estimado usuario,
 
-Su solicitud #${id} ha sido aprobada y firmada por la Dirección.
-Su solicitud continúa al siguiente paso del proceso.
+Su solicitud #${id} ha sido aprobada y firmada por la Dirección.\n\nAdjunto encontrará el certificado oficial de su solicitud aprobada.\n\nSu solicitud continúa al siguiente paso del proceso.\nLe notificaremos cuando se produzcan nuevos avances.\n\nAtentamente,\nDirección`;
 
-Le notificaremos cuando se produzcan nuevos avances.
+            const html = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2d8a4a;">¡Solicitud Aprobada!</h2>
+                    <p>Estimado usuario,</p>
+                    <p>Su solicitud <strong>#${id}</strong> ha sido aprobada y firmada por la Dirección.</p>
+                    ${pdfBuffer ? '<p>Adjunto encontrará el <strong>certificado oficial</strong> de su solicitud aprobada.</p>' : ''}
+                    <p>Su solicitud continúa al siguiente paso del proceso.<br>Le notificaremos cuando se produzcan nuevos avances.</p>
+                    <p>Atentamente,<br><strong>Dirección</strong></p>
+                </div>`;
 
-Atentamente,
-Dirección`;
+            const attachments = pdfBuffer ? [{
+                filename: pdfFilename,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+            }] : [];
 
-            sendEmail(user.email, subject, text).catch(err =>
-                console.error("Error enviando email de aprobación:", err)
-            );
+            sendEmailWithAttachment({
+                to: user.email,
+                subject,
+                text,
+                html,
+                attachments
+            }).catch(err => console.error("❌ Error enviando email de aprobación:", err));
         }
 
         return res.status(200).json({
