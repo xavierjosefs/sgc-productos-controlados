@@ -97,6 +97,30 @@ export default function DireccionSolicitudDetalle() {
         navigate('/direccion');
     };
 
+    const verCertificado = async () => {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(
+            `http://localhost:8000/api/direccion/certificate/${id}`,
+            {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+            }
+        );
+
+        if (!response.ok) {
+            alert('No autorizado para ver el certificado');
+            return;
+        }
+
+        const blob = await response.blob();
+        const fileURL = URL.createObjectURL(blob);
+
+        window.open(fileURL, '_blank');
+        };
+
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -112,6 +136,8 @@ export default function DireccionSolicitudDetalle() {
             </div>
         );
     }
+
+
 
     // Determinar si está aprobada o rechazada
     const isApproved = request.estado_id === 8;
@@ -160,11 +186,7 @@ export default function DireccionSolicitudDetalle() {
                                 className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700"
                             />
                             <button
-                                onClick={() => {
-                                    // Abrir el PDF de la plantilla
-                                    const pdfUrl = `http://localhost:8000/api/direccion/certificate/${id}`;
-                                    window.open(pdfUrl, '_blank');
-                                }}
+                                onClick={verCertificado}
                                 className="px-8 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors"
                             >
                                 Ver
