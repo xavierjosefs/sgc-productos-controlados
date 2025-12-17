@@ -70,7 +70,7 @@ export const authService = {
   },
 
   /**
-   * Recuperar contraseña
+   * Recuperar contraseña (Enviar OTP)
    * @param {string} email - Correo del usuario
    * @returns {Promise<Object>}
    */
@@ -82,6 +82,63 @@ export const authService = {
       return response.data;
     } catch (error) {
       console.error('Error en recuperación de contraseña:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Verificar OTP
+   * @param {string} email - Correo del usuario
+   * @param {string} otp - Código OTP
+   * @returns {Promise<Object>}
+   */
+  verifyOtp: async (email, otp) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Código inválido');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en verificación de OTP:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Restablecer contraseña
+   * @param {string} email - Correo del usuario
+   * @param {string} otp - Código OTP
+   * @param {string} password - Nueva contraseña
+   * @returns {Promise<Object>}
+   */
+  resetPassword: async (email, otp, password) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al restablecer contraseña');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en restablecimiento de contraseña:', error);
       throw error;
     }
   },

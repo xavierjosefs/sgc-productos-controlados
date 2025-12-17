@@ -1,40 +1,88 @@
 import { useState } from 'react';
 import axios from 'axios';
 import Logo from '../components/Logo';
+import { authService } from '../services/authService';
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password, 4: Success
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Validación de email
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Timer state
+  const [timer, setTimer] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const startTimer = () => {
+    setTimer(30);
+    setCanResend(false);
   };
 
-  // Manejar cambio en el input
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-    if (error) {
-      setError('');
+  // Validation helpers
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePassword = (password) => password.length >= 6;
+
+  // Step 1: Send OTP
+  const handleSendOtp = async (e) => {
+    e?.preventDefault();
+    if (!email) return setError('El correo es requerido');
+    if (!validateEmail(email)) return setError('Ingresa un correo válido');
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await authService.forgotPassword(email.trim().toLowerCase());
+      setStep(2);
+      startTimer();
+    } catch (err) {
+      setError(err.message || 'Error al enviar código');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Manejar submit del formulario
-  const handleSubmit = async (e) => {
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    
-    if (!email) {
-      setError('El correo es requerido');
-      return;
-    }
+    if (!otp) return setError('Ingresa el código');
+    if (otp.length !== 6) return setError('El código debe tener 6 dígitos');
 
-    if (!validateEmail(email)) {
-      setError('Ingresa un correo válido');
-      return;
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await authService.verifyOtp(email.trim().toLowerCase(), otp);
+      setStep(3);
+    } catch (err) {
+      setError(err.message || 'Código inválido');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Step 3: Reset Password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!password) return setError('La contraseña es requerida');
+    if (!validatePassword(password)) return setError('Mínimo 6 caracteres');
+    if (password !== confirmPassword) return setError('Las contraseñas no coinciden');
 
     setIsLoading(true);
     setError('');
@@ -61,20 +109,19 @@ export default function ForgotPassword() {
     }
   };
 
+  // Resend OTP handler
+  const handleResend = async () => {
+    if (!canResend) return;
+    await handleSendOtp();
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Contenido centrado */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-[460px] space-y-5">
-          {/* Flecha de regreso y Logo */}
+          {/* Header */}
           <div className="space-y-4">
-            <a 
-              href="/login" 
-              className="inline-flex items-center transition-colors"
-              style={{ color: '#4A8BDF' }}
-              onMouseEnter={(e) => e.target.style.color = '#3A7BCF'}
-              onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}
-            >
+            <a href="/login" className="inline-flex items-center text-[#4A8BDF] hover:text-[#3A7BCF] transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
@@ -84,111 +131,136 @@ export default function ForgotPassword() {
             </div>
           </div>
 
-          {!isSuccess ? (
-            <>
-              {/* Título y descripción */}
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-center" style={{ color: '#4A8BDF' }}>
-                  Olvidaste tu contraseña?
-                </h1>
-                <p className="text-gray-600 text-xs text-center">
-                  Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
-                </p>
-              </div>
-
-              {/* Mensaje de error */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                  {error}
+          {/* Content based on step */}
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            {step === 1 && (
+              <>
+                <div className="text-center space-y-2 mb-6">
+                  <h1 className="text-2xl font-bold text-[#4A8BDF]">Recuperar Contraseña</h1>
+                  <p className="text-gray-500 text-sm">Ingresa tu correo para recibir un código de recuperación.</p>
                 </div>
-              )}
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent outline-none transition-all"
+                      placeholder="ejemplo@correo.com"
+                    />
+                  </div>
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#085297] hover:bg-[#064073] text-white py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? 'Enviando...' : 'Enviar Código'}
+                  </button>
+                </form>
+              </>
+            )}
 
-              {/* Formulario */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Campo de Correo */}
-                <div>
-                  <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                    Correo
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={email}
-                    onChange={handleChange}
-                    placeholder="ejemplo@gmail.com"
-                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                      error ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    style={{ '--tw-ring-color': '#4A8BDF' }}
-                  />
+            {step === 2 && (
+              <>
+                <div className="text-center space-y-2 mb-6">
+                  <h1 className="text-2xl font-bold text-[#4A8BDF]">Verificar Código</h1>
+                  <p className="text-gray-500 text-sm">Ingresa el código de 6 dígitos enviado a {email}</p>
                 </div>
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Código OTP</label>
+                    <input
+                      type="text"
+                      maxLength="6"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent outline-none transition-all text-center tracking-widest text-lg"
+                      placeholder="000000"
+                    />
+                  </div>
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#085297] hover:bg-[#064073] text-white py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? 'Verificando...' : 'Verificar'}
+                  </button>
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={!canResend || isLoading}
+                      className={`text-sm font-medium ${canResend ? 'text-[#4A8BDF] hover:underline' : 'text-gray-400 cursor-not-allowed'}`}
+                    >
+                      {canResend ? 'Reenviar código' : `Reenviar en ${timer}s`}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
 
-                {/* Botón de Enviar */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full text-white py-2.5 text-sm rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#085297', '--tw-ring-color': '#085297' }}
-                  onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#064073')}
-                  onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#085297')}
-                >
-                  {isLoading ? 'Enviando...' : 'Enviar'}
-                </button>
-              </form>
+            {step === 3 && (
+              <>
+                <div className="text-center space-y-2 mb-6">
+                  <h1 className="text-2xl font-bold text-[#4A8BDF]">Nueva Contraseña</h1>
+                  <p className="text-gray-500 text-sm">Crea una nueva contraseña segura.</p>
+                </div>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Nueva Contraseña</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A8BDF] focus:border-transparent outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#085297] hover:bg-[#064073] text-white py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? 'Actualizando...' : 'Cambiar Contraseña'}
+                  </button>
+                </form>
+              </>
+            )}
 
-              {/* Línea divisoria */}
-              <div className="border-t border-black"></div>
-
-              {/* Link para reenviar */}
-              <p className="text-center text-sm text-gray-600 -mt-4">
-                ¿No has recibido el enlace?{' '}
-                <a 
-                  href="#" 
-                  className="font-medium transition-colors" 
-                  style={{ color: '#4A8BDF' }} 
-                  onMouseEnter={(e) => e.target.style.color = '#3A7BCF'} 
-                  onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLoading && email && validateEmail(email)) {
-                      handleSubmit(e);
-                    }
-                  }}
-                >
-                  Reenvíalo aquí
-                </a>
-              </p>
-            </>
-          ) : (
-            /* Mensaje de éxito */
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#4A8BDF20' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#4A8BDF" className="w-8 h-8">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            {step === 4 && (
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-green-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
                 </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-[#4A8BDF]">¡Contraseña Actualizada!</h2>
+                  <p className="text-gray-600 text-sm">Tu contraseña ha sido restablecida exitosamente.</p>
+                </div>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="w-full bg-[#085297] hover:bg-[#064073] text-white py-2.5 rounded-lg font-semibold transition-colors"
+                >
+                  Iniciar Sesión
+                </button>
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold" style={{ color: '#4A8BDF' }}>
-                  ¡Correo enviado!
-                </h2>
-                <p className="text-gray-600 text-sm">
-                  Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
-                </p>
-              </div>
-              <a 
-                href="/login"
-                className="inline-block font-medium transition-colors text-sm"
-                style={{ color: '#4A8BDF' }}
-                onMouseEnter={(e) => e.target.style.color = '#3A7BCF'}
-                onMouseLeave={(e) => e.target.style.color = '#4A8BDF'}
-              >
-                Volver al inicio de sesión
-              </a>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

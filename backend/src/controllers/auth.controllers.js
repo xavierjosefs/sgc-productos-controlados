@@ -1,5 +1,6 @@
 import { createUser, findUserByEmail, login, findUserByCedulaWithRole } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
+import { createResetToken, findResetToken, deleteResetToken } from "../models/recovery.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
