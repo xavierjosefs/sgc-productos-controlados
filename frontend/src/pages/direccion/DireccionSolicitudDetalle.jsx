@@ -1,0 +1,304 @@
+
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
+import DireccionTopbar from '../../components/DireccionTopbar';
+import useRequestsAPI from '../../hooks/useRequestsAPI';
+
+/**
+ * DireccionSolicitudDetalle
+ * Vista de detalle de solicitud para Dirección con opciones de Aprobar/Rechazar
+ */
+export default function DireccionSolicitudDetalle() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [request, setRequest] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successAction, setSuccessAction] = useState('');
+    const [comentario, setComentario] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const { getDireccionRequestDetail, validateDireccionRequest } = useRequestsAPI();
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+            setLoading(true);
+            try {
+                const data = await getDireccionRequestDetail(id);
+                // El backend responde { ok, detalle } o solo el detalle
+                if (data?.ok && data.detalle) {
+                    setRequest(data.detalle);
+                } else if (data?.detalle) {
+                    setRequest(data.detalle);
+                } else {
+                    setRequest(data);
+                }
+            } catch (error) {
+                console.error('Error al cargar solicitud:', error);
+                toast.error(error?.message || 'Error al cargar la solicitud');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDetail();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
+    const handleReject = () => {
+        setShowRejectModal(true);
+    };
+
+    const handleApprove = () => {
+        setShowApproveModal(true);
+    };
+
+    const executeReject = async () => {
+        setProcessing(true);
+        try {
+            const data = await validateDireccionRequest(id, 'rechazado_direccion', comentario || '');
+            if (data.ok) {
+                setShowRejectModal(false);
+                setSuccessAction('Rechazada');
+                setShowSuccessModal(true);
+            } else {
+                toast.error(data.error || 'Error al rechazar solicitud');
+            }
+        } catch (error) {
+            console.error('Error al rechazar:', error);
+            toast.error(error?.message || 'Error al rechazar la solicitud');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const executeApprove = async () => {
+        setProcessing(true);
+        try {
+            const data = await validateDireccionRequest(id, 'aprobado_direccion', comentario || '');
+            if (data.ok) {
+                setShowApproveModal(false);
+                setSuccessAction('Aprobada');
+                setShowSuccessModal(true);
+            } else {
+                toast.error(data.error || 'Error al aprobar solicitud');
+            }
+        } catch (error) {
+            console.error('Error al aprobar:', error);
+            toast.error(error?.message || 'Error al aprobar la solicitud');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const goToSolicitudes = () => {
+        navigate('/direccion');
+    };
+
+    const verCertificado = async () => {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(
+            `http://localhost:8000/api/direccion/certificate/${id}`,
+            {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+            }
+        );
+
+        if (!response.ok) {
+            alert('No autorizado para ver el certificado');
+            return;
+        }
+
+        const blob = await response.blob();
+        const fileURL = URL.createObjectURL(blob);
+
+        window.open(fileURL, '_blank');
+        };
+
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-gray-500">Cargando...</div>
+            </div>
+        );
+    }
+
+    if (!request) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-gray-500">Solicitud no encontrada</div>
+            </div>
+        );
+    }
+
+
+
+    // Determinar si está aprobada o rechazada
+    const isApproved = request.estado_id === 8;
+    const isRejected = request.estado_id === 18;
+    const isPending = request.estado_id === 7;
+
+    return (
+        <>
+            <DireccionTopbar />
+            <div className="max-w-[1400px] mx-auto px-8 py-8">
+            {/* Header con botón volver */}
+            <div className="flex items-center gap-4 mb-8">
+                <button
+                    onClick={() => navigate('/direccion')}
+                    className="focus:outline-none group"
+                    aria-label="Volver"
+                >
+                    <ArrowLeft className="w-7 h-7 text-[#085297] cursor-pointer group-hover:scale-110 transition-transform" />
+                </button>
+                <h1 className="text-3xl font-bold text-[#4A8BDF]">Solicitud #{id}</h1>
+            </div>
+
+
+            {/* Sección de Documento */}
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-4 max-w-xl mx-auto shadow-sm mb-8">
+                <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-[#4A8BDF] font-bold text-lg">Documento</h3>
+                            {(isApproved || isRejected) && (
+                                <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold border-2 ${
+                                    isApproved 
+                                        ? 'bg-green-50 text-green-600 border-green-200' 
+                                        : 'bg-orange-50 text-orange-600 border-orange-200'
+                                }`}>
+                                    {isApproved ? 'Aprobada' : 'Rechazada'}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <input
+                                type="text"
+                                value={`Solicitud de ${request.tipo_servicio || 'Certificado'}.pdf`}
+                                readOnly
+                                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700"
+                            />
+                            <button
+                                onClick={verCertificado}
+                                className="px-8 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors"
+                            >
+                                Ver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Botones de acción solo si está pendiente */}
+            {isPending && (
+                <div className="flex justify-center gap-6">
+                    <button
+                        onClick={handleReject}
+                        disabled={processing}
+                        className="px-12 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors disabled:opacity-50"
+                    >
+                        Rechazar
+                    </button>
+                    <button
+                        onClick={handleApprove}
+                        disabled={processing}
+                        className="px-12 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors disabled:opacity-50"
+                    >
+                        Aprobar
+                    </button>
+                </div>
+            )}
+
+            {/* Modal de Rechazo */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Rechazo</h3>
+                        <p className="text-gray-600 text-center mb-8">
+                            ¿Está seguro de que desea rechazar esta solicitud?
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowRejectModal(false);
+                                    setComentario('');
+                                }}
+                                disabled={processing}
+                                className="flex-1 px-6 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={executeReject}
+                                disabled={processing}
+                                className="flex-1 px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors disabled:opacity-50"
+                            >
+                                {processing ? 'Procesando...' : 'Rechazar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Aprobación */}
+            {showApproveModal && (
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-[#4A8BDF] mb-4 text-center">Confirmar Aprobación</h3>
+                        <p className="text-gray-600 text-center mb-8">
+                            ¿Está seguro de que desea aprobar esta solicitud?
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowApproveModal(false)}
+                                disabled={processing}
+                                className="flex-1 px-6 py-3 bg-[#A8C5E8] text-[#085297] rounded-lg font-semibold hover:bg-[#8FB5DC] transition-colors disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={executeApprove}
+                                disabled={processing}
+                                className="flex-1 px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors disabled:opacity-50"
+                            >
+                                {processing ? 'Procesando...' : 'Aprobar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Éxito */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
+                        <h3 className="text-2xl font-bold text-[#4A8BDF] mb-6">Solicitud {successAction}</h3>
+                        
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-full border-4 border-[#4A8BDF] flex items-center justify-center">
+                            <Check className="w-12 h-12 text-[#4A8BDF]" strokeWidth={3} />
+                        </div>
+
+                        <p className="text-gray-600 mb-8">
+                            La solicitud se ha firmado correctamente
+                        </p>
+
+                        <button
+                            onClick={goToSolicitudes}
+                            className="w-full px-6 py-3 bg-[#085297] text-white rounded-lg font-semibold hover:bg-[#064078] transition-colors"
+                        >
+                            Ir a &quot;Solicitudes&quot;
+                        </button>
+                    </div>
+                </div>
+            )}
+            </div>
+        </>
+    );
+}

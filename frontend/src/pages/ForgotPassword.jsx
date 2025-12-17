@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import axios from 'axios';
 import Logo from '../components/Logo';
 import { authService } from '../services/authService';
 
@@ -88,10 +88,22 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      await authService.resetPassword(email.trim().toLowerCase(), otp, password);
-      setStep(4);
-    } catch (err) {
-      setError(err.message || 'Error al cambiar contraseña');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
+      await axios.post(`${baseURL}/api/auth/forgot-password`, 
+        { email: email.trim().toLowerCase() },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
+      console.log('Enlace de recuperación enviado a:', email);
+      setIsSuccess(true);
+      
+    } catch (error) {
+      console.error('Error en recuperación:', error);
+      setError(error.response?.data?.message || error.message || 'Error al enviar enlace. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }

@@ -1,15 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 import Logo from '../components/Logo';
 
 export default function Login() {
-
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  const navigate = useNavigate();
-
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -52,7 +45,7 @@ export default function Login() {
   // Validar formulario
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.email) {
       newErrors.email = 'El correo es requerido';
     } else if (!validateEmail(formData.email)) {
@@ -73,10 +66,6 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const fd = new FormData(e.currentTarget);
-    const email = fd.get("email");
-    const password = fd.get("password");
-    
     if (!validateForm()) {
       return;
     }
@@ -84,19 +73,46 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${baseURL}/api/auth/login`, { email, password }, { withCredentials: true });
-      if(response.status === 200){
-        const { token, user } = response.data;
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        navigate("/");
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+      const response = await axios.post(`${baseURL}/api/auth/login`, {
+        email: formData.email,
+        password: formData.password
+      });
+
+      const data = response.data;
+
+      // Guardar token en localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        if (formData.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        }
+
+        // Redirigir según el rol del usuario
+        const userRole = data.user?.role_name || 'cliente';
+        const roleRoutes = {
+          cliente: '/cliente',
+          ventanilla: '/ventanilla',
+          tecnico_controlados: '/tecnico-controlados',
+          director_controlados: '/director-controlados',
+          direccion: '/director-general',
+          dncd: '/dncd',
+          admin: '/admin',
+        };
+        window.location.href = roleRoutes[userRole] || '/cliente';
+      } else {
+        throw new Error('No se recibió el token de autenticación');
       }
-      
+
     } catch (error) {
       console.error('Error en login:', error);
-      setErrors(prev => ({ 
-        ...prev, 
-        password: 'Error al iniciar sesión. Verifica tus credenciales.' 
+      setErrors(prev => ({
+        ...prev,
+        password: error.response?.data?.message || error.message || 'Error al iniciar sesión. Verifica tus credenciales.'
       }));
     } finally {
       setIsLoading(false);
@@ -137,9 +153,8 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="ejemplo@gmail.com"
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 style={{ '--tw-ring-color': '#4A8BDF' }}
               />
               {errors.email && (
@@ -160,9 +175,8 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   style={{ '--tw-ring-color': '#4A8BDF' }}
                 />
                 <button
@@ -234,13 +248,13 @@ export default function Login() {
       {/* Lado derecho - Imagen de fondo */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden rounded-l-[48px]">
         {/* Imagen de fondo con overlay */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url(/login-background.jpg)',
           }}
         ></div>
-        
+
         {/* Overlay oscuro */}
         <div className="absolute inset-0 bg-black/40"></div>
       </div>

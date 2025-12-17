@@ -1,5 +1,7 @@
+
+import axios from 'axios';
 // Configuración del endpoint del backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * Servicio de autenticación
@@ -15,21 +17,10 @@ export const authService = {
    */
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password }, {
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al iniciar sesión');
-      }
-
-      const data = await response.json();
-
+      const data = response.data;
       // Guardar token en localStorage
       if (data.token) {
         localStorage.setItem('token', data.token);
@@ -37,7 +28,6 @@ export const authService = {
           localStorage.setItem('user', JSON.stringify(data.user));
         }
       }
-
       return data;
     } catch (error) {
       console.error('Error en login:', error);
@@ -86,20 +76,10 @@ export const authService = {
    */
   forgotPassword: async (email) => {
     try {
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email }, {
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al recuperar contraseña');
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Error en recuperación de contraseña:', error);
       throw error;

@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail, login, updateUserPassword } from "../models/user.client.js";
+import { createUser, findUserByEmail, login, findUserByCedulaWithRole } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
 import { createResetToken, findResetToken, deleteResetToken } from "../models/recovery.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
@@ -18,13 +18,12 @@ export const preRegister = async (req, res) => {
   await deletePendingUserByEmail(normalizedEmail);
 
   const existingUser = await findUserByEmail(normalizedEmail);
-  // console.log(existingUser);
   if (existingUser) {
     return res.status(400).json({ error: "El correo ya está registrado." });
   }
 
   const token = crypto.randomBytes(20).toString('hex');
-  const expires = new Date(Date.now() + 1000 * 60 * 15); // Token válido por 15 minutos
+  const expires = new Date(Date.now() + 1000 * 60 * 15).toISOString();
 
   await createPendingUser(cedula, full_name, email, token, expires);
 
@@ -52,7 +51,6 @@ export const getPreData = async (req, res) => {
   return res.json({ full_name: pendingUser.full_name, email: pendingUser.email });
 };
 
-
 export const registerComplete = async (req, res) => {
   const { token, password } = req.body;
 
@@ -61,22 +59,28 @@ export const registerComplete = async (req, res) => {
   if (!pending) {
     return res.status(400).json({ ok: false, message: "Token inválido o expirado" });
   }
+  console.log("antes del guardado def")
 
-  await createUser(pending.full_name, pending.cedula, pending.email, password);
+  await createUser(
+    pending.full_name,
+    pending.cedula,
+    pending.email,
+    password,
+    pending.role_id
+  );
+
   await deletePendingUser(pending.cedula);
-
 
   res.json({ ok: true, message: "Registro completado con éxito" });
 };
 
+
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  console.log("Llego aqui");
 
   try {
-    console.log("Intentando iniciar sesión para:", email);
     const { user } = await login(email, password);
-    const token = jwt.sign({ cedula: user.cedula }, process.env.SECRET_KEY, { expiresIn: "8h" })
+    const token = jwt.sign({ cedula: user.cedula, role: user.role_id }, process.env.SECRET_KEY, { expiresIn: "8h" })
 
     return res.status(200).json({
       ok: true,
@@ -94,90 +98,26 @@ export const loginUser = async (req, res) => {
   }
 };
 
-export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: "El correo es requerido" });
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const user = await findUserByEmail(normalizedEmail);
-
-  if (!user) {
-    // Simulamos espera para evitar timing attacks
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return res.json({ message: "Si el correo existe, recibirás un código de recuperación." });
-  }
-
-  // Generar OTP de 6 dígitos
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutos
-
-  // Guardar OTP (Simulado)
-  await createResetToken(normalizedEmail, otp, expires);
-
-  const subject = "Código de recuperación de contraseña";
-  const text = `Hola,\n\nTu código de recuperación es: ${otp}\n\nEste código expirará en 15 minutos.\n\nSi no solicitaste esto, ignora este correo.`;
-
+export const getProfile = async (req, res) => {
   try {
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-      await sendEmail(normalizedEmail, subject, text);
-      console.log(`[SIMULATION] Email sent to ${normalizedEmail}`);
-    } else {
-      console.log(`[SIMULATION] Email sending skipped (No credentials). OTP for ${normalizedEmail}: ${otp}`);
+    const { cedula } = req.user;
+
+    if (!cedula) {
+      return res.status(400).json({ ok: false, message: "Token inválido: no contiene cédula" });
     }
+
+    const user = await findUserByCedulaWithRole(cedula);
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "Usuario no encontrado" });
+    }
+
+    res.json({
+      ok: true,
+      user
+    });
   } catch (error) {
-    console.error(`[SIMULATION] Failed to send email to ${normalizedEmail}: ${error.message}`);
-  }
-
-  res.json({ message: "Código de recuperación enviado" });
-};
-
-export const verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-
-  if (!email || !otp) {
-    return res.status(400).json({ message: "Email y código son requeridos" });
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const resetData = await findResetToken(normalizedEmail);
-
-  if (!resetData || resetData.otp !== otp) {
-    return res.status(400).json({ message: "Código inválido o expirado" });
-  }
-
-  res.json({ ok: true, message: "Código verificado correctamente" });
-};
-
-export const resetPassword = async (req, res) => {
-  const { email, otp, password } = req.body;
-
-  if (!email || !otp || !password) {
-    return res.status(400).json({ message: "Todos los campos son requeridos" });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const resetData = await findResetToken(normalizedEmail);
-
-  if (!resetData || resetData.otp !== otp) {
-    return res.status(400).json({ message: "Código inválido o expirado" });
-  }
-
-  try {
-    await updateUserPassword(normalizedEmail, password);
-    await deleteResetToken(normalizedEmail);
-    res.json({ message: "Contraseña actualizada correctamente" });
-  } catch (error) {
-    console.error("Error actualizando password:", error);
-    res.status(500).json({ message: "Error al actualizar la contraseña" });
+    console.error('[getProfile] Error:', error);
+    res.status(500).json({ ok: false, message: "Error al obtener perfil" });
   }
 };
-
-
-

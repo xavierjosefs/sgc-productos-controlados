@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.86.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -19,9 +20,13 @@
     "express": "^5.1.0",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.10",
     "npm": "^11.6.3",
+    "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
-    "supabase": "^2.58.5"
+    "supabase": "^2.58.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
