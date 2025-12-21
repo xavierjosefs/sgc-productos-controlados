@@ -306,6 +306,8 @@ export const getTecnicoUPCRequestDetails = async (id) => {
         u.full_name AS cliente_nombre,
         u.cedula AS cliente_cedula,
         u.email AS cliente_email,
+        u.direccion AS cliente_direccion,
+        u.telefono AS cliente_contacto,
         s.comentario_director_upc,
         s.estado_id,
         e.nombre_mostrar AS estado_actual
@@ -326,6 +328,17 @@ export const getTecnicoUPCRequestDetails = async (id) => {
   // 2) Obtener documentos entregados
   const documentos = await getDocumentosBySolicitudId(id);
 
+  // 3) Obtener comentario de rechazo de dirección desde historial (si existe)
+  const historialResult = await pool.query(
+    `SELECT comentario 
+     FROM historial_solicitud 
+     WHERE solicitud_id = $1 AND accion = 'RECHAZO_DIRECCION'
+     ORDER BY fecha DESC
+     LIMIT 1`,
+    [id]
+  );
+  const comentarioDireccion = historialResult.rows[0]?.comentario || null;
+
   return {
     solicitud: {
       id: solicitud.id,
@@ -334,6 +347,7 @@ export const getTecnicoUPCRequestDetails = async (id) => {
       servicio: solicitud.nombre_servicio,
       form_data: solicitud.form_data,
       comentario_director_upc: solicitud.comentario_director_upc,
+      comentario_direccion: comentarioDireccion,
       estado_id: solicitud.estado_id,
       estado_actual: solicitud.estado_actual,
     },
@@ -341,6 +355,8 @@ export const getTecnicoUPCRequestDetails = async (id) => {
       cedula: solicitud.cliente_cedula,
       nombre: solicitud.cliente_nombre,
       email: solicitud.cliente_email,
+      direccion: solicitud.cliente_direccion,
+      contacto: solicitud.cliente_contacto,
     },
     documentos: documentos,
   };
@@ -542,7 +558,7 @@ export const directorUPCDecision = async (id, data) => {
 
 export const getDNCDRequest = async () => {
   try {
-    console.log('🔍 Ejecutando query para solicitudes DNCD (aprobadas y rechazadas por Dirección)');
+    console.log('🔍 Ejecutando query para solicitudes DNCD (pendientes, aprobadas y rechazadas)');
 
     const result = await pool.query(
       `SELECT 
@@ -564,7 +580,7 @@ export const getDNCDRequest = async () => {
      JOIN tipos_servicio ts ON ts.id = s.tipo_servicio_id
      JOIN users u ON u.cedula = s.user_id
      JOIN estados_solicitud e ON e.id = s.estado_id
-     WHERE s.estado_id IN (10, 18)
+     WHERE s.estado_id IN (8, 10, 18)
      ORDER BY s.fecha_creacion DESC`);
 
     console.log('✅ Registros encontrados para DNCD:', result.rows.length);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BadgeEstado from '../../components/BadgeEstado';
 import { useRequestsAPI } from '../../hooks/useRequestsAPI';
 import useServicesAPI from '../../hooks/useServicesAPI';
+import useSortableTable from '../../hooks/useSortableTable';
 
 /**
  * VentanillaSolicitudes
@@ -60,17 +61,17 @@ export default function VentanillaSolicitudes() {
     };
 
     // Calcular contadores - Pendientes son las "Enviadas" por el cliente
-    const pendientesCount = requests.filter(r => 
+    const pendientesCount = requests.filter(r =>
         r.estado_actual?.toLowerCase() === 'enviada'
     ).length;
-    
+
     // Aprobadas son las que pasaron validación de VUS
-    const aprobadasCount = requests.filter(r => 
+    const aprobadasCount = requests.filter(r =>
         r.estado_actual?.toLowerCase() === 'en evaluación técnica'
     ).length;
-    
+
     // Devueltas por VUS
-    const devueltasCount = requests.filter(r => 
+    const devueltasCount = requests.filter(r =>
         r.estado_actual?.toLowerCase() === 'devuelta por vus'
     ).length;
 
@@ -81,17 +82,17 @@ export default function VentanillaSolicitudes() {
         // Filtro por card clickeada
         if (activeCard === 'pendientes') {
             // Mostrar solo las "Enviadas" que están esperando revisión
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 r.estado_actual?.toLowerCase() === 'enviada'
             );
         } else if (activeCard === 'aprobadas') {
             // Mostrar las que pasaron validación de VUS
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 r.estado_actual?.toLowerCase() === 'en evaluación técnica'
             );
         } else if (activeCard === 'devueltas') {
             // Mostrar las devueltas por VUS
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 r.estado_actual?.toLowerCase() === 'devuelta por vus'
             );
         }
@@ -130,6 +131,9 @@ export default function VentanillaSolicitudes() {
         setAppliedFilterEstado('');
     };
 
+    // Hook para ordenamiento de tabla
+    const { sortedData, SortableHeader } = useSortableTable(filteredRequests, { key: 'id', direction: 'desc' });
+
     return (
         <div className="max-w-7xl mx-auto px-6 py-8">
             {/* Header */}
@@ -145,16 +149,15 @@ export default function VentanillaSolicitudes() {
                 {/* Card Pendientes */}
                 <div
                     onClick={() => handleCardClick('pendientes')}
-                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
-                        activeCard === 'pendientes' ? 'border-[#4A8BDF] shadow-lg' : 'border-gray-200'
-                    }`}
+                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${activeCard === 'pendientes' ? 'border-[#4A8BDF] shadow-lg' : 'border-gray-200'
+                        }`}
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Pendientes de Revisión</span>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-[#4A8BDF]">{pendientesCount}</p>
@@ -164,16 +167,15 @@ export default function VentanillaSolicitudes() {
                 {/* Card Aprobadas */}
                 <div
                     onClick={() => handleCardClick('aprobadas')}
-                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
-                        activeCard === 'aprobadas' ? 'border-green-500 shadow-lg' : 'border-gray-200'
-                    }`}
+                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${activeCard === 'aprobadas' ? 'border-green-500 shadow-lg' : 'border-gray-200'
+                        }`}
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Aprobadas</span>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-green-600">{aprobadasCount}</p>
@@ -183,16 +185,15 @@ export default function VentanillaSolicitudes() {
                 {/* Card Devueltas */}
                 <div
                     onClick={() => handleCardClick('devueltas')}
-                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
-                        activeCard === 'devueltas' ? 'border-orange-500 shadow-lg' : 'border-gray-200'
-                    }`}
+                    className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${activeCard === 'devueltas' ? 'border-orange-500 shadow-lg' : 'border-gray-200'
+                        }`}
                 >
                     <div className="flex justify-between items-start mb-4">
                         <span className="text-sm font-medium text-gray-700">Devueltas</span>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
                     <p className="text-5xl font-bold text-orange-600">{devueltasCount}</p>
@@ -266,15 +267,15 @@ export default function VentanillaSolicitudes() {
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-800">
                         {activeCard === 'pendientes' ? 'Solicitudes Enviadas (Pendientes de Revisión)' :
-                         activeCard === 'aprobadas' ? 'Solicitudes Aprobadas por VUS' :
-                         activeCard === 'devueltas' ? 'Solicitudes Devueltas por VUS' :
-                         'Todas las Solicitudes'}
+                            activeCard === 'aprobadas' ? 'Solicitudes Aprobadas por VUS' :
+                                activeCard === 'devueltas' ? 'Solicitudes Devueltas por VUS' :
+                                    'Todas las Solicitudes'}
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
                         {activeCard === 'pendientes' ? 'Solicitudes enviadas por clientes que esperan validación de Ventanilla' :
-                         activeCard === 'aprobadas' ? 'Solicitudes que pasaron la validación formal y están en evaluación técnica' :
-                         activeCard === 'devueltas' ? 'Solicitudes devueltas al cliente por no cumplir requisitos formales' :
-                         'Vista general de todas las solicitudes gestionadas por Ventanilla'}
+                            activeCard === 'aprobadas' ? 'Solicitudes que pasaron la validación formal y están en evaluación técnica' :
+                                activeCard === 'devueltas' ? 'Solicitudes devueltas al cliente por no cumplir requisitos formales' :
+                                    'Vista general de todas las solicitudes gestionadas por Ventanilla'}
                     </p>
                 </div>
 
@@ -286,67 +287,77 @@ export default function VentanillaSolicitudes() {
                     <div className="overflow-x-auto">
                         <div style={{ maxHeight: '400px', overflowY: filteredRequests.length > 5 ? 'auto' : 'visible' }}>
                             <table className="w-full min-w-[900px]">
-                        <thead>
-                            <tr className="bg-[#4A8BDF]">
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">CÓDIGO</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">FECHA CREACIÓN</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">SOLICITANTE</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">TIPO DE SERVICIO</th>
-                                <th className="px-6 py-4 text-left text-white font-semibold text-sm">ESTADO</th>
-                                <th className="px-6 py-4 text-center text-white font-semibold text-sm">ACCIONES</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRequests.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                                        No hay solicitudes que mostrar
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredRequests.map((request) => {
-                                    const isDevuelta = request.estado_actual?.toLowerCase() === 'devuelta por vus';
-                                    const isEnviada = request.estado_actual?.toLowerCase() === 'enviada';
-                                    
-                                    return (
-                                        <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                                                #{request.id}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
-                                                {formatDate(request.fecha_creacion)}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
-                                                {request.nombre_cliente}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
-                                                {request.tipo_servicio}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <BadgeEstado estado={request.estado_actual} />
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                {isDevuelta ? (
-                                                    <span 
-                                                        className="text-gray-400 font-medium text-sm cursor-not-allowed"
-                                                        title="Esta solicitud está en manos del cliente para corrección"
-                                                    >
-                                                        En corrección
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
-                                                        className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
-                                                    >
-                                                        {isEnviada ? 'Validar' : 'Ver Detalle'}
-                                                    </button>
-                                                )}
+                                <thead>
+                                    <tr className="bg-[#4A8BDF]">
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="id">CÓDIGO</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="fecha_creacion">FECHA CREACIÓN</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="nombre_cliente">SOLICITANTE</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="tipo_servicio">TIPO DE SERVICIO</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="estado_actual">ESTADO</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-center text-white font-semibold text-sm">ACCIONES</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sortedData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                                No hay solicitudes que mostrar
                                             </td>
                                         </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
+                                    ) : (
+                                        sortedData.map((request) => {
+                                            const isDevuelta = request.estado_actual?.toLowerCase() === 'devuelta por vus';
+                                            const isEnviada = request.estado_actual?.toLowerCase() === 'enviada';
+
+                                            return (
+                                                <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                                        #{request.id}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-500">
+                                                        {formatDate(request.fecha_creacion)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-700">
+                                                        {request.nombre_cliente}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-700">
+                                                        {request.tipo_servicio}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <BadgeEstado estado={request.estado_actual} />
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        {isDevuelta ? (
+                                                            <span
+                                                                className="text-gray-400 font-medium text-sm cursor-not-allowed"
+                                                                title="Esta solicitud está en manos del cliente para corrección"
+                                                            >
+                                                                En corrección
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => navigate(`/ventanilla/solicitud/${request.id}`)}
+                                                                className="text-[#4A8BDF] hover:text-[#3875C8] font-medium text-sm"
+                                                            >
+                                                                {isEnviada ? 'Validar' : 'Ver Detalle'}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
                             </table>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import useSortableTable from '../../hooks/useSortableTable';
 
 
 
@@ -55,6 +56,9 @@ function DirectorTecnicoSolicitudes() {
     // Las aprobadas son solo las que el director mandó a dirección (estado 7)
     const aprobadasCount = requests.filter(r => r.estado_id === 7).length;
 
+    // Hook para ordenamiento de tabla
+    const { sortedData, SortableHeader } = useSortableTable(filteredRequests, { key: 'id', direction: 'desc' });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -86,9 +90,9 @@ function DirectorTecnicoSolicitudes() {
                         <span className="text-base font-medium text-black">Pendientes</span>
                         <span className="inline-flex items-center justify-center">
                             <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover:scale-110">
-                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </span>
                     </div>
@@ -111,9 +115,9 @@ function DirectorTecnicoSolicitudes() {
                         <span className="text-base font-medium text-black">Aprobadas</span>
                         <span className="inline-flex items-center justify-center">
                             <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover:scale-110">
-                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M15 10.8333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V6.66667C2.5 6.22464 2.67559 5.80072 2.98816 5.48816C3.30072 5.17559 3.72464 5 4.16667 5H9.16667" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12.5 2.5H17.5V7.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M8.33398 11.6667L17.5007 2.5" stroke="#085297" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </span>
                     </div>
@@ -177,16 +181,26 @@ function DirectorTecnicoSolicitudes() {
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#4A8BDF]">
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">CÓDIGO</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">FECHA CREACIÓN</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">SOLICITANTE</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">TIPO DE SERVICIO</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">ESTADO</th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                                    <SortableHeader columnKey="id">CÓDIGO</SortableHeader>
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                                    <SortableHeader columnKey="fecha_creacion">FECHA CREACIÓN</SortableHeader>
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                                    <SortableHeader columnKey="cliente_nombre">SOLICITANTE</SortableHeader>
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                                    <SortableHeader columnKey="tipo_servicio">TIPO DE SERVICIO</SortableHeader>
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                                    <SortableHeader columnKey="estado_id">ESTADO</SortableHeader>
+                                </th>
                                 <th className="px-6 py-3 text-left text-sm font-semibold text-white">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredRequests.map((request) => (
+                            {sortedData.map((request) => (
                                 <tr key={request.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 text-sm text-gray-900">{request.id}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900">

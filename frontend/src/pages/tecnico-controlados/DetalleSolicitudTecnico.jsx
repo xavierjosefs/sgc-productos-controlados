@@ -11,11 +11,11 @@ const DetalleSolicitudTecnico = () => {
   const [showAprobarModal, setShowAprobarModal] = useState(false);
   const [procesado, setProcesado] = useState(false);
   const [tipoAccion, setTipoAccion] = useState(null); // 'APROBADO' o 'NO_APROBADO'
-  
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { getRequestDetail, validateTecnicoRequest } = useTecnicoAPI();
-  
+
   const [detalle, setDetalle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [documentosEstado, setDocumentosEstado] = useState([]);
@@ -36,50 +36,50 @@ const DetalleSolicitudTecnico = () => {
   };
 
   useEffect(() => {
-  async function fetchDetalle() {
-    setLoading(true);
-    try {
-      const res = await getRequestDetail(id);
-      const data = res.detalle;
-      
-      setDetalle(data);
-      
-      // Inicializar documentos
-      setDocumentosEstado(
-        (data.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
-      );
+    async function fetchDetalle() {
+      setLoading(true);
+      try {
+        const res = await getRequestDetail(id);
+        const data = res.detalle;
 
-      // Inicializar validaciones del formulario CON SOPORTE PARA OBJETOS ANIDADOS
-      if (data.solicitud?.form_data) {
-        const validaciones = [];
-        
-        Object.entries(data.solicitud.form_data).forEach(([key, value]) => {
-          // Si es un objeto anidado, agregar cada subcampo
-          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            Object.entries(value).forEach(([subKey]) => {
-              validaciones.push({ key: `${key}-${subKey}`, cumple: null });
-            });
-          } else {
-            // Si es un valor simple, agregarlo directamente
-            validaciones.push({ key, cumple: null });
-          }
-        });
-        
-        setFormValidaciones(validaciones);
+        setDetalle(data);
+
+        // Inicializar documentos
+        setDocumentosEstado(
+          (data.documentos || []).map(doc => ({ id: doc.id, cumple: null }))
+        );
+
+        // Inicializar validaciones del formulario CON SOPORTE PARA OBJETOS ANIDADOS
+        if (data.solicitud?.form_data) {
+          const validaciones = [];
+
+          Object.entries(data.solicitud.form_data).forEach(([key, value]) => {
+            // Si es un objeto anidado, agregar cada subcampo
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              Object.entries(value).forEach(([subKey]) => {
+                validaciones.push({ key: `${key}-${subKey}`, cumple: null });
+              });
+            } else {
+              // Si es un valor simple, agregarlo directamente
+              validaciones.push({ key, cumple: null });
+            }
+          });
+
+          setFormValidaciones(validaciones);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudo cargar la solicitud');
+        navigate(-1);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('No se pudo cargar la solicitud');
-      navigate(-1);
+      setLoading(false);
     }
-    setLoading(false);
-  }
-  fetchDetalle();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [id]);
+    fetchDetalle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleDocumentoChange = (docId, cumple) => {
-    setDocumentosEstado(prev => 
+    setDocumentosEstado(prev =>
       prev.map(d => d.id === docId ? { ...d, cumple } : d)
     );
   };
@@ -91,7 +91,7 @@ const DetalleSolicitudTecnico = () => {
     );
   };
 
-  const todosSeleccionados = 
+  const todosSeleccionados =
     formValidaciones.length > 0 &&
     formValidaciones.every(f => f.cumple !== null) &&
     documentosEstado.length > 0 &&
@@ -105,7 +105,7 @@ const DetalleSolicitudTecnico = () => {
   const algunNoCumple =
     todosSeleccionados &&
     (formValidaciones.some(f => f.cumple === false) ||
-     documentosEstado.some(d => d.cumple === false));
+      documentosEstado.some(d => d.cumple === false));
 
   const handleSubmitAprobar = (e) => {
     e.preventDefault();
@@ -209,7 +209,7 @@ const DetalleSolicitudTecnico = () => {
     <div className="min-h-screen bg-gray-50">
       <TecnicoTopbar />
       <div className="max-w-6xl mx-auto px-6 py-8">
-        
+
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate('/tecnico-controlados')}
@@ -276,11 +276,18 @@ const DetalleSolicitudTecnico = () => {
               <div className="text-gray-800 whitespace-pre-line">{solicitud.comentario_director_upc}</div>
             </div>
           )}
+          {/* Comentario de Dirección si fue devuelta/rechazada */}
+          {solicitud.comentario_direccion && (
+            <div className="mb-8 p-4 border-l-4 border-orange-500 bg-orange-50">
+              <div className="font-semibold text-orange-700 mb-2">Comentario de Dirección:</div>
+              <div className="text-gray-800 whitespace-pre-line">{solicitud.comentario_direccion}</div>
+            </div>
+          )}
           {/* NUEVO: Subtítulo para el Formulario */}
           <div className="mb-8">
             <div className="border-b border-gray-200 pb-2 mb-4">
-               <h3 className="text-xl font-bold text-[#4A8BDF]">Datos del Formulario</h3>
-               <p className="text-sm text-gray-500">Información capturada digitalmente en la solicitud.</p>
+              <h3 className="text-xl font-bold text-[#4A8BDF]">Datos del Formulario</h3>
+              <p className="text-sm text-gray-500">Información capturada digitalmente en la solicitud.</p>
             </div>
 
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
@@ -453,11 +460,10 @@ const DetalleSolicitudTecnico = () => {
             <div className="flex gap-6 justify-end">
               <button
                 type="button"
-                className={`px-8 py-3 rounded-lg font-semibold text-lg transition ${
-                  !todosSeleccionados || !algunNoCumple
+                className={`px-8 py-3 rounded-lg font-semibold text-lg transition ${!todosSeleccionados || !algunNoCumple
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-red-500 text-white hover:bg-red-600 shadow'
-                }`}
+                  }`}
                 onClick={handleSubmitRechazar}
                 disabled={enviando || !todosSeleccionados || !algunNoCumple}
               >
@@ -466,11 +472,10 @@ const DetalleSolicitudTecnico = () => {
 
               <button
                 type="button"
-                className={`px-8 py-3 rounded-lg font-semibold text-lg transition ${
-                  !todosSeleccionados || !todosCumplen
+                className={`px-8 py-3 rounded-lg font-semibold text-lg transition ${!todosSeleccionados || !todosCumplen
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-[#085297] text-white hover:bg-[#0a63b7] shadow'
-                }`}
+                  }`}
                 onClick={handleSubmitAprobar}
                 disabled={enviando || !todosSeleccionados || !todosCumplen}
               >

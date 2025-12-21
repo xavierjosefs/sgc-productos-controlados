@@ -1,0 +1,25 @@
+
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.2.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 101 modules transformed.
+Ô£ù Build failed in 456ms
+error during build:
+src/hooks/useSortableTable.js (75:16): Expression expected
+file: C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/src/hooks/useSortableTable.js:75:16
+
+73:             // Icono neutral (no ordenado por esta columna)
+74:             return (
+75:                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="curre...
+                    ^
+76:                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 1...
+77:                 </svg>
+
+    at getRollupError (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at ParseError.initialise (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/node-entry.js:14460:28)
+    at convertNode (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/node-entry.js:16343:10)
+    at convertProgram (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/node-entry.js:15583:12)
+    at Module.setSource (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/node-entry.js:17340:24)
+    at async ModuleLoader.addModuleSource (file:///C:/Users/RAYNER/Desktop/sgc-productos-controlados/frontend/node_modules/rollup/dist/es/shared/node-entry.js:21363:13)
