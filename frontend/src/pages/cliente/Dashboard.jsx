@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import BadgeEstado from '../../components/BadgeEstado';
 import useRequestsAPI from '../../hooks/useRequestsAPI';
 import useServicesAPI from '../../hooks/useServicesAPI';
+import useSortableTable from '../../hooks/useSortableTable';
 
 /**
  * Dashboard principal del Cliente (Home)
@@ -15,7 +16,7 @@ export default function Home() {
   const navigate = useNavigate();
   const requestsAPI = useRequestsAPI();
   const servicesAPI = useServicesAPI();
-  
+
   const [allRequests, setAllRequests] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]); // Will be renamed to filteredRequests
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -34,7 +35,7 @@ export default function Home() {
       setLoadingRequests(true);
       try {
         const data = await requestsAPI.getUserRequests();
-        
+
         // El backend responde { ok: true, requests } o directamente un array
         const normalized = Array.isArray(data) ? data : (data?.requests || data?.data || []);
         setAllRequests(normalized);
@@ -49,7 +50,7 @@ export default function Home() {
         setLoadingRequests(false);
       }
     };
-    
+
     loadRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -61,7 +62,7 @@ export default function Home() {
       try {
         const types = await servicesAPI.getServiceTypes();
         console.log('Tipos de servicio recibidos:', types);
-        
+
         setServiceTypes(Array.isArray(types) ? types : (types.data || []));
       } catch (err) {
         console.error('Error cargando tipos de servicio:', err);
@@ -70,7 +71,7 @@ export default function Home() {
         setLoadingServices(false);
       }
     };
-    
+
     loadServiceTypes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -132,22 +133,22 @@ export default function Home() {
       'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas',
       'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada'
     ];
-    
+
     if (servicesWithPhases.includes(serviceName)) {
       // Mostrar sub-menú de fases
       setSelectedServiceForPhase(serviceName);
       return;
     }
-    
+
     setShowCreateMenu(false);
-    
+
     // Mapeo de nombres de servicio a rutas
     const routeMap = {
       'Solicitud de Certificado de Inscripción de Drogas Controladas Clase A': '/solicitud-drogas-clase-a',
       'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Establecimientos Privados': '/solicitud-drogas-clase-b',
       'Solicitud de Certificado de Inscripción de Drogas Controladas Clase B para Hospitales Públicos y/u otras Instituciones Públicas': '/solicitud-clase-b-capa-c/actividades',
     };
-    
+
     const route = routeMap[serviceName];
     if (route) {
       navigate(route);
@@ -160,7 +161,7 @@ export default function Home() {
   const handleSelectPhase = (phase) => {
     setShowCreateMenu(false);
     setSelectedServiceForPhase(null);
-    
+
     if (selectedServiceForPhase === 'Solicitud de Permiso de Importación de Materia Prima de Sustancias Controladas') {
       navigate(phase === 1 ? '/solicitud-importacion-materia-prima' : '/solicitud-importacion-materia-prima/fase-2');
     } else if (selectedServiceForPhase === 'Solicitud de Permiso de Importación de Medicamentos con Sustancia Controlada') {
@@ -176,10 +177,14 @@ export default function Home() {
   // Contar solicitudes por estado
   const countByStatus = {
     enviadas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('enviada')).length,
-    aprobadas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('finalizada') || (r.estado_actual || '').toLowerCase().includes('autorizada')).length,
-    devueltas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('devuelta') || (r.estado_actual || '').toLowerCase().includes('rechazada')).length,
+    aprobadas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('finalizada') || (r.estado_actual || '').toLowerCase().includes('autorizada') || (r.estado_actual || '').toLowerCase().includes('aprobada dncd')).length,
+    devueltas: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('devuelta')).length,
+    rechazadas: allRequests.filter(r => r.estado_id === 18 || (r.estado_actual || '').toLowerCase().includes('rechazada_direccion')).length,
     pendientes: allRequests.filter(r => (r.estado_actual || '').toLowerCase().includes('pendiente') || (r.estado_actual || '').toLowerCase().includes('revisión') || (r.estado_actual || '').toLowerCase().includes('evaluación')).length,
   };
+
+  // Hook para ordenamiento de tabla
+  const { sortedData, SortableHeader } = useSortableTable(recentRequests, { key: 'id', direction: 'desc' });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -194,7 +199,7 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-[#4A8BDF]">Mis Solicitudes</h1>
             <p className="text-gray-600 mt-1">Bienvenido, {user?.full_name || 'Cliente'}</p>
           </div>
-          
+
           <div className="relative">
             <button
               onClick={handleOpenCreateMenu}
@@ -215,7 +220,7 @@ export default function Home() {
                   // Sub-menú para seleccionar fase
                   <div>
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <button 
+                      <button
                         onClick={handleBackToMainMenu}
                         className="flex items-center text-sm text-[#4A8BDF] hover:text-[#3875C8]"
                       >
@@ -228,7 +233,7 @@ export default function Home() {
                     </div>
                     <ul>
                       <li>
-                        <button 
+                        <button
                           className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100"
                           onClick={() => handleSelectPhase(1)}
                         >
@@ -237,7 +242,7 @@ export default function Home() {
                         </button>
                       </li>
                       <li>
-                        <button 
+                        <button
                           className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700"
                           onClick={() => handleSelectPhase(2)}
                         >
@@ -252,7 +257,7 @@ export default function Home() {
                   <ul>
                     {serviceTypes.map(type => (
                       <li key={type.id}>
-                        <button 
+                        <button
                           className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100 last:border-0"
                           onClick={() => handleSelectService(type.nombre_servicio)}
                         >
@@ -268,8 +273,8 @@ export default function Home() {
         </div>
 
         {/* Cards de resumen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div
             onClick={() => navigate('/requests/enviadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
@@ -282,40 +287,53 @@ export default function Home() {
             <p className="text-4xl font-bold text-[#4A8BDF]">{countByStatus.enviadas}</p>
           </div>
 
-          <div 
+          <div
             onClick={() => navigate('/requests/aprobadas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
               <span className="text-sm text-gray-600">Aprobadas</span>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <p className="text-4xl font-bold text-[#10B981]">{countByStatus.aprobadas}</p>
           </div>
 
-          <div 
+          <div
             onClick={() => navigate('/requests/devueltas')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
               <span className="text-sm text-gray-600">Devueltas</span>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
               </svg>
             </div>
             <p className="text-4xl font-bold text-[#F59E0B]">{countByStatus.devueltas}</p>
           </div>
 
-          <div 
+          <div
+            onClick={() => navigate('/requests/rechazadas')}
+            className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm text-gray-600">Rechazadas</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-[#EF4444]">{countByStatus.rechazadas}</p>
+          </div>
+
+          <div
             onClick={() => navigate('/requests/pendientes')}
             className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
               <span className="text-sm text-gray-600">Pendientes</span>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <p className="text-4xl font-bold text-[#EC4899]">{countByStatus.pendientes}</p>
@@ -327,7 +345,7 @@ export default function Home() {
           <div className="flex flex-wrap gap-4 items-center justify-end">
             <div className="flex gap-4">
               <div className="relative w-48">
-                <select 
+                <select
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 truncate"
@@ -344,9 +362,9 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </div>
-              
+
               <div className="relative">
-                <select 
+                <select
                   value={filterEstado}
                   onChange={(e) => setFilterEstado(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10"
@@ -355,6 +373,7 @@ export default function Home() {
                   <option value="enviada">Enviada</option>
                   <option value="aprobada">Aprobada</option>
                   <option value="devuelta">Devuelta</option>
+                  <option value="rechazada">Rechazada</option>
                   <option value="pendiente">Pendiente</option>
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -362,15 +381,15 @@ export default function Home() {
                 </svg>
               </div>
 
-              <button 
+              <button
                 onClick={handleApplyFilters}
                 className="px-6 py-2 bg-[#085297] text-white rounded-lg font-medium hover:bg-[#064175] transition-colors"
               >
                 Filtrar
               </button>
-              
+
               {(filterTipo || filterEstado) && (
-                <button 
+                <button
                   onClick={handleResetFilters}
                   className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
                 >
@@ -384,12 +403,20 @@ export default function Home() {
         {/* Tabla de solicitudes - Desktop con barra de desplazamiento */}
         <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <table className="w-full">
-            <thead>
+            <thead className="sticky top-0">
               <tr className="bg-[#4A8BDF]">
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
-                <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Creación</th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                  <SortableHeader columnKey="id">ID</SortableHeader>
+                </th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                  <SortableHeader columnKey="tipo_servicio">Tipo de Servicio</SortableHeader>
+                </th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                  <SortableHeader columnKey="estado_actual">Estado</SortableHeader>
+                </th>
+                <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                  <SortableHeader columnKey="fecha_creacion">Fecha Creación</SortableHeader>
+                </th>
                 <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
               </tr>
             </thead>
@@ -398,17 +425,17 @@ export default function Home() {
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">Cargando...</td></tr>
               ) : errorRequests ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-red-500">{errorRequests}</td></tr>
-              ) : recentRequests.length === 0 ? (
+              ) : sortedData.length === 0 ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No tienes solicitudes registradas aún</td></tr>
               ) : (
-                recentRequests.map(request => (
-                  <tr key={request.id} className="hover:bg-gray-100 transition-colors">
-                    <td className="px-6 py-5 text-sm text-gray-700">{request.id}</td>
+                sortedData.map(request => (
+                  <tr key={request.id} className="hover:bg-gray-100 transition-colors border-b border-gray-100">
+                    <td className="px-6 py-5 text-sm text-gray-700 font-medium">#{request.id}</td>
                     <td className="px-6 py-5 text-sm text-gray-700">{request.tipo_servicio || '-'}</td>
                     <td className="px-6 py-5"><BadgeEstado estado={request.estado_actual} /></td>
                     <td className="px-6 py-5 text-sm text-gray-700">{request.fecha_creacion ? new Date(request.fecha_creacion).toLocaleDateString('es-ES') : '-'}</td>
                     <td className="px-6 py-5">
-                      <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg" onClick={() => navigate(`/requests/${request.id}/details`)}>
+                      <button className="px-4 py-2 bg-[#4A8BDF] text-white rounded-lg font-medium hover:bg-[#3875C8] transition-colors" onClick={() => navigate(`/requests/${request.id}/details`)}>
                         Ver detalles
                       </button>
                     </td>

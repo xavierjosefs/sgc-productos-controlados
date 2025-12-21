@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import DireccionTopbar from '../../components/DireccionTopbar';
 import useRequestsAPI from '../../hooks/useRequestsAPI';
+import useSortableTable from '../../hooks/useSortableTable';
 
 /**
  * DireccionSolicitudes
@@ -87,6 +88,9 @@ export default function DireccionSolicitudes() {
         setAppliedTipo(filterTipo);
         setAppliedEstado(filterEstado);
     };
+
+    // Hook para ordenamiento de tabla
+    const { sortedData, SortableHeader } = useSortableTable(filteredRequests, { key: 'id', direction: 'desc' });
 
     const handleCardFilter = (estado) => {
         setFilterEstado(estado);
@@ -194,10 +198,18 @@ export default function DireccionSolicitudes() {
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-[#4A8BDF]">
-                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Código</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Fecha Creación</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Tipo de Servicio</th>
-                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">Estado</th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">
+                                        <SortableHeader columnKey="id">Código</SortableHeader>
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">
+                                        <SortableHeader columnKey="fecha_creacion">Fecha Creación</SortableHeader>
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">
+                                        <SortableHeader columnKey="tipo_servicio">Tipo de Servicio</SortableHeader>
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-white font-semibold uppercase tracking-wide">
+                                        <SortableHeader columnKey="estado_actual">Estado</SortableHeader>
+                                    </th>
                                     <th className="px-6 py-4 text-right text-white font-semibold uppercase tracking-wide">Acción</th>
                                 </tr>
                             </thead>
@@ -208,14 +220,14 @@ export default function DireccionSolicitudes() {
                                             Cargando solicitudes...
                                         </td>
                                     </tr>
-                                ) : filteredRequests.length === 0 ? (
+                                ) : sortedData.length === 0 ? (
                                     <tr>
                                         <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                                             No hay solicitudes disponibles
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredRequests.map((request) => (
+                                    sortedData.map((request) => (
                                         <tr key={request.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <span className="text-gray-900 font-medium">#{request.id}</span>

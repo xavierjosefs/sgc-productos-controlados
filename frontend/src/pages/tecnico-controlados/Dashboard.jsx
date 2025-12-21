@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TecnicoTopbar from '../../components/TecnicoTopbar';
 import useTecnicoAPI from '../../hooks/useTecnicoAPI';
 import BadgeEstado from '../../components/BadgeEstado';
+import useSortableTable from '../../hooks/useSortableTable';
 
 /**
  * Dashboard del Técnico de Controlados
@@ -12,14 +13,14 @@ import BadgeEstado from '../../components/BadgeEstado';
 export default function TecnicoControladosDashboard() {
     const navigate = useNavigate();
     const { getRequests } = useTecnicoAPI();
-    
+
     const [allRequests, setAllRequests] = useState([]);
     const [filteredRequests, setFilteredRequests] = useState([]);
     const [loadingRequests, setLoadingRequests] = useState(false);
     const [errorRequests, setErrorRequests] = useState('');
     const [filterTipo, setFilterTipo] = useState('');
     const [filterEstado, setFilterEstado] = useState('');
-    
+
     // Cargar solicitudes
     useEffect(() => {
         const loadRequests = async () => {
@@ -44,19 +45,19 @@ export default function TecnicoControladosDashboard() {
     // Aplicar filtros automáticamente cuando cambian
     useEffect(() => {
         let filtered = [...allRequests];
-        
+
         if (filterTipo) {
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 (r.tipo_servicio || '').toLowerCase().includes(filterTipo.toLowerCase())
             );
         }
-        
+
         if (filterEstado) {
-            filtered = filtered.filter(r => 
+            filtered = filtered.filter(r =>
                 (r.estado_actual || '') === filterEstado
             );
         }
-        
+
         setFilteredRequests(filtered);
     }, [filterTipo, filterEstado, allRequests]);
 
@@ -72,18 +73,22 @@ export default function TecnicoControladosDashboard() {
 
     // Contar solicitudes por estado
     const countByStatus = {
-        pendientes: allRequests.filter(r => 
+        pendientes: allRequests.filter(r =>
             r.estado_actual === 'En evaluación técnica'
         ).length,
-        devueltas: allRequests.filter(r => 
+        devueltas: allRequests.filter(r =>
             r.estado_actual === 'Rechazada por Director UPC'
         ).length,
-        enRevisionDirector: allRequests.filter(r =>
-            r.estado_actual && r.estado_actual.toLowerCase().includes('revisión') && 
-            r.estado_actual.toLowerCase().includes('director')
+        enviadasDirector: allRequests.filter(r =>
+            r.estado_actual && (
+                r.estado_actual.toLowerCase().includes('revisión') &&
+                r.estado_actual.toLowerCase().includes('director')
+            ) || r.estado_id === 6
         ).length,
     };
 
+    // Hook para ordenamiento de tabla
+    const { sortedData, SortableHeader } = useSortableTable(filteredRequests, { key: 'id', direction: 'desc' });
 
     // Tipos de servicio únicos
     const tiposUnicos = [...new Set(allRequests.map(r => r.tipo_servicio).filter(Boolean))];
@@ -100,25 +105,42 @@ export default function TecnicoControladosDashboard() {
                 </div>
 
                 {/* Estadísticas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div
+                        onClick={() => setFilterEstado('En evaluación técnica')}
+                        className={`bg-white rounded-xl border-2 p-6 relative cursor-pointer hover:shadow-lg transition-all ${filterEstado === 'En evaluación técnica' ? 'border-[#4A8BDF] shadow-lg' : 'border-gray-200'}`}
+                    >
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-sm text-gray-600">Pendientes</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        {/* CAMBIO: Usando clase Tailwind en lugar de style inline */}
                         <p className="text-4xl font-bold text-[#4A8BDF]">{countByStatus.pendientes}</p>
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 relative cursor-pointer hover:shadow-lg transition-shadow">
+                    <div
+                        onClick={() => setFilterEstado('Rechazada por Director UPC')}
+                        className={`bg-white rounded-xl border-2 p-6 relative cursor-pointer hover:shadow-lg transition-all ${filterEstado === 'Rechazada por Director UPC' ? 'border-[#F59E0B] shadow-lg' : 'border-gray-200'}`}
+                    >
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-sm text-gray-600">Devueltas</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
                             </svg>
                         </div>
                         <p className="text-4xl font-bold text-[#F59E0B]">{countByStatus.devueltas}</p>
+                    </div>
+                    <div
+                        onClick={() => setFilterEstado('En revisión por Director')}
+                        className={`bg-white rounded-xl border-2 p-6 relative cursor-pointer hover:shadow-lg transition-all ${filterEstado && filterEstado.toLowerCase().includes('director') && !filterEstado.toLowerCase().includes('rechazada') ? 'border-[#10B981] shadow-lg' : 'border-gray-200'}`}
+                    >
+                        <div className="flex justify-between items-start mb-4">
+                            <span className="text-sm text-gray-600">Enviadas a Director</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <p className="text-4xl font-bold text-[#10B981]">{countByStatus.enviadasDirector}</p>
                     </div>
                 </div>
 
@@ -129,7 +151,7 @@ export default function TecnicoControladosDashboard() {
                         <div className="flex flex-wrap gap-4">
                             <div className="relative w-48">
                                 {/* CAMBIO: focus:ring actualizado */}
-                                <select 
+                                <select
                                     value={filterTipo}
                                     onChange={(e) => setFilterTipo(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 bg-white"
@@ -147,7 +169,7 @@ export default function TecnicoControladosDashboard() {
 
                             <div className="relative w-56">
                                 {/* CAMBIO: focus:ring actualizado */}
-                                <select 
+                                <select
                                     value={filterEstado}
                                     onChange={(e) => setFilterEstado(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A8BDF] appearance-none pr-10 bg-white"
@@ -163,7 +185,7 @@ export default function TecnicoControladosDashboard() {
                             </div>
 
                             {(filterTipo || filterEstado) && (
-                                <button 
+                                <button
                                     onClick={handleResetFilters}
                                     className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors flex items-center gap-2"
                                 >
@@ -185,11 +207,21 @@ export default function TecnicoControladosDashboard() {
                                 <thead className="sticky top-0 z-10">
                                     {/* CAMBIO: Fondo del header de tabla actualizado */}
                                     <tr className="bg-[#4A8BDF]">
-                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
-                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">Fecha</th>
-                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">Solicitante</th>
-                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">Tipo de Servicio</th>
-                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">Estado</th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="id">ID</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="fecha_creacion">Fecha</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="nombre_cliente">Solicitante</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="tipo_servicio">Tipo de Servicio</SortableHeader>
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-white font-semibold text-sm">
+                                            <SortableHeader columnKey="estado_actual">Estado</SortableHeader>
+                                        </th>
                                         <th className="px-6 py-4 text-left text-white font-semibold text-sm">Acciones</th>
                                     </tr>
                                 </thead>
@@ -213,20 +245,20 @@ export default function TecnicoControladosDashboard() {
                                                 {errorRequests}
                                             </td>
                                         </tr>
-                                    ) : filteredRequests.length === 0 ? (
+                                    ) : sortedData.length === 0 ? (
                                         <tr>
                                             <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                                 {filterTipo || filterEstado ? 'No se encontraron solicitudes con los filtros aplicados' : 'No hay solicitudes registradas aún'}
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredRequests.map(request => (
+                                        sortedData.map(request => (
                                             <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                                     #{request.id}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-700">
-                                                    {request.fecha_creacion 
+                                                    {request.fecha_creacion
                                                         ? new Date(request.fecha_creacion).toLocaleDateString('es-DO', {
                                                             year: 'numeric',
                                                             month: 'short',
@@ -248,11 +280,10 @@ export default function TecnicoControladosDashboard() {
                                                     <div className="flex gap-3">
                                                         <button
                                                             /* CAMBIO: Texto del botón actualizado */
-                                                            className={`font-medium hover:underline transition-colors ${
-                                                                puedeValidar(request.estado_actual)
-                                                                    ? 'text-[#4A8BDF] hover:text-[#064175]'
-                                                                    : 'text-gray-600 hover:text-gray-800'
-                                                            }`}
+                                                            className={`font-medium hover:underline transition-colors ${puedeValidar(request.estado_actual)
+                                                                ? 'text-[#4A8BDF] hover:text-[#064175]'
+                                                                : 'text-gray-600 hover:text-gray-800'
+                                                                }`}
                                                             onClick={() => navigate(`/tecnico-controlados/solicitud/${request.id}`)}
                                                         >
                                                             {puedeValidar(request.estado_actual) ? 'Validar' : 'Ver Detalle'}
@@ -311,20 +342,19 @@ export default function TecnicoControladosDashboard() {
                                     <div className="flex justify-between items-start">
                                         <span className="text-xs font-medium text-gray-500">Fecha</span>
                                         <span className="text-sm text-gray-700">
-                                            {request.fecha_creacion 
+                                            {request.fecha_creacion
                                                 ? new Date(request.fecha_creacion).toLocaleDateString('es-DO')
                                                 : '-'
                                             }
                                         </span>
                                     </div>
                                     <div className="pt-2 border-t border-gray-100">
-                                        <button 
+                                        <button
                                             /* CAMBIO: Fondo del botón actualizado */
-                                            className={`w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                                                puedeValidar(request.estado_actual)
-                                                    ? 'bg-[#4A8BDF] text-white hover:bg-[#064175]'
-                                                    : 'bg-gray-500 text-white hover:bg-gray-600'
-                                            }`}
+                                            className={`w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${puedeValidar(request.estado_actual)
+                                                ? 'bg-[#4A8BDF] text-white hover:bg-[#064175]'
+                                                : 'bg-gray-500 text-white hover:bg-gray-600'
+                                                }`}
                                             onClick={() => navigate(`/tecnico-controlados/solicitud/${request.id}`)}
                                         >
                                             {puedeValidar(request.estado_actual) ? 'Validar' : 'Ver Detalle'}

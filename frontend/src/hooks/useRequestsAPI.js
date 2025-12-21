@@ -583,6 +583,33 @@ export function useRequestsAPI() {
     }
   }, []);
 
+  /**
+   * Aprobar solicitud desde DNCD (envía certificado al cliente)
+   * @param {string} requestId - ID de la solicitud
+   */
+  const approveDncdRequest = useCallback(async (requestId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${baseURL}/api/dncd/requests/${requestId}/approve`, {}, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al aprobar la solicitud';
+      setError(errorMessage);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
 
 
   return {
@@ -605,6 +632,7 @@ export function useRequestsAPI() {
     // DNCD
     getDncdRequests,
     getDncdRequestDetail,
+    approveDncdRequest,
 
     // Las siguientes funciones están disponibles pero se usarán en features específicos:
     // createRequest - Para formularios de creación de solicitudes

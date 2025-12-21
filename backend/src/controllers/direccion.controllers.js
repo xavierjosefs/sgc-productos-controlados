@@ -265,36 +265,32 @@ Su solicitud #${id} fue rechazada por la Dirección${reasons ? ` por las siguien
             }).catch(err => console.error("❌ Error enviando email de rechazo:", err));
         }
 
-        // Enviar correo si la solicitud fue aprobada
+        // Enviar correo si la solicitud fue aprobada (sin PDF - el PDF se envía cuando DNCD aprueba)
         if (status === 'aprobado_direccion' && user?.email) {
             const subject = `Solicitud #${id} - Aprobada por Dirección`;
             const text = `Estimado usuario,
 
-Su solicitud #${id} ha sido aprobada y firmada por la Dirección.\n\nAdjunto encontrará el certificado oficial de su solicitud aprobada.\n\nSu solicitud continúa al siguiente paso del proceso.\nLe notificaremos cuando se produzcan nuevos avances.\n\nAtentamente,\nDirección`;
+Su solicitud #${id} ha sido aprobada y firmada por la Dirección.
+
+Su solicitud continúa al siguiente paso del proceso de revisión.
+Le notificaremos cuando se complete la aprobación final y recibirá su certificado oficial.
+
+Atentamente,
+Dirección`;
 
             const html = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #2d8a4a;">¡Solicitud Aprobada!</h2>
+                    <h2 style="color: #2d8a4a;">¡Solicitud Aprobada por Dirección!</h2>
                     <p>Estimado usuario,</p>
                     <p>Su solicitud <strong>#${id}</strong> ha sido aprobada y firmada por la Dirección.</p>
-                    ${pdfBuffer ? '<p>Adjunto encontrará el <strong>certificado oficial</strong> de su solicitud aprobada.</p>' : ''}
-                    <p>Su solicitud continúa al siguiente paso del proceso.<br>Le notificaremos cuando se produzcan nuevos avances.</p>
+                    <p>Su solicitud continúa al siguiente paso del proceso de revisión.</p>
+                    <p><strong>Le notificaremos cuando se complete la aprobación final y recibirá su certificado oficial.</strong></p>
                     <p>Atentamente,<br><strong>Dirección</strong></p>
                 </div>`;
 
-            const attachments = pdfBuffer ? [{
-                filename: pdfFilename,
-                content: pdfBuffer,
-                contentType: 'application/pdf'
-            }] : [];
-
-            sendEmailWithAttachment({
-                to: user.email,
-                subject,
-                text,
-                html,
-                attachments
-            }).catch(err => console.error("❌ Error enviando email de aprobación:", err));
+            sendEmail(user.email, subject, text, html).catch(err =>
+                console.error("❌ Error enviando email de aprobación:", err)
+            );
         }
 
         return res.status(200).json({
