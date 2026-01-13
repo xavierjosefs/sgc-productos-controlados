@@ -1,9 +1,12 @@
 import { createUser, findUserByEmail, login, findUserByCedulaWithRole } from "../models/user.client.js";
 import { createPendingUser, findPendingByToken, deletePendingUser, deletePendingUserByEmail } from "../models/pending.client.js";
+import { createPasswordResetToken, findByToken as findPasswordResetToken, deleteByToken as deletePasswordResetToken } from "../models/password_reset.client.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { isValidDominicanCedula } from "../utils/validateCedula.js";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import pool from "../config/db.js";
 
 export const preRegister = async (req, res) => {
   const { cedula, full_name, email } = req.body;
@@ -118,5 +121,113 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     console.error('[getProfile] Error:', error);
     res.status(500).json({ ok: false, message: "Error al obtener perfil" });
+  }
+};
+
+/**
+ * Request password reset - generates token and sends email
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log('[forgotPassword] Step 1: Received email:', email);
+
+    if (!email) {
+      return res.status(400).json({ ok: false, message: "El correo es requerido" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('[forgotPassword] Step 2: Normalized email:', normalizedEmail);
+
+    // Check if user exists
+    const user = await findUserByEmail(normalizedEmail);
+    console.log('[forgotPassword] Step 3: User found:', user ? 'Yes' : 'No');
+
+    // Always return success to prevent email enumeration attacks
+    if (!user) {
+      console.log(`[forgotPassword] Email not found: ${normalizedEmail}`);
+      return res.json({
+        ok: true,
+        message: "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
+      });
+    }
+
+    // Generate unique token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 1000 * 60 * 15).toISOString(); // 15 minutes
+    console.log('[forgotPassword] Step 4: Token generated');
+
+    // Save token
+    console.log('[forgotPassword] Step 5: Attempting to save token...');
+    await createPasswordResetToken(normalizedEmail, token, expires);
+    console.log('[forgotPassword] Step 6: Token saved successfully');
+
+    // Send email
+    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetLink = `${FRONTEND_URL}/reset-password/${token}`;
+
+    const subject = "Restablecer tu contraseña";
+    const text = `Hola ${user.full_name},\n\nHemos recibido una solicitud para restablecer tu contraseña.\n\nHaz clic en el siguiente enlace para crear una nueva contraseña:\n\n${resetLink}\n\nEste enlace expirará en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.`;
+
+    console.log('[forgotPassword] Step 7: Attempting to send email...');
+    await sendEmail(normalizedEmail, subject, text);
+    console.log('[forgotPassword] Step 8: Email sent successfully');
+
+    console.log(`[forgotPassword] Reset link: ${resetLink}`);
+
+    res.json({
+      ok: true,
+      message: "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
+    });
+
+  } catch (error) {
+    console.error('[forgotPassword] Error details:', error.message);
+    console.error('[forgotPassword] Full error:', error);
+    res.status(500).json({ ok: false, message: "Error al procesar la solicitud" });
+  }
+};
+
+/**
+ * Reset password using token
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ ok: false, message: "Token inválido" });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ ok: false, message: "La contraseña debe tener al menos 6 caracteres" });
+    }
+
+    // Find valid token
+    const resetToken = await findPasswordResetToken(token);
+
+    if (!resetToken) {
+      return res.status(400).json({ ok: false, message: "El enlace ha expirado o es inválido" });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Update user password
+    await pool.query(
+      "UPDATE users SET password_hash = $1 WHERE email = $2",
+      [passwordHash, resetToken.email]
+    );
+
+    // Delete used token
+    await deletePasswordResetToken(token);
+
+    console.log(`[resetPassword] Password reset successful for: ${resetToken.email}`);
+
+    res.json({ ok: true, message: "Contraseña actualizada exitosamente" });
+
+  } catch (error) {
+    console.error('[resetPassword] Error:', error);
+    res.status(500).json({ ok: false, message: "Error al restablecer la contraseña" });
   }
 };
